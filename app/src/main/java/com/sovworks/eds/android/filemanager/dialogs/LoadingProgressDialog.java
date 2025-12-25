@@ -8,7 +8,7 @@ import com.sovworks.eds.android.R;
 
 import java.util.concurrent.CancellationException;
 
-import io.reactivex.Completable;
+import io.reactivex.rxjava3.core.Completable;
 
 public class LoadingProgressDialog
 {

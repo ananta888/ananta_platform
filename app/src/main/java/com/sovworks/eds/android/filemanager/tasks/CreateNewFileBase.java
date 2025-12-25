@@ -17,9 +17,9 @@ import org.json.JSONException;
 
 import java.io.IOException;
 
-import io.reactivex.Single;
-import io.reactivex.subjects.PublishSubject;
-import io.reactivex.subjects.Subject;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.subjects.PublishSubject;
+import io.reactivex.rxjava3.subjects.Subject;
 
 public abstract class CreateNewFileBase
 {

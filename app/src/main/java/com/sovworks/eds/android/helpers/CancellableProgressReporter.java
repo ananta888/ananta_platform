@@ -2,7 +2,7 @@ package com.sovworks.eds.android.helpers;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.reactivex.functions.Cancellable;
+import io.reactivex.rxjava3.functions.Cancellable;
 
 public class CancellableProgressReporter implements ProgressReporter, Cancellable
 {

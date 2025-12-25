@@ -3,7 +3,7 @@ package com.sovworks.eds.android.providers.cursor;
 import com.sovworks.eds.android.helpers.CachedPathInfo;
 import com.sovworks.eds.locations.Location;
 
-import io.reactivex.functions.Predicate;
+import io.reactivex.rxjava3.functions.Predicate;
 
 public interface SearchFilter
 {

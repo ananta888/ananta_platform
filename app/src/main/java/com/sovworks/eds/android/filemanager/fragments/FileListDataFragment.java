@@ -31,8 +31,7 @@ import com.sovworks.eds.locations.Location;
 import com.sovworks.eds.locations.LocationsManager;
 import com.sovworks.eds.settings.GlobalConfig;
 import com.sovworks.eds.settings.Settings;
-import com.trello.rxlifecycle2.android.FragmentEvent;
-import com.trello.rxlifecycle2.components.support.RxFragment;
+import com.sovworks.eds.android.fragments.BaseFragment;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,14 +43,14 @@ import java.util.Stack;
 import java.util.TreeSet;
 import java.util.concurrent.CancellationException;
 
-import io.reactivex.Observable;
-import io.reactivex.Single;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.BehaviorSubject;
-import io.reactivex.subjects.PublishSubject;
-import io.reactivex.subjects.Subject;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.reactivex.rxjava3.subjects.BehaviorSubject;
+import io.reactivex.rxjava3.subjects.PublishSubject;
+import io.reactivex.rxjava3.subjects.Subject;
 
 import static com.sovworks.eds.settings.SettingsCommon.FB_SORT_DATE_ASC;
 import static com.sovworks.eds.settings.SettingsCommon.FB_SORT_DATE_DESC;
@@ -62,7 +61,7 @@ import static com.sovworks.eds.settings.SettingsCommon.FB_SORT_FILENAME_NUM_DESC
 import static com.sovworks.eds.settings.SettingsCommon.FB_SORT_SIZE_ASC;
 import static com.sovworks.eds.settings.SettingsCommon.FB_SORT_SIZE_DESC;
 
-public class FileListDataFragment extends RxFragment
+public class FileListDataFragment extends BaseFragment
 {
     public static FileListDataFragment newInstance()
     {

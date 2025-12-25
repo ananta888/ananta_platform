@@ -23,11 +23,13 @@ import com.sovworks.eds.crypto.SecureBuffer;
 import com.sovworks.eds.locations.LocationsManager;
 import com.sovworks.eds.locations.Openable;
 import androidx.fragment.app.DialogFragment;
-import com.trello.rxlifecycle2.components.support.RxDialogFragment;
+import com.sovworks.eds.android.helpers.RxLifecycleProvider;
+import io.reactivex.rxjava3.core.ObservableTransformer;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 
-public abstract class PasswordDialogBase extends RxDialogFragment
+public abstract class PasswordDialogBase extends BaseDialogFragment
 {
     public static final String TAG = "com.sovworks.eds.android.dialogs.PasswordDialog";
 

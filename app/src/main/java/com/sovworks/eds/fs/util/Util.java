@@ -29,7 +29,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import io.reactivex.functions.Cancellable;
+import io.reactivex.rxjava3.functions.Cancellable;
 
 public class Util
 {

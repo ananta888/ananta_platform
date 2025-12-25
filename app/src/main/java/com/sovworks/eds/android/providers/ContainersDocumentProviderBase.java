@@ -27,9 +27,9 @@ import com.sovworks.eds.settings.SystemConfig;
 import java.io.FileNotFoundException;
 import java.nio.charset.Charset;
 
-import io.reactivex.Completable;
-import io.reactivex.Single;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 @TargetApi(Build.VERSION_CODES.KITKAT)
 public abstract class ContainersDocumentProviderBase extends android.provider.DocumentsProvider

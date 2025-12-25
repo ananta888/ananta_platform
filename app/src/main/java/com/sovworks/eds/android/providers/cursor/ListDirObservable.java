@@ -14,9 +14,9 @@ import com.sovworks.eds.locations.LocationsManager;
 
 import java.io.IOException;
 
-import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.disposables.Disposables;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.ObservableEmitter;
+import io.reactivex.rxjava3.disposables.Disposables;
 
 public class ListDirObservable
 {

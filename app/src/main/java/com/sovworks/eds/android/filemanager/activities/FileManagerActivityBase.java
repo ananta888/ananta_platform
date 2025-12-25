@@ -15,7 +15,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
@@ -47,19 +46,28 @@ import com.sovworks.eds.locations.Location;
 import com.sovworks.eds.locations.LocationsManager;
 import com.sovworks.eds.locations.Openable;
 import com.sovworks.eds.settings.GlobalConfig;
-import com.trello.rxlifecycle2.android.ActivityEvent;
-import com.trello.rxlifecycle2.components.support.RxAppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.NavigableSet;
 import java.util.TreeSet;
 import java.util.concurrent.CancellationException;
 
-import io.reactivex.subjects.BehaviorSubject;
-import io.reactivex.subjects.Subject;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.subjects.BehaviorSubject;
+import io.reactivex.rxjava3.subjects.Subject;
+import io.reactivex.rxjava3.core.ObservableTransformer;
+
+import com.sovworks.eds.android.helpers.RxLifecycleProvider;
 
 @SuppressLint({"CommitPrefEdits", "ApplySharedPref"})
-public abstract class FileManagerActivityBase extends RxAppCompatActivity implements PreviewFragment.Host
+public abstract class FileManagerActivityBase extends AppCompatActivity implements PreviewFragment.Host, RxLifecycleProvider
 {
+    protected final CompositeDisposable _disposables = new CompositeDisposable();
+
+    public <T> ObservableTransformer<T, T> bindToLifecycle() {
+        return upstream -> upstream.doOnSubscribe(_disposables::add);
+    }
+
     public static final String TAG = "FileManagerActivity";
     public static final String ACTION_ASK_OVERWRITE = "com.sovworks.eds.android.ACTION_ASK_OVERWRITE";
 
@@ -328,7 +336,9 @@ public abstract class FileManagerActivityBase extends RxAppCompatActivity implem
             if (panel != null)
                 panel.setVisibility(View.GONE);
         }
-	    LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(_exitBroadcastReceiver, new IntentFilter(EdsApplication.BROADCAST_EXIT));
+        EdsApplication.getExitObservable()
+                .compose(bindToLifecycle())
+                .subscribe(v -> finish(), err -> Logger.log(err));
         CompatHelper.registerReceiver(this, _locationAddedOrRemovedReceiver, LocationsManager.getLocationAddedIntentFilter(), false);
         CompatHelper.registerReceiver(this, _locationAddedOrRemovedReceiver, LocationsManager.getLocationRemovedIntentFilter(), false);
         CompatHelper.registerReceiver(this, _locationChangedReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED), false);
@@ -563,9 +573,9 @@ public abstract class FileManagerActivityBase extends RxAppCompatActivity implem
     @Override
 	protected void onDestroy ()
 	{
+        _disposables.clear();
         unregisterReceiver(_locationAddedOrRemovedReceiver);
         unregisterReceiver(_locationChangedReceiver);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(_exitBroadcastReceiver);
         _settings = null;
         super.onDestroy();
     }
@@ -660,15 +670,6 @@ public abstract class FileManagerActivityBase extends RxAppCompatActivity implem
                 }
             }
             getDrawerController().reloadItems();
-        }
-    };
-
-    private final BroadcastReceiver _exitBroadcastReceiver = new BroadcastReceiver()
-    {
-        @Override
-        public void onReceive(Context context, Intent intent)
-        {
-            finish();
         }
     };
 

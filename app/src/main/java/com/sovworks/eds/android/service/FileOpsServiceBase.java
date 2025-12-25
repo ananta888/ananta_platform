@@ -9,7 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.PowerManager;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.sovworks.eds.android.EdsApplication;
 import com.sovworks.eds.android.Logger;
@@ -156,7 +155,7 @@ public abstract class FileOpsServiceBase extends IntentService
 		Intent i = new Intent(context, FileOpsService.class);
 		i.setAction(ACTION_CANCEL_TASK);
 		i.putExtra(INTENT_PARAM_TASK_ID, taskId);
-		return PendingIntent.getService(context, taskId, i, PendingIntent.FLAG_ONE_SHOT);
+		return PendingIntent.getService(context, taskId, i, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
 	}
 
 	public static void startFileViewer(Context context, Location fileLocation)
@@ -383,13 +382,6 @@ public abstract class FileOpsServiceBase extends IntentService
 			wakeLock.acquire();
 			try
 			{
-                if(GlobalConfig.isDebug())
-                {
-                    LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getApplicationContext());
-                    Intent notifIntent = new Intent(intent.getAction());
-                    notifIntent.putExtra(ARG_ORIG_INTENT, intent);
-                    lbm.sendBroadcast(notifIntent);
-                }
 				Object res = _currentTask.doWork(this, intent);
 				result = _taskCancelled ? new Result(
 						new CancellationException(), true) : new Result(res);
@@ -404,14 +396,6 @@ public abstract class FileOpsServiceBase extends IntentService
 				{
 					wakeLock.release();
 					_currentTask.onCompleted(result);
-                    if(GlobalConfig.isDebug())
-                    {
-                        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getApplicationContext());
-                        Intent notifIntent = new Intent(intent.getAction());
-                        notifIntent.putExtra(ARG_ORIG_INTENT, intent);
-                        notifIntent.putExtra(ARG_TASK_COMPLETED, true);
-                        lbm.sendBroadcast(notifIntent);
-                    }
 				}
 				catch (Throwable e)
 				{

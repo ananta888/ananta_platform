@@ -21,18 +21,17 @@ import com.sovworks.eds.fs.util.SrcDstCollection.SrcDst;
 import com.sovworks.eds.fs.util.SrcDstPlain;
 import com.sovworks.eds.locations.Location;
 import com.trello.rxlifecycle2.android.FragmentEvent;
-import com.trello.rxlifecycle2.components.support.RxDialogFragment;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.concurrent.CancellationException;
 
-import io.reactivex.Single;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
-public class AskOverwriteDialog extends RxDialogFragment
+public class AskOverwriteDialog extends BaseDialogFragment
 {
 	public static void showDialog(
 			FragmentManager fm,
@@ -75,6 +74,19 @@ public class AskOverwriteDialog extends RxDialogFragment
 		return v;
 	}
 
+    private boolean _askedFirstRecord = false;
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+        if(!_askedFirstRecord)
+        {
+            _askedFirstRecord = true;
+            askNextRecord();
+        }
+    }
+
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState)
 	{
@@ -91,15 +103,6 @@ public class AskOverwriteDialog extends RxDialogFragment
 		_pathsIter = paths.iterator();
 		for(int i=0;i<_numProc;i++)
 			_next = _pathsIter.next();
-
-		lifecycle().
-				filter(event -> event == FragmentEvent.RESUME).
-				firstElement().
-				subscribe(res -> askNextRecord(), err ->
-				{
-					if(!(err instanceof CancellationException))
-						Logger.log(err);
-				});
 	}
 
 	@Override

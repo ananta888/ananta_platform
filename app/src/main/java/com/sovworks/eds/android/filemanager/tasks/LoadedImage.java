@@ -19,7 +19,7 @@ import com.sovworks.eds.settings.GlobalConfig;
 import java.io.IOException;
 import java.io.InputStream;
 
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Single;
 
 import static com.sovworks.eds.android.filemanager.fragments.PreviewFragment.calcSampleSize;
 import static com.sovworks.eds.android.filemanager.fragments.PreviewFragment.loadDownsampledImage;

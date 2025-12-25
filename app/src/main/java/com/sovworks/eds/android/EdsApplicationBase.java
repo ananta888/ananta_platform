@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.SystemClock;
 import androidx.multidex.MultiDexApplication;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.widget.Toast;
 
 import com.sovworks.eds.android.helpers.ExtendedFileInfoLoader;
@@ -17,6 +16,9 @@ import com.sovworks.eds.android.settings.UserSettings;
 import com.sovworks.eds.crypto.SecureBuffer;
 import com.sovworks.eds.locations.LocationsManager;
 import com.sovworks.eds.settings.SystemConfig;
+
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.subjects.PublishSubject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -34,9 +36,14 @@ public class EdsApplicationBase extends MultiDexApplication
 {
 	public static final String BROADCAST_EXIT = "com.sovworks.eds.android.BROADCAST_EXIT";
 
+	public static Observable<Boolean> getExitObservable()
+	{
+		return _exitSubject;
+	}
+
 	public static void stopProgramBase(Context context, boolean removeNotifications)
 	{
-		LocalBroadcastManager.getInstance(context).sendBroadcastSync(new Intent(BROADCAST_EXIT));
+		_exitSubject.onNext(true);
 		if(removeNotifications)
 			((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE)).cancelAll();
 		setMasterPassword(null);
@@ -174,6 +181,7 @@ public class EdsApplicationBase extends MultiDexApplication
 	private static SecureBuffer _masterPass;
 	private static Map<String,String> _mimeTypes;
 	private static long _lastActivityTime;
+	private static final PublishSubject<Boolean> _exitSubject = PublishSubject.create();
 
 	private static final String MIME_TYPES_PATH = "mime.types";
 

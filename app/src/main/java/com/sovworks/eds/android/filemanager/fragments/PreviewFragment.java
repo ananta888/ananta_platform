@@ -30,24 +30,24 @@ import com.sovworks.eds.fs.Path;
 import com.sovworks.eds.fs.util.StringPathUtil;
 import com.sovworks.eds.locations.Location;
 import com.sovworks.eds.settings.GlobalConfig;
-import com.trello.rxlifecycle2.components.support.RxFragment;
+import com.sovworks.eds.android.fragments.BaseFragment;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.NavigableSet;
 import java.util.concurrent.CancellationException;
 
-import io.reactivex.Single;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.BehaviorSubject;
-import io.reactivex.subjects.PublishSubject;
-import io.reactivex.subjects.Subject;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.reactivex.rxjava3.subjects.BehaviorSubject;
+import io.reactivex.rxjava3.subjects.PublishSubject;
+import io.reactivex.rxjava3.subjects.Subject;
 
 import static com.sovworks.eds.android.settings.UserSettingsCommon.IMAGE_VIEWER_AUTO_ZOOM_ENABLED;
 import static com.sovworks.eds.android.settings.UserSettingsCommon.IMAGE_VIEWER_FULL_SCREEN_ENABLED;
 
-public class PreviewFragment extends RxFragment implements FileManagerFragment
+public class PreviewFragment extends BaseFragment implements FileManagerFragment
 {
 	public interface Host
 	{

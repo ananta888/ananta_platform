@@ -62,8 +62,7 @@ import com.sovworks.eds.fs.util.SrcDstSingle;
 import com.sovworks.eds.locations.Location;
 import com.sovworks.eds.locations.LocationsManager;
 import com.sovworks.eds.settings.GlobalConfig;
-import com.trello.rxlifecycle2.android.FragmentEvent;
-import com.trello.rxlifecycle2.components.support.RxFragment;
+import com.sovworks.eds.android.fragments.BaseFragment;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -74,16 +73,16 @@ import java.util.Stack;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Completable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.BehaviorSubject;
-import io.reactivex.subjects.Subject;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.reactivex.rxjava3.subjects.BehaviorSubject;
+import io.reactivex.rxjava3.subjects.Subject;
 
 import static com.sovworks.eds.android.settings.UserSettingsCommon.FILE_BROWSER_SORT_MODE;
 
-public abstract class FileListViewFragmentBase extends RxFragment implements
+public abstract class FileListViewFragmentBase extends BaseFragment implements
         SortDialog.SortingReceiver,
         FileManagerFragment,
         LocationOpenerBaseFragment.LocationOpenerResultReceiver,

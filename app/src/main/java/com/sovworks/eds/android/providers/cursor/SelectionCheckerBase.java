@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import io.reactivex.functions.Predicate;
+import io.reactivex.rxjava3.functions.Predicate;
 
 class SelectionCheckerBase implements Predicate<CachedPathInfo>
 {

@@ -7,7 +7,7 @@ import com.sovworks.eds.android.filemanager.records.BrowserRecord;
 import com.sovworks.eds.fs.Path;
 import com.sovworks.eds.locations.Location;
 
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Single;
 
 public class LoadPathRecordObservable
 {

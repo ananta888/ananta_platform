@@ -3,8 +3,8 @@ package com.sovworks.eds.android.filemanager.fragments;
 import android.Manifest;
 import android.annotation.TargetApi;
 import androidx.fragment.app.FragmentManager;
-import com.trello.rxlifecycle2.components.support.RxAppCompatActivity;
-import com.trello.rxlifecycle2.components.support.RxFragment;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -13,19 +13,16 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
 import com.sovworks.eds.android.dialogs.AskPrimaryStoragePermissionDialog;
-import com.trello.rxlifecycle2.android.FragmentEvent;
-import com.trello.rxlifecycle2.components.support.RxAppCompatActivity;
-import com.trello.rxlifecycle2.components.support.RxFragment;
 
-import io.reactivex.Completable;
-import io.reactivex.subjects.CompletableSubject;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.subjects.CompletableSubject;
 
 
-public class ExtStorageWritePermisisonCheckFragment extends RxFragment
+public class ExtStorageWritePermisisonCheckFragment extends Fragment
 {
     public static final String TAG = "com.sovworks.eds.android.filemanager.fragments.ExtStorageWritePermisisonCheckFragment";
 
-    public static Completable getObservable(RxAppCompatActivity activity)
+    public static Completable getObservable(AppCompatActivity activity)
     {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || (
                 ContextCompat.checkSelfPermission(
@@ -49,14 +46,17 @@ public class ExtStorageWritePermisisonCheckFragment extends RxFragment
         return f._extStoragePermissionCheckSubject;
     }
 
+    private boolean _permissionRequested = false;
+
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState)
+    public void onResume()
     {
-        super.onCreate(savedInstanceState);
-        lifecycle().
-                filter(event -> event == FragmentEvent.RESUME).
-                firstElement().
-                subscribe((event) -> requestExtStoragePermission());
+        super.onResume();
+        if(!_permissionRequested)
+        {
+            _permissionRequested = true;
+            requestExtStoragePermission();
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.M)

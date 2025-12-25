@@ -16,8 +16,8 @@ import com.sovworks.eds.android.service.FileOpsService;
 import com.sovworks.eds.fs.util.StringPathUtil;
 import com.sovworks.eds.locations.Location;
 
-import io.reactivex.Observable;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 import static com.sovworks.eds.android.providers.ContainersDocumentProviderBase.getDocumentIdFromLocation;
 

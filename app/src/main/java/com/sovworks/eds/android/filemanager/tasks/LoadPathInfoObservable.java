@@ -5,7 +5,7 @@ import com.sovworks.eds.android.helpers.CachedPathInfo;
 import com.sovworks.eds.android.helpers.CachedPathInfoBase;
 import com.sovworks.eds.locations.Location;
 
-import io.reactivex.Single;
+import io.reactivex.rxjava3.core.Single;
 
 public class LoadPathInfoObservable
 {

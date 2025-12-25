@@ -2,22 +2,38 @@ package com.sovworks.eds.android.locations.activities;
 
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import com.trello.rxlifecycle2.components.support.RxAppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
+import android.app.Activity;
 import android.os.Bundle;
 
 import com.sovworks.eds.android.Logger;
 import com.sovworks.eds.android.helpers.AppInitHelper;
 import com.sovworks.eds.android.helpers.Util;
+import com.sovworks.eds.android.helpers.RxLifecycleProvider;
 import com.sovworks.eds.android.locations.opener.fragments.LocationOpenerBaseFragment;
 import com.sovworks.eds.locations.Location;
 import com.sovworks.eds.locations.LocationsManager;
-import com.trello.rxlifecycle2.components.RxActivity;
+
+import io.reactivex.rxjava3.core.ObservableTransformer;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 
 import java.util.ArrayList;
 import java.util.concurrent.CancellationException;
 
-public class OpenLocationsActivity extends RxAppCompatActivity
+public class OpenLocationsActivity extends AppCompatActivity implements RxLifecycleProvider
 {
+    protected final CompositeDisposable _disposables = new CompositeDisposable();
+
+    @Override
+    public <T> ObservableTransformer<T, T> bindToLifecycle() {
+        return upstream -> upstream.doOnSubscribe(_disposables::add);
+    }
+
+    @Override
+    protected void onDestroy() {
+        _disposables.clear();
+        super.onDestroy();
+    }
     public static class MainFragment extends Fragment implements LocationOpenerBaseFragment.LocationOpenerResultReceiver
     {
         public static final String TAG = "com.sovworks.eds.android.locations.activities.OpenLocationsActivity.MainFragment";
@@ -65,7 +81,7 @@ public class OpenLocationsActivity extends RxAppCompatActivity
                 _targetLocations.remove(0);
             if(_targetLocations.isEmpty())
             {
-                getActivity().setResult(RxAppCompatActivity.RESULT_CANCELED);
+                getActivity().setResult(Activity.RESULT_CANCELED);
                 getActivity().finish();
             }
             else
@@ -84,7 +100,7 @@ public class OpenLocationsActivity extends RxAppCompatActivity
         {
             if(_targetLocations.isEmpty())
             {
-                getActivity().setResult(RxAppCompatActivity.RESULT_OK);
+                getActivity().setResult(Activity.RESULT_OK);
                 getActivity().finish();
             }
             else

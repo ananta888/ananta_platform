@@ -52,9 +52,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-import io.reactivex.Completable;
-import io.reactivex.Single;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 import static com.sovworks.eds.android.providers.cursor.FSCursorBase.COLUMN_ID;
 import static com.sovworks.eds.android.providers.cursor.FSCursorBase.COLUMN_IS_FOLDER;

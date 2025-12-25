@@ -7,16 +7,16 @@ import com.sovworks.eds.android.settings.UserSettings;
 import com.sovworks.eds.locations.Location;
 import com.sovworks.eds.locations.LocationsManager;
 import com.sovworks.eds.settings.Settings;
-import com.trello.rxlifecycle2.components.support.RxAppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 
-import io.reactivex.Completable;
-import io.reactivex.CompletableEmitter;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.CompletableEmitter;
 
 import static com.sovworks.eds.android.settings.UserSettingsCommon.CURRENT_SETTINGS_VERSION;
 
 public abstract class AppInitHelperBase
 {
-    public static Completable createObservable(RxAppCompatActivity activity)
+    public static Completable createObservable(AppCompatActivity activity)
     {
         return Completable.create(emitter -> {
             AppInitHelper initHelper = new AppInitHelper(activity, emitter);
@@ -24,14 +24,14 @@ public abstract class AppInitHelperBase
         });
     }
 
-    AppInitHelperBase(RxAppCompatActivity activity, CompletableEmitter emitter)
+    AppInitHelperBase(AppCompatActivity activity, CompletableEmitter emitter)
     {
         _activity = activity;
         _settings = UserSettings.getSettings(activity);
         _initFinished = emitter;
     }
 
-    final RxAppCompatActivity _activity;
+    final AppCompatActivity _activity;
     protected final UserSettings _settings;
     final CompletableEmitter _initFinished;
 

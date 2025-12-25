@@ -9,7 +9,7 @@ import org.json.JSONException;
 
 import java.io.IOException;
 
-import io.reactivex.Maybe;
+import io.reactivex.rxjava3.core.Maybe;
 
 public class LoadDirSettingsObservable
 {

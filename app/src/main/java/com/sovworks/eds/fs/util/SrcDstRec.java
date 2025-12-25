@@ -19,8 +19,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import io.reactivex.Observable;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class SrcDstRec implements SrcDstCollection, SrcDstCollection.SrcDst
 {
