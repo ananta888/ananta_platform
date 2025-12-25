@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/secure_share_desc"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_marginBottom="16dp" />
+
+    <RadioGroup
+        android:id="@+id/encryption_mode_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <RadioButton
+            android:id="@+id/radio_passphrase"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/share_with_passphrase"
+            android:checked="true" />
+        <RadioButton
+            android:id="@+id/radio_public_key"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/share_with_public_key" />
+    </RadioGroup>
+
+    <EditText
+        android:id="@+id/passphrase_edit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/enter_passphrase"
+        android:inputType="textPassword"
+        android:layout_marginTop="8dp" />
+
+    <Spinner
+        android:id="@+id/keys_spinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/manage_keys_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/manage_trusted_keys"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"
+        style="?android:attr/borderlessButtonStyle" />
+
+</LinearLayout>
