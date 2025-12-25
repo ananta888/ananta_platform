@@ -3,7 +3,7 @@ package com.sovworks.eds.android.service;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.v4.app.NotificationCompat;
+import androidx.fragment.app.NotificationCompat;
 
 import com.sovworks.eds.android.R;
 import com.sovworks.eds.fs.util.FilesOperationStatus;
@@ -158,3 +158,4 @@ public abstract class FileOperationTaskBase extends	ServiceTaskWithNotificationB
 
 
 }
+

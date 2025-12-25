@@ -11,7 +11,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.ActionMode;
@@ -1435,3 +1435,4 @@ public abstract class FileListViewFragmentBase extends RxFragment implements
         }
     }
 }
+

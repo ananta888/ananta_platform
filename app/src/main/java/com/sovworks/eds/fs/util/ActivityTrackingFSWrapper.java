@@ -1,7 +1,7 @@
 package com.sovworks.eds.fs.util;
 
 import android.os.SystemClock;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.sovworks.eds.fs.FSRecord;
 import com.sovworks.eds.fs.FileSystem;
@@ -341,3 +341,4 @@ public class ActivityTrackingFSWrapper extends FileSystemWrapper
 	}
 
 }
+

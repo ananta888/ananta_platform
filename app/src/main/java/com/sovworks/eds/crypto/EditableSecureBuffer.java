@@ -1,8 +1,8 @@
 package com.sovworks.eds.crypto;
 
 import android.annotation.SuppressLint;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.Selection;
@@ -1546,3 +1546,4 @@ public class EditableSecureBuffer implements Editable
     private static final int SPAN_START_END_MASK = 0xF000;
 
 }
+

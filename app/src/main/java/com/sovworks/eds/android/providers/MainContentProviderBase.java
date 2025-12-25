@@ -18,7 +18,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ParcelFileDescriptor;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Base64;
 
 import com.sovworks.eds.android.Logger;
@@ -778,3 +778,4 @@ public abstract class MainContentProviderBase extends ContentProvider
 
     private static final Cursor _emptyMetaCursor = new MatrixCursor(ALL_META_COLUMNS, 0);
 }
+

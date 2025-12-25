@@ -6,7 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.SystemClock;
-import android.support.v4.app.NotificationCompat;
+import androidx.fragment.app.NotificationCompat;
 
 import com.sovworks.eds.android.R;
 import com.sovworks.eds.android.Logger;
@@ -153,3 +153,4 @@ public abstract class ServiceTaskWithNotificationBase implements Task
 		}
 	}
 }
+

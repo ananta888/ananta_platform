@@ -12,7 +12,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.SystemClock;
-import android.support.v4.app.NotificationCompat;
+import androidx.fragment.app.NotificationCompat;
 
 import com.sovworks.eds.android.Logger;
 import com.sovworks.eds.android.R;
@@ -244,3 +244,4 @@ public class LocationsServiceBase extends Service
 		return n;
 	}
 }
+

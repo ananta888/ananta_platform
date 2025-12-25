@@ -10,10 +10,12 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
 import com.str4d.age.ArmoredOutputStream;
 import com.str4d.age.Recipient;
 import com.str4d.age.X25519Recipient;
 import com.str4d.age.ScryptRecipient;
+*/
 
 /**
  * Engine for age encryption/decryption.
@@ -21,6 +23,7 @@ import com.str4d.age.ScryptRecipient;
 public class AgeEncryptionEngine {
 
     public static void encryptWithPassphrase(InputStream in, OutputStream out, char[] passphrase) throws IOException, GeneralSecurityException {
+        /*
         ScryptRecipient recipient = new ScryptRecipient(passphrase);
         List<Recipient> recipients = new ArrayList<>();
         recipients.add(recipient);
@@ -33,9 +36,12 @@ public class AgeEncryptionEngine {
                 ageOut.write(buffer, 0, read);
             }
         }
+        */
+        throw new UnsupportedOperationException("age-java library not found during migration");
     }
 
     public static void encryptWithPublicKeys(InputStream in, OutputStream out, List<String> b64PublicKeys) throws IOException, GeneralSecurityException {
+        /*
         List<Recipient> recipients = new ArrayList<>();
         for (String b64Key : b64PublicKeys) {
             recipients.add(X25519Recipient.parse(b64Key));
@@ -49,5 +55,7 @@ public class AgeEncryptionEngine {
                 ageOut.write(buffer, 0, read);
             }
         }
+        */
+        throw new UnsupportedOperationException("age-java library not found during migration");
     }
 }

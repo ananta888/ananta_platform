@@ -1,6 +1,6 @@
 package com.sovworks.eds.fs.util;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -232,3 +232,4 @@ public class StringPathUtil implements Comparable<StringPathUtil>
 	
 	protected final List<String> _components;
 }
+

@@ -6,7 +6,7 @@ import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.sovworks.eds.android.R;
 import com.sovworks.eds.android.activities.SettingsBaseActivity;
@@ -73,3 +73,4 @@ public class OverwriteContainerDialog extends DialogFragment
 	private static final String ARG_REQUEST_RES_ID = "com.sovworks.eds.android.TEXT_ID";
 
 }
+

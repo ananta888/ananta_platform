@@ -4,7 +4,7 @@ import android.app.Activity;
 import android.app.DialogFragment;
 import android.app.ProgressDialog;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.sovworks.eds.android.fragments.TaskFragment.Result;
 import com.sovworks.eds.android.fragments.TaskFragment.TaskCallbacks;
@@ -87,3 +87,4 @@ public class ProgressDialogTaskFragmentCallbacks implements TaskCallbacks
 	private final int _dialogTextResId;
 	
 }
+

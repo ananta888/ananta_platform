@@ -1,6 +1,6 @@
 package com.sovworks.eds.fs.util;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -139,3 +139,4 @@ public class PipedInputStream extends InputStream
 		_buffer.notify();		
 	}	
 }
+

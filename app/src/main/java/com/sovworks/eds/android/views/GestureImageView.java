@@ -6,7 +6,7 @@ import android.graphics.Matrix;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -493,3 +493,4 @@ public class GestureImageView extends ImageView
 		outDelta.offset(deltaX, deltaY);
 	}
 }
+

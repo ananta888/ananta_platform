@@ -1,6 +1,6 @@
 package com.sovworks.eds.fs.util;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import java.io.IOException;
 
@@ -132,3 +132,4 @@ public abstract class PathWrapper implements Path
 	private final Path _base;
 
 }
+
