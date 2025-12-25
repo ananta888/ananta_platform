@@ -30,7 +30,9 @@ import com.sovworks.eds.settings.GlobalConfig;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Collections;
 import java.util.concurrent.CancellationException;
 import java.util.regex.Matcher;

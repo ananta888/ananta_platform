@@ -978,7 +978,7 @@ public abstract class FileListViewFragmentBase extends RxFragment implements
                 mhi.clearSelection = true;
                 return true;
             case R.id.secure_share:
-                secureShareFiles();
+                // secureShareFiles();
                 mhi.clearSelection = true;
                 return true;
             default:
