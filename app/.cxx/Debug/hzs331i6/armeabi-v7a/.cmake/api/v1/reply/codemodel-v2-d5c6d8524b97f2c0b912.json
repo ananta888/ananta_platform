@@ -1,0 +1,159 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.4.1"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "Project",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "edsaes::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-edsaes-Debug-b81e905644bab0d30368.json",
+					"name" : "edsaes",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "edscbc::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-edscbc-Debug-1a4af282749f111d2c9b.json",
+					"name" : "edscbc",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "edscfb::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-edscfb-Debug-ce7846a4321cf9c48f1b.json",
+					"name" : "edscfb",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "edsctr::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-edsctr-Debug-7a251ae489ba39ea02bf.json",
+					"name" : "edsctr",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "edsgost::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-edsgost-Debug-32fc737934890132157a.json",
+					"name" : "edsgost",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "edsripemd160::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-edsripemd160-Debug-dd85d83d097a4f9b4711.json",
+					"name" : "edsripemd160",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "edsserpent::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-edsserpent-Debug-84d00a515220b658a7d0.json",
+					"name" : "edsserpent",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "edstwofish::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-edstwofish-Debug-1b27717e84e032c998cb.json",
+					"name" : "edstwofish",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "edswhirlpool::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-edswhirlpool-Debug-6db7d31a18921b51a967.json",
+					"name" : "edswhirlpool",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "edsxts::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-edsxts-Debug-2fd642cd80df3d814228.json",
+					"name" : "edsxts",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "fdraio::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-fdraio-Debug-9a892eba108ca2b06e2b.json",
+					"name" : "fdraio",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "localxts::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-localxts-Debug-71a82352948ca4c22be3.json",
+					"name" : "localxts",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/stuib/AndroidStudioProjects/ananta_platform/app/.cxx/Debug/hzs331i6/armeabi-v7a",
+		"source" : "C:/Users/stuib/AndroidStudioProjects/ananta_platform/app"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}
