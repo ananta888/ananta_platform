@@ -1,0 +1,9 @@
+# ninja log v5
+93	263	7883825036025877	CMakeFiles/edstwofish.dir/src/main/native/twofish/twofish.c.o	8709622c489c23f
+71	295	7883825036602418	CMakeFiles/edsserpent.dir/src/main/native/serpent/serpent.c.o	8a7451eae7e6f5bb
+127	377	7883825037462721	CMakeFiles/edswhirlpool.dir/src/main/native/whirlpool/edswhirlpool.c.o	60563ac2aa047ae0
+201	516	7883825038874336	CMakeFiles/edsgost.dir/src/main/native/gost/gost89.c.o	7defc3a943be1418
+139	564	7883825039351637	CMakeFiles/edswhirlpool.dir/src/main/native/whirlpool/whirlpool.c.o	1596f0eb2afefa1b
+17	591	7883825039594259	CMakeFiles/edsaes.dir/src/main/native/aes/aeskey.c.o	3b4c254cdc92fff6
+28	602	7883825039769634	CMakeFiles/edsaes.dir/src/main/native/aes/aescrypt.c.o	f4c6ccbadd1c1bd5
+39	994	7883825043661815	CMakeFiles/edsaes.dir/src/main/native/aes/aestab.c.o	1c7064fe0292bda6

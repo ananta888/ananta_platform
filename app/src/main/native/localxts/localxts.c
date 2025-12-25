@@ -5,7 +5,9 @@
 #include "com_sovworks_eds_crypto_LocalEncryptedFileXTS.h"
 
 #include <stdlib.h>
-//#include <stdio.h>
+#include <stdio.h>
+#include <string.h>  // <-- für memset
+#include <unistd.h>
 #include <fcntl.h>
 #include <android/log.h>
 #include <block_cipher.h>

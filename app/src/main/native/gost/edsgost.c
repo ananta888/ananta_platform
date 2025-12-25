@@ -5,7 +5,7 @@
 #include "com_sovworks_eds_crypto_blockciphers_GOST.h"
 #include <stdlib.h>
 #include <malloc.h>
-//#include <android/log.h>
+#include <string.h>  // <-- für memset
 
 #include <block_cipher.h>
 #include "gost89.h"

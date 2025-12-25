@@ -1,0 +1,117 @@
+{
+  "buildFiles": [
+    "C:\\Users\\stuib\\AndroidStudioProjects\\ananta_platform\\app\\CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "C:\\Users\\stuib\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+      "-C",
+      "C:\\Users\\stuib\\AndroidStudioProjects\\ananta_platform\\app\\.cxx\\Debug\\hzs331i6\\arm64-v8a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "C:\\Users\\stuib\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+    "-C",
+    "C:\\Users\\stuib\\AndroidStudioProjects\\ananta_platform\\app\\.cxx\\Debug\\hzs331i6\\arm64-v8a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "edsaes::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "edsaes",
+      "output": "C:\\Users\\stuib\\AndroidStudioProjects\\ananta_platform\\app\\build\\intermediates\\cxx\\Debug\\hzs331i6\\obj\\arm64-v8a\\libedsaes.so",
+      "runtimeFiles": []
+    },
+    "edscbc::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "edscbc",
+      "output": "C:\\Users\\stuib\\AndroidStudioProjects\\ananta_platform\\app\\build\\intermediates\\cxx\\Debug\\hzs331i6\\obj\\arm64-v8a\\libedscbc.so",
+      "runtimeFiles": []
+    },
+    "edscfb::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "edscfb",
+      "output": "C:\\Users\\stuib\\AndroidStudioProjects\\ananta_platform\\app\\build\\intermediates\\cxx\\Debug\\hzs331i6\\obj\\arm64-v8a\\libedscfb.so",
+      "runtimeFiles": []
+    },
+    "edsctr::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "edsctr",
+      "output": "C:\\Users\\stuib\\AndroidStudioProjects\\ananta_platform\\app\\build\\intermediates\\cxx\\Debug\\hzs331i6\\obj\\arm64-v8a\\libedsctr.so",
+      "runtimeFiles": []
+    },
+    "edsgost::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "edsgost",
+      "output": "C:\\Users\\stuib\\AndroidStudioProjects\\ananta_platform\\app\\build\\intermediates\\cxx\\Debug\\hzs331i6\\obj\\arm64-v8a\\libedsgost.so",
+      "runtimeFiles": []
+    },
+    "edsripemd160::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "edsripemd160",
+      "output": "C:\\Users\\stuib\\AndroidStudioProjects\\ananta_platform\\app\\build\\intermediates\\cxx\\Debug\\hzs331i6\\obj\\arm64-v8a\\libedsripemd160.so",
+      "runtimeFiles": []
+    },
+    "edsserpent::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "edsserpent",
+      "output": "C:\\Users\\stuib\\AndroidStudioProjects\\ananta_platform\\app\\build\\intermediates\\cxx\\Debug\\hzs331i6\\obj\\arm64-v8a\\libedsserpent.so",
+      "runtimeFiles": []
+    },
+    "edstwofish::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "edstwofish",
+      "output": "C:\\Users\\stuib\\AndroidStudioProjects\\ananta_platform\\app\\build\\intermediates\\cxx\\Debug\\hzs331i6\\obj\\arm64-v8a\\libedstwofish.so",
+      "runtimeFiles": []
+    },
+    "edswhirlpool::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "edswhirlpool",
+      "output": "C:\\Users\\stuib\\AndroidStudioProjects\\ananta_platform\\app\\build\\intermediates\\cxx\\Debug\\hzs331i6\\obj\\arm64-v8a\\libedswhirlpool.so",
+      "runtimeFiles": []
+    },
+    "edsxts::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "edsxts",
+      "output": "C:\\Users\\stuib\\AndroidStudioProjects\\ananta_platform\\app\\build\\intermediates\\cxx\\Debug\\hzs331i6\\obj\\arm64-v8a\\libedsxts.so",
+      "runtimeFiles": []
+    },
+    "fdraio::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "fdraio",
+      "output": "C:\\Users\\stuib\\AndroidStudioProjects\\ananta_platform\\app\\build\\intermediates\\cxx\\Debug\\hzs331i6\\obj\\arm64-v8a\\libfdraio.so",
+      "runtimeFiles": []
+    },
+    "localxts::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "localxts",
+      "output": "C:\\Users\\stuib\\AndroidStudioProjects\\ananta_platform\\app\\build\\intermediates\\cxx\\Debug\\hzs331i6\\obj\\arm64-v8a\\liblocalxts.so",
+      "runtimeFiles": [
+        "C:\\Users\\stuib\\AndroidStudioProjects\\ananta_platform\\app\\build\\intermediates\\cxx\\Debug\\hzs331i6\\obj\\arm64-v8a\\libedsxts.so"
+      ]
+    }
+  },
+  "toolchains": {
+    "toolchain": {
+      "cCompilerExecutable": "C:\\Users\\stuib\\AppData\\Local\\Android\\Sdk\\ndk\\27.0.12077973\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang.exe",
+      "cppCompilerExecutable": "C:\\Users\\stuib\\AppData\\Local\\Android\\Sdk\\ndk\\27.0.12077973\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe"
+    }
+  },
+  "cFileExtensions": [
+    "c"
+  ],
+  "cppFileExtensions": []
+}

@@ -8,7 +8,7 @@
 #include <android/log.h>
 #include "ctr.h"
 
-
+#include <string.h>  // <-- für memset
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, "EDS (native code edsctr)", __VA_ARGS__);
 #ifdef DEBUG
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, "EDS (native code edsctr)", __VA_ARGS__);

@@ -36,7 +36,7 @@ Part of this code is based on Brian Gladman's xts implementation.
 #include <stdlib.h>
 #include <android/log.h>
 #include "xts.h"
-
+#include <string.h>  // <-- für memset
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, "EDS (native code edsxts)", __VA_ARGS__);
 #ifdef DEBUG
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, "EDS (native code edsxts)", __VA_ARGS__);

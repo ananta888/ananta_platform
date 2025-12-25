@@ -5,6 +5,7 @@
 
 #include "com_sovworks_eds_crypto_modes_CBC.h"
 #include <stdlib.h>
+#include <string.h>  // <-- für memset
 #include <android/log.h>
 #include "cbc.h"
 
