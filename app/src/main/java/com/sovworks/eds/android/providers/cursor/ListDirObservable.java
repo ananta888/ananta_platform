@@ -16,7 +16,7 @@ import java.io.IOException;
 
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableEmitter;
-import io.reactivex.rxjava3.disposables.Disposables;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 public class ListDirObservable
 {
@@ -62,7 +62,7 @@ public class ListDirObservable
     private static void emitListDir(Directory dir, ObservableEmitter<CachedPathInfo> observableEmitter) throws IOException
     {
         Directory.Contents contents = dir.list();
-        observableEmitter.setDisposable(Disposables.fromRunnable(() ->
+        observableEmitter.setDisposable(Disposable.fromAction(() ->
         {
             try
             {

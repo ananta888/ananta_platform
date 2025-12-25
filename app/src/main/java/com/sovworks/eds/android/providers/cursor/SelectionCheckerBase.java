@@ -34,7 +34,7 @@ class SelectionCheckerBase implements Predicate<CachedPathInfo>
     }
 
     @Override
-    public boolean test(CachedPathInfo cachedPathInfo) throws Exception
+    public boolean test(CachedPathInfo cachedPathInfo) throws Throwable
     {
         for (Predicate<CachedPathInfo> pc : _filters)
             if (!pc.test(cachedPathInfo))

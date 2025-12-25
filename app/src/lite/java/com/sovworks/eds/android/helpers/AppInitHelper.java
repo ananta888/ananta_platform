@@ -29,7 +29,7 @@ public class AppInitHelper extends AppInitHelperBase
                     throw new UserException(_activity, R.string.invalid_master_password);
                 }).
 
-                compose(((RxLifecycleProvider)_activity).bindToLifecycle()).
+                compose(((RxLifecycleProvider)_activity).bindToLifecycleCompletable()).
                 subscribe(() -> {
                     convertLegacySettings();
                     _initFinished.onComplete();

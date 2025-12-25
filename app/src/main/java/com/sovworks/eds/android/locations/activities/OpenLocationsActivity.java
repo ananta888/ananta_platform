@@ -14,11 +14,17 @@ import com.sovworks.eds.android.locations.opener.fragments.LocationOpenerBaseFra
 import com.sovworks.eds.locations.Location;
 import com.sovworks.eds.locations.LocationsManager;
 
+import io.reactivex.rxjava3.core.CompletableTransformer;
+import io.reactivex.rxjava3.core.FlowableTransformer;
+import io.reactivex.rxjava3.core.MaybeTransformer;
 import io.reactivex.rxjava3.core.ObservableTransformer;
+import io.reactivex.rxjava3.core.SingleTransformer;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 
 import java.util.ArrayList;
 import java.util.concurrent.CancellationException;
+
+import io.reactivex.rxjava3.disposables.Disposable;
 
 public class OpenLocationsActivity extends AppCompatActivity implements RxLifecycleProvider
 {
@@ -26,6 +32,26 @@ public class OpenLocationsActivity extends AppCompatActivity implements RxLifecy
 
     @Override
     public <T> ObservableTransformer<T, T> bindToLifecycle() {
+        return upstream -> upstream.doOnSubscribe(_disposables::add);
+    }
+
+    @Override
+    public <T> FlowableTransformer<T, T> bindToLifecycleFlowable() {
+        return upstream -> upstream.doOnSubscribe(s -> _disposables.add(Disposable.fromAction(s::cancel)));
+    }
+
+    @Override
+    public <T> SingleTransformer<T, T> bindToLifecycleSingle() {
+        return upstream -> upstream.doOnSubscribe(_disposables::add);
+    }
+
+    @Override
+    public <T> MaybeTransformer<T, T> bindToLifecycleMaybe() {
+        return upstream -> upstream.doOnSubscribe(_disposables::add);
+    }
+
+    @Override
+    public CompletableTransformer bindToLifecycleCompletable() {
         return upstream -> upstream.doOnSubscribe(_disposables::add);
     }
 
@@ -142,7 +168,7 @@ public class OpenLocationsActivity extends AppCompatActivity implements RxLifecy
         setResult(RESULT_CANCELED);
         AppInitHelper.
                 createObservable(this).
-                compose(bindToLifecycle()).
+                compose(bindToLifecycleCompletable()).
                 subscribe(this::addMainFragment, err ->
                 {
                     if(!(err instanceof CancellationException))

@@ -356,7 +356,7 @@ public class PreviewFragment extends BaseFragment implements FileManagerFragment
 				LoadPathInfoObservable.create(loc).
 						subscribeOn(Schedulers.io()).
 						observeOn(AndroidSchedulers.mainThread()).
-						compose(bindToLifecycle()).
+						compose(bindToLifecycleSingle()).
 						subscribe(
 								rec -> {
 									setNeibImagePaths(rec);
@@ -517,7 +517,7 @@ public class PreviewFragment extends BaseFragment implements FileManagerFragment
 		_imageViewPrepared.
 				filter(res -> res).
 				firstElement().
-				compose(bindToLifecycle()).
+				compose(bindToLifecycleMaybe()).
 				subscribe(res -> loadImage(null), err ->
 				{
 					if(!(err instanceof CancellationException))
@@ -535,7 +535,7 @@ public class PreviewFragment extends BaseFragment implements FileManagerFragment
 		Single<LoadedImage> loadImageTaskObservable = LoadedImage.createObservable(getActivity().getApplicationContext(), _currentImagePath, _viewRect, regionRect).
 				subscribeOn(Schedulers.io()).
 				observeOn(AndroidSchedulers.mainThread()).
-				compose(bindToLifecycle());
+				compose(bindToLifecycleSingle());
 		if(GlobalConfig.isTest())
 		{
 			loadImageTaskObservable = loadImageTaskObservable.

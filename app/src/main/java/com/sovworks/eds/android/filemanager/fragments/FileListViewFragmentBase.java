@@ -301,6 +301,11 @@ public abstract class FileListViewFragmentBase extends BaseFragment implements
         }
         _cleanSelectionOnModeFinish = true;
         ExtendedFileInfoLoader.getInstance().resumeViewUpdate();
+        if(_pendingLocationToOpen != null)
+        {
+            openLocation(_pendingLocationToOpen);
+            _pendingLocationToOpen = null;
+        }
     }
 
     @Override
@@ -371,7 +376,7 @@ public abstract class FileListViewFragmentBase extends BaseFragment implements
     public void makeNewFile(String name, int type)
     {
         getFileListDataFragment().makeNewFile(name, type).
-                compose(bindToLifecycle()).
+                compose(bindToLifecycleSingle()).
                 subscribe(res -> {
                     FileListViewAdapter adapter = getAdapter();
                     if(adapter!=null)
@@ -423,6 +428,8 @@ public abstract class FileListViewFragmentBase extends BaseFragment implements
         onSelectionChanged();
     }
 
+    private Location _pendingLocationToOpen = null;
+
     public TaskFragment.TaskCallbacks getOpenAsContainerTaskCallbacks()
     {
         return new ProgressDialogTaskFragmentCallbacks(getActivity(), R.string.loading)
@@ -434,14 +441,12 @@ public abstract class FileListViewFragmentBase extends BaseFragment implements
                 {
                     final Location locToOpen = (Location) result.getResult();
                     if(locToOpen != null)
-                        lifecycle().
-                                filter(event -> event == FragmentEvent.RESUME).
-                                firstElement().
-                                subscribe(res -> openLocation(locToOpen), err ->
-                                {
-                                    if(!(err instanceof CancellationException))
-                                        Logger.log(err);
-                                });
+                    {
+                        if(isResumed())
+                            openLocation(locToOpen);
+                        else
+                            _pendingLocationToOpen = locToOpen;
+                    }
                 }
                 catch (Throwable e)
                 {
@@ -613,7 +618,7 @@ public abstract class FileListViewFragmentBase extends BaseFragment implements
             Completable.
                     timer(50, TimeUnit.MILLISECONDS, Schedulers.computation()).
                     observeOn(AndroidSchedulers.mainThread()).
-                    compose(bindToLifecycle()).
+                    compose(bindToLifecycleCompletable()).
                     subscribe(() -> scrollList(sp), err -> {});
         }
         if(TEST_READING_OBSERVABLE != null)
@@ -1155,7 +1160,7 @@ public abstract class FileListViewFragmentBase extends BaseFragment implements
                                     CreateNewFile.FILE_TYPE_FILE :
                                     CreateNewFile.FILE_TYPE_FOLDER
                     ).
-                            compose(bindToLifecycle()).
+                            compose(bindToLifecycleSingle()).
                             subscribe(rec -> {
                                 FileListViewAdapter adapter = getAdapter();
                                 if(adapter!=null)

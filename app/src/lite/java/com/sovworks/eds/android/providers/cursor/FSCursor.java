@@ -6,7 +6,7 @@ import com.drew.lang.annotations.NotNull;
 import com.sovworks.eds.android.helpers.CachedPathInfo;
 import com.sovworks.eds.locations.Location;
 
-import io.reactivex.Observable;
+import io.reactivex.rxjava3.core.Observable;
 
 public class FSCursor extends FSCursorBase
 {

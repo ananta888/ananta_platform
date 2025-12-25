@@ -139,6 +139,19 @@ public class FileListDataFragment extends BaseFragment
     }
 
 
+    private boolean _locationLoadRequested = false;
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+        if(_locationLoadRequested)
+        {
+            _locationLoadRequested = false;
+            loadLocation(null, false);
+        }
+    }
+
     @Override
 	public void onActivityResult (int requestCode, int resultCode, Intent data)
 	{
@@ -146,17 +159,7 @@ public class FileListDataFragment extends BaseFragment
         {
             if(resultCode != Activity.RESULT_OK)
                 getActivity().setIntent(new Intent());
-            lifecycle().
-                    filter(event -> event == FragmentEvent.RESUME).
-                    firstElement().
-                    subscribe(isResumed ->
-                            loadLocation(null, false),
-                            err ->
-                    {
-                        if(!(err instanceof CancellationException))
-                            Logger.log(err);
-                    });
-
+            _locationLoadRequested = true;
         }
 		else
 			super.onActivityResult(requestCode, resultCode, data);
@@ -338,7 +341,7 @@ public class FileListDataFragment extends BaseFragment
         _locationLoading.onNext(startInfo);
         Observable<BrowserRecord> observable = LoadDirSettingsObservable.
                 create(location).
-                toSingle(new DirectorySettings()).
+                switchIfEmpty(Single.just(new DirectorySettings())).
                 onErrorReturn(err -> {
                     Logger.log(err);
                     return new DirectorySettings();
@@ -389,7 +392,7 @@ public class FileListDataFragment extends BaseFragment
         }
 
         _readLocationObserver = observable.
-                compose(bindUntilEvent(FragmentEvent.DESTROY)).
+                compose(bindToLifecycle()).
                 subscribeOn(Schedulers.io()).
                 observeOn(AndroidSchedulers.mainThread()).
                 doFinally(() -> sendFinishedLoading(location)).
@@ -423,7 +426,7 @@ public class FileListDataFragment extends BaseFragment
                 name,
                 type,
                 false
-        ).compose(bindToLifecycle()).
+        ).compose(bindToLifecycleSingle()).
                 subscribeOn(Schedulers.io()).
                 observeOn(AndroidSchedulers.mainThread()).
                 subscribe(rec -> {
@@ -442,7 +445,7 @@ public class FileListDataFragment extends BaseFragment
                 name,
                 type,
                 true
-        ).compose(bindToLifecycle()).
+        ).compose(bindToLifecycleSingle()).
                 subscribeOn(Schedulers.io()).
                 observeOn(AndroidSchedulers.mainThread()).
                 subscribe(rec -> {

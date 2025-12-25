@@ -20,8 +20,6 @@ import com.sovworks.eds.fs.util.SrcDstCollection;
 import com.sovworks.eds.fs.util.SrcDstCollection.SrcDst;
 import com.sovworks.eds.fs.util.SrcDstPlain;
 import com.sovworks.eds.locations.Location;
-import com.trello.rxlifecycle2.android.FragmentEvent;
-
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.concurrent.CancellationException;
@@ -219,7 +217,7 @@ public class AskOverwriteDialog extends BaseDialogFragment
 		}).
 				subscribeOn(Schedulers.io()).
 				observeOn(AndroidSchedulers.mainThread()).
-				compose(bindToLifecycle()).
+				compose(bindToLifecycleSingle()).
 				subscribe(res -> setText(res.srcName, res.dstName), err -> {
 					if(!(err instanceof CancellationException))
 						Logger.showAndLog(context, err);

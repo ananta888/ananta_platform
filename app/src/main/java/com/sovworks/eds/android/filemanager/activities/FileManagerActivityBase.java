@@ -55,7 +55,13 @@ import java.util.concurrent.CancellationException;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
 import io.reactivex.rxjava3.subjects.Subject;
+import io.reactivex.rxjava3.core.CompletableTransformer;
+import io.reactivex.rxjava3.core.FlowableTransformer;
+import io.reactivex.rxjava3.core.MaybeTransformer;
 import io.reactivex.rxjava3.core.ObservableTransformer;
+import io.reactivex.rxjava3.core.SingleTransformer;
+
+import io.reactivex.rxjava3.disposables.Disposable;
 
 import com.sovworks.eds.android.helpers.RxLifecycleProvider;
 
@@ -64,7 +70,28 @@ public abstract class FileManagerActivityBase extends AppCompatActivity implemen
 {
     protected final CompositeDisposable _disposables = new CompositeDisposable();
 
+    @Override
     public <T> ObservableTransformer<T, T> bindToLifecycle() {
+        return upstream -> upstream.doOnSubscribe(_disposables::add);
+    }
+
+    @Override
+    public <T> FlowableTransformer<T, T> bindToLifecycleFlowable() {
+        return upstream -> upstream.doOnSubscribe(s -> _disposables.add(Disposable.fromAction(s::cancel)));
+    }
+
+    @Override
+    public <T> SingleTransformer<T, T> bindToLifecycleSingle() {
+        return upstream -> upstream.doOnSubscribe(_disposables::add);
+    }
+
+    @Override
+    public <T> MaybeTransformer<T, T> bindToLifecycleMaybe() {
+        return upstream -> upstream.doOnSubscribe(_disposables::add);
+    }
+
+    @Override
+    public CompletableTransformer bindToLifecycleCompletable() {
         return upstream -> upstream.doOnSubscribe(_disposables::add);
     }
 
@@ -347,7 +374,7 @@ public abstract class FileManagerActivityBase extends AppCompatActivity implemen
         _drawer.init(savedInstanceState);
         AppInitHelper.
                 createObservable(this).
-                compose(bindToLifecycle()).
+                compose(bindToLifecycleCompletable()).
                 subscribe(() -> {
                     startAction(savedInstanceState);
                     addFileListFragments();
@@ -358,19 +385,27 @@ public abstract class FileManagerActivityBase extends AppCompatActivity implemen
 
 	}
 
+    private boolean _newIntentActionRequested = false;
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+        if(GlobalConfig.isTest())
+            TEST_INIT_OBSERVABLE.onNext(true);
+        if(_newIntentActionRequested)
+        {
+            _newIntentActionRequested = false;
+            startAction(null);
+        }
+    }
+
     @Override
     protected void onNewIntent(Intent intent)
     {
         super.onNewIntent(intent);
         setIntent(intent);
-        lifecycle().
-                filter(event -> event == ActivityEvent.RESUME).
-                firstElement().
-                subscribe(res -> startAction(null), err ->
-                {
-                    if(!(err instanceof CancellationException))
-                        Logger.log(err);
-                });
+        _newIntentActionRequested = true;
     }
 
     @Override
@@ -560,14 +595,6 @@ public abstract class FileManagerActivityBase extends AppCompatActivity implemen
             finish();
         }
 
-    }
-
-    @Override
-    protected void onResume()
-    {
-        super.onResume();
-        if(GlobalConfig.isTest())
-            TEST_INIT_OBSERVABLE.onNext(true);
     }
 
     @Override

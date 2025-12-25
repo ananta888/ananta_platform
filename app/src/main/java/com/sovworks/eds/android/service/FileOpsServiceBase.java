@@ -37,8 +37,45 @@ import java.util.concurrent.CancellationException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class FileOpsServiceBase extends IntentService
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.IBinder;
+import android.os.Looper;
+import android.os.Message;
+import androidx.annotation.Nullable;
+
+public abstract class FileOpsServiceBase extends Service
 {
+    private volatile Looper _serviceLooper;
+    private volatile ServiceHandler _serviceHandler;
+
+    private final class ServiceHandler extends Handler {
+        public ServiceHandler(Looper looper) {
+            super(looper);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            onHandleIntent((Intent)msg.obj);
+        }
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        HandlerThread thread = new HandlerThread("IntentService[FileOpsService]");
+        thread.start();
+
+        _serviceLooper = thread.getLooper();
+        _serviceHandler = new ServiceHandler(_serviceLooper);
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
     public static final String INTENT_PARAM_TASK_ID = "TASK_ID";
 	public static final String BROADCAST_FILE_OPERATION_COMPLETED = "com.sovworks.eds.android.FILE_OPERATION_COMPLETED";
     public static final String ARG_NOTIFICATION_ID = "com.sovworks.eds.NOTIFICATION_ID";
@@ -334,32 +371,36 @@ public abstract class FileOpsServiceBase extends IntentService
 
     public FileOpsServiceBase()
 	{
-		super(TAG);
 	}
 
 	@Override
 	public int onStartCommand (Intent intent, int flags, int startId)
 	{
-		if(ACTION_CANCEL_TASK.equals(intent.getAction()))
-		{
-			if(_currentTask != null)
-			{
-				_currentTask.cancel();
-				_taskCancelled = true;
-			}
-			return Service.START_NOT_STICKY;
-		}		
-		return super.onStartCommand(intent, flags, startId);		
+        if(intent != null) {
+            if (ACTION_CANCEL_TASK.equals(intent.getAction())) {
+                if (_currentTask != null) {
+                    _currentTask.cancel();
+                    _taskCancelled = true;
+                }
+                return Service.START_NOT_STICKY;
+            }
+
+            Message msg = _serviceHandler.obtainMessage();
+            msg.arg1 = startId;
+            msg.obj = intent;
+            _serviceHandler.sendMessage(msg);
+        }
+		return Service.START_NOT_STICKY;
 	}
 
     @Override
     public void onDestroy()
     {
+        _serviceLooper.quit();
         super.onDestroy();
         _currentTask = null;
     }
 	 
-	@Override
 	protected void onHandleIntent(Intent intent)
 	{
         int notificationId = intent.getIntExtra(ARG_NOTIFICATION_ID, -1);
