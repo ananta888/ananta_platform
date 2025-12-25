@@ -2,7 +2,7 @@ package com.sovworks.eds.android.filemanager.fragments;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.FragmentManager;
+import androidx.fragment.app.FragmentManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -63,7 +63,7 @@ import com.sovworks.eds.locations.Location;
 import com.sovworks.eds.locations.LocationsManager;
 import com.sovworks.eds.settings.GlobalConfig;
 import com.trello.rxlifecycle2.android.FragmentEvent;
-import com.trello.rxlifecycle2.components.RxFragment;
+import com.trello.rxlifecycle2.components.support.RxFragment;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -354,7 +354,7 @@ public abstract class FileListViewFragmentBase extends RxFragment implements
 			Path curPath = loc.getFS().getPath(path);
 			Location srcLoc = loc.copy();
 			srcLoc.setCurrentPath(curPath);
-            getFragmentManager().
+            getParentFragmentManager().
                     beginTransaction().
                     add(
                             RenameFileTask.newInstance(srcLoc, newName),
@@ -768,7 +768,7 @@ public abstract class FileListViewFragmentBase extends RxFragment implements
     @NonNull
     protected FileListDataFragment getFileListDataFragment()
     {
-        return (FileListDataFragment) getFragmentManager().findFragmentByTag(FileListDataFragment.TAG);
+      		return (FileListDataFragment) getParentFragmentManager().findFragmentByTag(FileListDataFragment.TAG);
     }
 
     protected ArrayList<BrowserRecord> getSelectedFiles()
@@ -988,7 +988,7 @@ public abstract class FileListViewFragmentBase extends RxFragment implements
 
     protected void showNewFileDialog(boolean isDir)
     {
-        NewFileDialog.showDialog(getFragmentManager(), isDir ?
+        NewFileDialog.showDialog(getParentFragmentManager(), isDir ?
                 CreateNewFile.FILE_TYPE_FOLDER :
                 CreateNewFile.FILE_TYPE_FILE,
                 getTag()
@@ -1063,7 +1063,7 @@ public abstract class FileListViewFragmentBase extends RxFragment implements
         ClipboardManager clipboard = (ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
         clipboard.setPrimaryClip(ClipData.newUri(cr, recs.size() + " files are in clipboard", MainContentProvider.getCurrentSelectionUri()));
         getActivity().invalidateOptionsMenu();*/
-		getFragmentManager().
+		getParentFragmentManager().
                 beginTransaction().
                 add(
                         CopyToClipboardTask.newInstance(
@@ -1105,7 +1105,7 @@ public abstract class FileListViewFragmentBase extends RxFragment implements
 		Bundle b = new Bundle();
 		LocationsManager.storePathsInBundle(b, getRealLocation(), getSelectedPaths());
 		b.putBoolean(ARG_WIPE_FILES, wipe);
-		DeleteConfirmationDialog.showDialog(getFragmentManager(), b);
+  DeleteConfirmationDialog.showDialog(getParentFragmentManager(), b);
 	}
 
     protected void onSelectionChanged()
@@ -1215,12 +1215,12 @@ public abstract class FileListViewFragmentBase extends RxFragment implements
     {
         BrowserRecord br = getSelectedFiles().get(0);
         String name = br.getName();
-        RenameFileDialog.showDialog(getFragmentManager(), br.getPath().getPathString(), name);
+        RenameFileDialog.showDialog(getParentFragmentManager(), br.getPath().getPathString(), name);
     }
 
     protected void sendFiles()
     {
-        getFragmentManager().
+        getParentFragmentManager().
                 beginTransaction().
                 add(
                         PrepareToSendTask.newInstance(
@@ -1369,7 +1369,7 @@ public abstract class FileListViewFragmentBase extends RxFragment implements
     private void changeSortMode()
     {
         int mode = UserSettings.getSettings(getActivity()).getFilesSortMode();
-        SortDialog.showDialog(getFragmentManager(), mode, getTag());
+        SortDialog.showDialog(getParentFragmentManager(), mode, getTag());
     }
 
     private void openFileAsContainer()
@@ -1380,7 +1380,7 @@ public abstract class FileListViewFragmentBase extends RxFragment implements
             return;
         loc = loc.copy();
         loc.setCurrentPath(br.getPath());
-        getFragmentManager().
+        getParentFragmentManager().
                 beginTransaction().
                 add(OpenAsContainerTask.newInstance(loc, false), OpenAsContainerTask.TAG).
                 commit();
@@ -1422,7 +1422,7 @@ public abstract class FileListViewFragmentBase extends RxFragment implements
 
     private void openLocation(Location locToOpen)
     {
-        FragmentManager fm = getFragmentManager();
+        FragmentManager fm = getParentFragmentManager();
         String openerTag = LocationOpenerBaseFragment.getOpenerTag(locToOpen);
         if(fm.findFragmentByTag(openerTag)==null)
         {

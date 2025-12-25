@@ -7,6 +7,8 @@ import android.app.NotificationManager;
 import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapRegionDecoder;
@@ -29,18 +31,26 @@ public class CompatHelperBase
 		    act.getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
 	}
 
+	public static void registerReceiver(Context context, BroadcastReceiver receiver, IntentFilter filter, boolean exported)
+	{
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+			context.registerReceiver(receiver, filter, exported ? Context.RECEIVER_EXPORTED : Context.RECEIVER_NOT_EXPORTED);
+		else
+			context.registerReceiver(receiver, filter);
+	}
+
 	public static void restartActivity(Activity activity)
 	{
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-		    activity.recreate();
+			activity.recreate();
 		else
 		{
-		    Intent intent = activity.getIntent();
-		    activity.overridePendingTransition(0, 0);
-		    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-		    activity.finish();
-		    activity.overridePendingTransition(0, 0);
-		    activity.startActivity(intent);
+			Intent intent = activity.getIntent();
+			activity.overridePendingTransition(0, 0);
+			intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+			activity.finish();
+			activity.overridePendingTransition(0, 0);
+			activity.startActivity(intent);
 		}
 	}
 

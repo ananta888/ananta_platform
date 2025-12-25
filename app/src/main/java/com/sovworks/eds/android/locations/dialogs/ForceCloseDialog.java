@@ -1,8 +1,8 @@
 package com.sovworks.eds.android.locations.dialogs;
 
-import android.app.DialogFragment;
-import android.app.Fragment;
-import android.app.FragmentManager;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import android.os.Bundle;
 
 import com.sovworks.eds.android.R;
@@ -42,7 +42,7 @@ public class ForceCloseDialog extends ConfirmationDialog
                 getArguments().getString(ARG_CLOSER_CLASS_NAME),
                 closerArgs
         );
-        getFragmentManager().beginTransaction().add(closer, getArguments().getString(LocationCloserBaseFragment.PARAM_RECEIVER_FRAGMENT_TAG)).commit();
+        getParentFragmentManager().beginTransaction().add(closer, getArguments().getString(LocationCloserBaseFragment.PARAM_RECEIVER_FRAGMENT_TAG)).commit();
 	}
 
     @Override

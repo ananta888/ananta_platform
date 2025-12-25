@@ -1,6 +1,6 @@
 package com.sovworks.eds.android.settings;
 
-import android.app.FragmentManager;
+import androidx.fragment.app.FragmentManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -20,7 +20,7 @@ public interface PropertyEditor
 		Context getContext();
 		void startActivityForResult(Intent intent, int requestCode);
 		PropertiesView getPropertiesView();
-		FragmentManager getFragmentManager();
+		FragmentManager getParentFragmentManager();
 		//void updateView();
 	}
 	int getId();

@@ -22,7 +22,8 @@ import com.sovworks.eds.android.views.EditSB;
 import com.sovworks.eds.crypto.SecureBuffer;
 import com.sovworks.eds.locations.LocationsManager;
 import com.sovworks.eds.locations.Openable;
-import com.trello.rxlifecycle2.components.RxDialogFragment;
+import androidx.fragment.app.DialogFragment;
+import com.trello.rxlifecycle2.components.support.RxDialogFragment;
 
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 
@@ -287,7 +288,7 @@ public abstract class PasswordDialogBase extends RxDialogFragment
     {
         Bundle args = getArguments();
         String recTag = args!=null ? args.getString(ARG_RECEIVER_FRAGMENT_TAG) : null;
-        return recTag != null ? (PasswordReceiver) getFragmentManager().findFragmentByTag(recTag) : null;
+        return recTag != null ? (PasswordReceiver) getParentFragmentManager().findFragmentByTag(recTag) : null;
     }
 
     protected boolean checkInput()

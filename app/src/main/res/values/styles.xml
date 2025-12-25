@@ -2,7 +2,7 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:ignore="NewApi">
-    <style name="Theme.EDS" parent="android:Theme.Holo.Light.DarkActionBar">
+    <style name="Theme.EDS" parent="Theme.Material3.DayNight">
         <item name="android:actionBarStyle">@style/ActionBar</item>
         <item name="android:buttonStyle">@style/Button</item>
         <item name="android:buttonBarButtonStyle">@style/Button</item>
@@ -50,7 +50,7 @@
         <item name="widgetUnlockedAllIcon">@drawable/widget_unlocked_all</item>
         <item name="collapseIcon">@drawable/ic_action_collapse</item>
     </style>
-    <style name="Theme.EDS.Dark" parent="android:Theme.Holo">
+    <style name="Theme.EDS.Dark" parent="Theme.Material3.Dark">
         <item name="android:actionBarStyle">@style/ActionBar.Dark</item>
         <item name="android:buttonStyle">@style/Button.Dark</item>
         <item name="android:buttonBarButtonStyle">@style/Button.Dark</item>

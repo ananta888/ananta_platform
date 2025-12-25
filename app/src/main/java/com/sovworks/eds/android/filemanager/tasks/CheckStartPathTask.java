@@ -1,6 +1,7 @@
 package com.sovworks.eds.android.filemanager.tasks;
 
 import android.app.Activity;
+import androidx.fragment.app.Fragment;
 import android.net.Uri;
 import android.os.Bundle;
 

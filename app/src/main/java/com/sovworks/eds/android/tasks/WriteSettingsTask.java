@@ -49,7 +49,7 @@ public class WriteSettingsTask extends TaskFragment
     protected TaskCallbacks getTaskCallbacks(Activity activity)
     {
         EDSLocationSettingsFragment f = (EDSLocationSettingsFragment)
-                getFragmentManager().findFragmentByTag(SettingsBaseActivity.SETTINGS_FRAGMENT_TAG);
+                getParentFragmentManager().findFragmentByTag(SettingsBaseActivity.SETTINGS_FRAGMENT_TAG);
         if(f == null)
             return null;
         return new ProgressDialogTaskFragmentCallbacks(activity, R.string.saving_changes)

@@ -153,7 +153,7 @@ public abstract class ProgramSettingsFragmentBase extends PropertiesFragmentBase
                 args.putString(MasterPasswordDialog.ARG_LABEL, getString(R.string.enter_new_password));
                 MasterPasswordDialog mpd = new MasterPasswordDialog();
                 mpd.setArguments(args);
-                mpd.show(getFragmentManager(), MasterPasswordDialog.TAG);
+                mpd.show(getParentFragmentManager(), MasterPasswordDialog.TAG);
             }
         }));
         commonPropertiesIds.add(getPropertiesView().addProperty(new SwitchPropertyEditor(this, R.string.show_previews, 0)

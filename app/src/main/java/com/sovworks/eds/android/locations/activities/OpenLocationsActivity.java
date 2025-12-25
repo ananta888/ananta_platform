@@ -1,8 +1,8 @@
 package com.sovworks.eds.android.locations.activities;
 
-import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentManager;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import com.trello.rxlifecycle2.components.support.RxAppCompatActivity;
 import android.os.Bundle;
 
 import com.sovworks.eds.android.Logger;
@@ -16,7 +16,7 @@ import com.trello.rxlifecycle2.components.RxActivity;
 import java.util.ArrayList;
 import java.util.concurrent.CancellationException;
 
-public class OpenLocationsActivity extends RxActivity
+public class OpenLocationsActivity extends RxAppCompatActivity
 {
     public static class MainFragment extends Fragment implements LocationOpenerBaseFragment.LocationOpenerResultReceiver
     {
@@ -65,7 +65,7 @@ public class OpenLocationsActivity extends RxActivity
                 _targetLocations.remove(0);
             if(_targetLocations.isEmpty())
             {
-                getActivity().setResult(Activity.RESULT_CANCELED);
+                getActivity().setResult(RxAppCompatActivity.RESULT_CANCELED);
                 getActivity().finish();
             }
             else
@@ -84,14 +84,14 @@ public class OpenLocationsActivity extends RxActivity
         {
             if(_targetLocations.isEmpty())
             {
-                getActivity().setResult(Activity.RESULT_OK);
+                getActivity().setResult(RxAppCompatActivity.RESULT_OK);
                 getActivity().finish();
             }
             else
             {
                 Location loc = _targetLocations.get(0);
                 String openerTag = LocationOpenerBaseFragment.getOpenerTag(loc);
-                if (getFragmentManager().findFragmentByTag(openerTag) != null)
+                if (getParentFragmentManager().findFragmentByTag(openerTag) != null)
                     return;
                 loc.getExternalSettings().setVisibleToUser(true);
                 loc.saveExternalSettings();
@@ -100,7 +100,7 @@ public class OpenLocationsActivity extends RxActivity
                 LocationOpenerBaseFragment opener = LocationOpenerBaseFragment.
                         getDefaultOpenerForLocation(loc);
                 opener.setArguments(args);
-                getFragmentManager().
+                getParentFragmentManager().
                         beginTransaction().
                         add(
                                 opener,
@@ -141,7 +141,7 @@ public class OpenLocationsActivity extends RxActivity
 
     protected void addMainFragment()
     {
-        FragmentManager fm = getFragmentManager();
+        FragmentManager fm = getSupportFragmentManager();
         if(fm.findFragmentByTag(MainFragment.TAG) == null)
             fm.beginTransaction().add(createFragment(), MainFragment.TAG).commit();
     }

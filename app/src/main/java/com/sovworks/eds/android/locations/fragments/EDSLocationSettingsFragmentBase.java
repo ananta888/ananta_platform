@@ -192,7 +192,7 @@ public abstract class EDSLocationSettingsFragmentBase extends PropertiesFragment
 
     protected void startLoadLocationInfoTask()
     {
-        getFragmentManager().
+        getParentFragmentManager().
                 beginTransaction().
                 add(
                         initLoadLocationInfoTask(),
@@ -344,9 +344,9 @@ public abstract class EDSLocationSettingsFragmentBase extends PropertiesFragment
                 Bundle openerArgs = new Bundle();
                 LocationsManager.storePathsInBundle(openerArgs, _location, null);
                 openerArgs.putString(LocationOpenerBaseFragment.PARAM_RECEIVER_FRAGMENT_TAG, getTag());
-                Fragment opener = getLocationOpener();
+                androidx.fragment.app.Fragment opener = getLocationOpener();
                 opener.setArguments(openerArgs);
-                getFragmentManager().
+                getParentFragmentManager().
                         beginTransaction().
                         add(opener, LocationOpenerBaseFragment.getOpenerTag(_location)).
                         commit();

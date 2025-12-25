@@ -68,7 +68,7 @@ public class SavePasswordPropertyEditorBase extends SwitchPropertyEditor impleme
             args.putInt(PropertyEditor.ARG_PROPERTY_ID, getId());
             PasswordDialog pd = new PasswordDialog();
             pd.setArguments(args);
-            pd.show(getHost().getFragmentManager(), PasswordDialog.TAG);
+            pd.show(getHost().getParentFragmentManager(), PasswordDialog.TAG);
 			return true;
         }
         else

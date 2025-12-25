@@ -118,7 +118,7 @@ public abstract class ChoiceDialogPropertyEditor extends PropertyEditorBase
 
     private void startChoiceDialog()
     {
-        ChoiceDialog.showDialog(_host.getFragmentManager(), getId(), _title != null ? _title : _host.getContext().getString(_titleResId), _entries, _hostFragmentTag );
+        ChoiceDialog.showDialog(_host.getParentFragmentManager(), getId(), _title != null ? _title : _host.getContext().getString(_titleResId), _entries, _hostFragmentTag );
     }
 
 	private final String _hostFragmentTag;

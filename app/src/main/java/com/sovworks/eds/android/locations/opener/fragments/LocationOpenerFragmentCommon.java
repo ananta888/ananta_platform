@@ -151,7 +151,7 @@ public class LocationOpenerFragmentCommon extends LocationOpenerBaseFragment imp
     {
         PasswordDialog pd = new PasswordDialog();
         pd.setArguments(getAskPasswordArgs());
-        pd.show(getFragmentManager(), PasswordDialog.TAG);
+        pd.show(getParentFragmentManager(), PasswordDialog.TAG);
     }
 
     protected boolean needPasswordDialog(Openable ol, Bundle defaultArgs)

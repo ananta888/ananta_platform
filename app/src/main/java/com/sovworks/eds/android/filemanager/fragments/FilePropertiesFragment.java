@@ -2,8 +2,8 @@ package com.sovworks.eds.android.filemanager.fragments;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentManager;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import android.content.Context;
 import android.os.Bundle;
 import android.text.format.Formatter;
@@ -61,7 +61,7 @@ public class FilePropertiesFragment extends Fragment implements FileManagerFragm
         {
             try
             {
-                FileListDataFragment df = (FileListDataFragment) getFragmentManager().findFragmentByTag(FileListDataFragment.TAG);
+              		FileListDataFragment df = (FileListDataFragment) getParentFragmentManager().findFragmentByTag(FileListDataFragment.TAG);
                 if(df!=null && df.isAdded())
                     _paths = new ArrayList<>(df.getSelectedPaths());
                 else
@@ -78,7 +78,7 @@ public class FilePropertiesFragment extends Fragment implements FileManagerFragm
 		@Override
 		protected TaskCallbacks getTaskCallbacks(Activity activity)
 		{
-			FragmentManager fm = getFragmentManager();
+			FragmentManager fm = getParentFragmentManager();
 			if(fm == null)
 				return null;
 			FilePropertiesFragment f = (FilePropertiesFragment) fm.findFragmentByTag(FilePropertiesFragment.TAG);
@@ -350,7 +350,7 @@ public class FilePropertiesFragment extends Fragment implements FileManagerFragm
 
 	private void cancelCalcTask()
 	{
-		FragmentManager fm = getFragmentManager();
+		FragmentManager fm = getParentFragmentManager();
 		if(fm == null)
 			return;
 		TaskFragment tf = (TaskFragment) fm.findFragmentByTag(CalcPropertiesTaskFragment.TAG);
@@ -361,7 +361,7 @@ public class FilePropertiesFragment extends Fragment implements FileManagerFragm
 	private void startCalcTask()
 	{
 		cancelCalcTask();
-		FragmentManager fm = getFragmentManager();
+		FragmentManager fm = getParentFragmentManager();
 		if(fm!=null)
 			fm.beginTransaction().add(CalcPropertiesTaskFragment.newInstance(getArguments()), CalcPropertiesTaskFragment.TAG).commit();	
 	}

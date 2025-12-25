@@ -1,6 +1,8 @@
 package com.sovworks.eds.android.filemanager.activities;
 
 import android.annotation.SuppressLint;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentManager;
 import android.app.Activity;
 import android.os.Build;
 import android.os.Bundle;
@@ -29,7 +31,7 @@ import java.util.NavigableSet;
 import java.util.TreeSet;
 
 @SuppressLint({"CommitPrefEdits", "ApplySharedPref", "InlinedApi"})
-public class ImageViewerActivity extends Activity implements PreviewFragment.Host
+public class ImageViewerActivity extends AppCompatActivity implements PreviewFragment.Host
 {	
 	public static final String INTENT_PARAM_CURRENT_PATH = "current_path";
 	
@@ -84,7 +86,7 @@ public class ImageViewerActivity extends Activity implements PreviewFragment.Hos
 		if(us.isImageViewerFullScreenModeEnabled())
 			enableFullScreen();
 		_location = LocationsManager.getLocationsManager(this).getFromIntent(getIntent(), null);
-		getFragmentManager().beginTransaction().add(RestorePathsTask.newInstance(), RestorePathsTask.TAG).commit();
+		getSupportFragmentManager().beginTransaction().add(RestorePathsTask.newInstance(), RestorePathsTask.TAG).commit();
 	}
 
 	@Override
@@ -138,7 +140,7 @@ public class ImageViewerActivity extends Activity implements PreviewFragment.Hos
 	@Override
 	public void onWindowFocusChanged(boolean hasFocus) {
 		super.onWindowFocusChanged(hasFocus);
-		PreviewFragment pf = (PreviewFragment) getFragmentManager().findFragmentByTag(PreviewFragment.TAG);
+		PreviewFragment pf = (PreviewFragment) getSupportFragmentManager().findFragmentByTag(PreviewFragment.TAG);
 		if(pf!=null)
 			pf.updateImageViewFullScreen();
 	}
@@ -148,14 +150,14 @@ public class ImageViewerActivity extends Activity implements PreviewFragment.Hos
 
 	private PreviewFragment getPreviewFragment()
 	{
-		return (PreviewFragment) getFragmentManager().findFragmentByTag(PreviewFragment.TAG);
+		return (PreviewFragment) getSupportFragmentManager().findFragmentByTag(PreviewFragment.TAG);
 	}
 
 	private void showFragment(String currentImagePathString)
 	{
 		PreviewFragment f = PreviewFragment.newInstance(currentImagePathString);
-		getFragmentManager().beginTransaction().add(android.R.id.content, f, PreviewFragment.TAG).commit();
-	}	
+		getSupportFragmentManager().beginTransaction().add(android.R.id.content, f, PreviewFragment.TAG).commit();
+	}
 	
 	private void enableFullScreen()
 	{		

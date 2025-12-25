@@ -1,7 +1,7 @@
 package com.sovworks.eds.android.locations.dialogs;
 
-import android.app.DialogFragment;
-import android.app.FragmentManager;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentManager;
 import android.os.Bundle;
 
 import com.sovworks.eds.android.R;
@@ -35,7 +35,7 @@ public class RemoveLocationConfirmationDialog extends ConfirmationDialog
 	{
         if(_loc == null)
             return;
-        LocationListBaseFragment f = (LocationListBaseFragment) getFragmentManager().findFragmentByTag(LocationListBaseFragment.TAG);
+        LocationListBaseFragment f = (LocationListBaseFragment) getParentFragmentManager().findFragmentByTag(LocationListBaseFragment.TAG);
         if(f == null)
             return;
         f.removeLocation(_loc);

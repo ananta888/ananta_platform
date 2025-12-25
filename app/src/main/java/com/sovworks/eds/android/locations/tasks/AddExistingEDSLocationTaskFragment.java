@@ -1,6 +1,7 @@
 package com.sovworks.eds.android.locations.tasks;
 
 import android.app.Activity;
+import androidx.fragment.app.FragmentManager;
 import android.content.Context;
 
 import com.sovworks.eds.android.activities.SettingsBaseActivity;
@@ -34,7 +35,7 @@ public abstract class AddExistingEDSLocationTaskFragment extends TaskFragment
 	@Override
     protected TaskCallbacks getTaskCallbacks(Activity activity)
     {
-        CreateEDSLocationFragment f = (CreateEDSLocationFragment) getFragmentManager().findFragmentByTag(SettingsBaseActivity.SETTINGS_FRAGMENT_TAG);
+        CreateEDSLocationFragment f = (CreateEDSLocationFragment) getParentFragmentManager().findFragmentByTag(SettingsBaseActivity.SETTINGS_FRAGMENT_TAG);
         return f == null ? null : f.getAddExistingEDSLocationTaskCallbacks();
     }
 

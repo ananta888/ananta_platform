@@ -1,8 +1,9 @@
 package com.sovworks.eds.android.fragments;
 
+import androidx.fragment.app.Fragment;
 import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentManager;
+import android.content.Context;
+import androidx.fragment.app.FragmentManager;
 import android.os.AsyncTask;
 import android.os.AsyncTask.Status;
 import android.os.Bundle;
@@ -239,7 +240,7 @@ public abstract class TaskFragment extends Fragment
 
 	protected void detachTask()
 	{
-		FragmentManager fm = getFragmentManager();
+		FragmentManager fm = getParentFragmentManager();
 		if(fm!=null)
 		{
 			fm.beginTransaction().remove(TaskFragment.this).commitAllowingStateLoss();

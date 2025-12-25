@@ -1,7 +1,7 @@
 package com.sovworks.eds.android.locations.activities;
 
-import android.app.Activity;
-import android.app.Fragment;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import android.os.Bundle;
 
 import com.sovworks.eds.android.helpers.CompatHelper;
@@ -13,7 +13,7 @@ import com.sovworks.eds.android.locations.fragments.DocumentTreeLocationsListFra
 import com.sovworks.eds.android.locations.fragments.LocationListBaseFragment;
 import com.sovworks.eds.android.settings.UserSettings;
 
-public abstract class LocationListActivityBase extends Activity
+public abstract class LocationListActivityBase extends AppCompatActivity
 {
     public static final String EXTRA_LOCATION_TYPE = "com.sovworks.eds.android.LOCATION_TYPE";
 
@@ -25,7 +25,7 @@ public abstract class LocationListActivityBase extends Activity
         if(UserSettings.getSettings(this).isFlagSecureEnabled())
             CompatHelper.setWindowFlagSecure(this);
         if(savedInstanceState == null)
-            getFragmentManager().
+            getSupportFragmentManager().
                 beginTransaction().
                 add(android.R.id.content, getCreateLocationFragment(), LocationListBaseFragment.TAG).
                 commit();

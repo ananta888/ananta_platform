@@ -40,7 +40,7 @@ public class ContainerPasswordPropertyEditor extends ButtonPropertyEditor implem
         args.putString(PasswordDialog.ARG_RECEIVER_FRAGMENT_TAG, getHostFragment().getTag());
         PasswordDialog pd = new PasswordDialog();
         pd.setArguments(args);
-        pd.show(getHost().getFragmentManager(), PasswordDialog.TAG);
+        pd.show(getHost().getParentFragmentManager(), PasswordDialog.TAG);
     }
 
     CreateEDSLocationFragment getHostFragment()

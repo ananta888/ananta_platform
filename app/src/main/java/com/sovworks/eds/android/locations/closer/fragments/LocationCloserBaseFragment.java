@@ -1,9 +1,9 @@
 package com.sovworks.eds.android.locations.closer.fragments;
 
 import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -86,7 +86,7 @@ public class LocationCloserBaseFragment extends Fragment
         @Override
         protected TaskCallbacks getTaskCallbacks(Activity activity)
         {
-            LocationCloserBaseFragment f = (LocationCloserBaseFragment) getFragmentManager().findFragmentByTag(getArguments().getString(ARG_CLOSER_TAG));
+            LocationCloserBaseFragment f = (LocationCloserBaseFragment) getParentFragmentManager().findFragmentByTag(getArguments().getString(ARG_CLOSER_TAG));
             return f == null ? null : f.getCloseLocationTaskCallbacks();
         }
 
@@ -98,7 +98,7 @@ public class LocationCloserBaseFragment extends Fragment
         @Override
         protected void detachTask()
         {
-            FragmentManager fm = getFragmentManager();
+            FragmentManager fm = getParentFragmentManager();
             if(fm!=null)
             {
                 FragmentTransaction trans = fm.beginTransaction();
@@ -119,7 +119,7 @@ public class LocationCloserBaseFragment extends Fragment
     public void onCreate(Bundle state)
     {
         super.onCreate(state);
-        if(getFragmentManager().findFragmentByTag(getCloseLocationTaskTag()) == null)
+        if(getParentFragmentManager().findFragmentByTag(getCloseLocationTaskTag()) == null)
             closeLocation();
     }
 
@@ -164,7 +164,7 @@ public class LocationCloserBaseFragment extends Fragment
                 @Override
                 public void onCancel(DialogInterface dialog)
                 {
-                    CloseLocationTaskFragment f = (CloseLocationTaskFragment) getFragmentManager().findFragmentByTag(CloseLocationTaskFragment.TAG);
+                    CloseLocationTaskFragment f = (CloseLocationTaskFragment) getParentFragmentManager().findFragmentByTag(CloseLocationTaskFragment.TAG);
                     if(f!=null)
                         f.cancel();
                 }
@@ -231,7 +231,7 @@ public class LocationCloserBaseFragment extends Fragment
 
     protected void finishCloser(boolean closed, Location location, Bundle closeTaskArgs)
     {
-        getFragmentManager().beginTransaction().remove(this).commitAllowingStateLoss();
+        getParentFragmentManager().beginTransaction().remove(this).commitAllowingStateLoss();
         if (closed)
             onLocationClosed(location, closeTaskArgs);
         else
@@ -243,7 +243,7 @@ public class LocationCloserBaseFragment extends Fragment
         String recTag = getArguments()!=null ? getArguments().getString(PARAM_RECEIVER_FRAGMENT_TAG) : null;
         if(recTag != null)
         {
-            CloseLocationReceiver rec = (CloseLocationReceiver) getFragmentManager().findFragmentByTag(recTag);
+            CloseLocationReceiver rec = (CloseLocationReceiver) getParentFragmentManager().findFragmentByTag(recTag);
             if(rec!=null)
                 rec.onTargetLocationClosed(location, closeTaskArgs);
         }
@@ -254,7 +254,7 @@ public class LocationCloserBaseFragment extends Fragment
         String recTag = getArguments()!=null ? getArguments().getString(PARAM_RECEIVER_FRAGMENT_TAG) : null;
         if(recTag != null)
         {
-            CloseLocationReceiver rec = (CloseLocationReceiver) getFragmentManager().findFragmentByTag(recTag);
+            CloseLocationReceiver rec = (CloseLocationReceiver) getParentFragmentManager().findFragmentByTag(recTag);
             if(rec!=null)
                 rec.onTargetLocationNotClosed(location, closeTaskArgs);
         }
@@ -276,7 +276,7 @@ public class LocationCloserBaseFragment extends Fragment
             {
                 Logger.log(e);
                 ForceCloseDialog.showDialog(
-                        getFragmentManager(),
+                        getParentFragmentManager(),
                         getTag(),
                         getTargetLocation().getTitle(),
                         getClass().getName(),
@@ -297,7 +297,7 @@ public class LocationCloserBaseFragment extends Fragment
 	{
         TaskFragment f = getCloseLocationTask();
         f.setArguments(args);
-        getFragmentManager().beginTransaction().add(f, getCloseLocationTaskTag()).commit();
+        getParentFragmentManager().beginTransaction().add(f, getCloseLocationTaskTag()).commit();
 	}
 
     private static final String TAG = "com.sovworks.eds.android.locations.closer.fragments.LocationCloserBaseFragment";

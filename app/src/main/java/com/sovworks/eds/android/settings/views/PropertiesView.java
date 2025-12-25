@@ -1,6 +1,6 @@
 package com.sovworks.eds.android.settings.views;
 
-import android.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -48,7 +48,7 @@ public class PropertiesView extends LinearLayout
     {
         final PropertyEditor.Host host;
 		if(f.getArguments().containsKey(PropertyEditor.ARG_HOST_FRAGMENT_TAG))
-			host = (PropertyEditor.Host) f.getFragmentManager().findFragmentByTag(f.getArguments().getString(PropertyEditor.ARG_HOST_FRAGMENT_TAG));
+			host = (PropertyEditor.Host) f.getParentFragmentManager().findFragmentByTag(f.getArguments().getString(PropertyEditor.ARG_HOST_FRAGMENT_TAG));
 		else
 			host = (PropertyEditor.Host) f.getActivity();
         return host;

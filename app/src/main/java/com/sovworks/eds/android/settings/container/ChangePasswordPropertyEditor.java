@@ -37,7 +37,7 @@ public class ChangePasswordPropertyEditor extends ButtonPropertyEditor implement
         args.putString(PasswordDialog.ARG_RECEIVER_FRAGMENT_TAG, getHost().getTag());
         PasswordDialog pd = new PasswordDialog();
         pd.setArguments(args);
-        pd.show(getHost().getFragmentManager(), PasswordDialog.TAG);
+        pd.show(getHost().getParentFragmentManager(), PasswordDialog.TAG);
     }
 
     @Override
@@ -48,7 +48,7 @@ public class ChangePasswordPropertyEditor extends ButtonPropertyEditor implement
             @Override
             public void run()
             {
-                getHost().getFragmentManager().
+                getHost().getParentFragmentManager().
                         beginTransaction().
                         add(
                                 getHost().getChangePasswordTask(dlg),

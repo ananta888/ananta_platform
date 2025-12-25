@@ -149,7 +149,7 @@ public class InstallExFatModulePropertyEditor extends ButtonPropertyEditor
     {
         Uri uri = result.getData();
         getHost().
-                getFragmentManager().
+                getParentFragmentManager().
                 beginTransaction().
                 add(InstallExfatModuleTask.newInstance(uri), InstallExfatModuleTask.TAG)
                 .commit();

@@ -140,7 +140,7 @@ public abstract class CreateEDSLocationFragmentBase extends PropertiesFragmentBa
             _propertiesView.saveProperties();
             TaskFragment task = createCreateLocationTask();
             task.setArguments(_state);
-            getFragmentManager().beginTransaction().add(task, CreateEDSLocationTaskFragment.TAG).commit();
+            getParentFragmentManager().beginTransaction().add(task, CreateEDSLocationTaskFragment.TAG).commit();
         }
         catch (Exception e)
         {
@@ -153,7 +153,7 @@ public abstract class CreateEDSLocationFragmentBase extends PropertiesFragmentBa
         try
         {
             _propertiesView.saveProperties();
-            getFragmentManager().
+            getParentFragmentManager().
                     beginTransaction().
                     add(createAddExistingLocationTask(), AddExistingContainerTaskFragment.TAG).commit();
         }
@@ -243,7 +243,7 @@ public abstract class CreateEDSLocationFragmentBase extends PropertiesFragmentBa
                 @Override
                 public void onCancel(DialogInterface dialog)
                 {
-                    CreateEDSLocationTaskFragment f = (CreateEDSLocationTaskFragment) getFragmentManager()
+                    CreateEDSLocationTaskFragment f = (CreateEDSLocationTaskFragment) getParentFragmentManager()
                             .findFragmentByTag(CreateContainerTaskFragmentBase.TAG);
                     if (f != null) f.cancel();
                 }
@@ -266,7 +266,7 @@ public abstract class CreateEDSLocationFragmentBase extends PropertiesFragmentBa
                 int res = (Integer) result.getResult();
                 if (res == CreateContainerTaskFragmentBase.RESULT_REQUEST_OVERWRITE)
                     OverwriteContainerDialog
-                            .showDialog(getFragmentManager());
+                            .showDialog(getParentFragmentManager());
                 else
                 {
                     getActivity().setResult(Activity.RESULT_OK);

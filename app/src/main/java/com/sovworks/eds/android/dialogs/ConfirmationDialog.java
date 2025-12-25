@@ -1,10 +1,10 @@
 package com.sovworks.eds.android.dialogs;
 
 import android.app.Activity;
-import android.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
 import android.app.Dialog;
-import android.app.DialogFragment;
-import android.app.Fragment;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 
@@ -74,7 +74,7 @@ public abstract class ConfirmationDialog extends DialogFragment
         String tag = args == null ? null : args.getString(ARG_RECEIVER_TAG);
         if(tag != null)
         {
-            Fragment f = getFragmentManager().findFragmentByTag(tag);
+            Fragment f = getParentFragmentManager().findFragmentByTag(tag);
             if(f instanceof Receiver)
                 return (Receiver) f;
         }

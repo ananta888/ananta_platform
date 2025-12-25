@@ -1,7 +1,7 @@
 package com.sovworks.eds.android.locations.activities;
 
-import android.app.Activity;
-import android.app.Fragment;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -16,7 +16,7 @@ import com.sovworks.eds.locations.LocationsManager;
 
 import java.util.ArrayList;
 
-public class CloseLocationsActivity extends Activity
+public class CloseLocationsActivity extends AppCompatActivity
 {
     public static class MainFragment extends Fragment implements LocationCloserBaseFragment.CloseLocationReceiver, MasterPasswordDialog.PasswordReceiver
     {
@@ -28,7 +28,7 @@ public class CloseLocationsActivity extends Activity
             super.onCreate(state);
             _locationsManager = LocationsManager.getLocationsManager(getActivity());
             _failedToClose = state != null && state.getBoolean(ARG_FAILED_TO_CLOSE_ALL);
-            if(MasterPasswordDialog.checkMasterPasswordIsSet(getActivity(), getFragmentManager(), getTag()))
+            if(MasterPasswordDialog.checkMasterPasswordIsSet(getActivity(), getParentFragmentManager(), getTag()))
                 startClosingLocations(state);
         }
 
@@ -109,14 +109,14 @@ public class CloseLocationsActivity extends Activity
         {
             if(_targetLocations.isEmpty())
             {
-                getActivity().setResult(_failedToClose ? Activity.RESULT_CANCELED : Activity.RESULT_OK);
+                getActivity().setResult(_failedToClose ? AppCompatActivity.RESULT_CANCELED : AppCompatActivity.RESULT_OK);
                 getActivity().finish();
             }
             else
             {
                 Location loc = _targetLocations.get(0);
                 String closerTag = LocationCloserBaseFragment.getCloserTag(loc);
-                if (getFragmentManager().findFragmentByTag(closerTag) != null)
+                if (getParentFragmentManager().findFragmentByTag(closerTag) != null)
                     return;
                 Bundle args = new Bundle();
                 args.putString(LocationCloserBaseFragment.PARAM_RECEIVER_FRAGMENT_TAG, getTag());
@@ -128,7 +128,7 @@ public class CloseLocationsActivity extends Activity
                     );
                 LocationCloserBaseFragment closer = LocationCloserBaseFragment.getDefaultCloserForLocation(loc);
                 closer.setArguments(args);
-                getFragmentManager().beginTransaction().add(closer, closerTag).commit();
+                getParentFragmentManager().beginTransaction().add(closer, closerTag).commit();
             }
         }
 
@@ -157,6 +157,6 @@ public class CloseLocationsActivity extends Activity
 	    super.onCreate(savedInstanceState);
         setResult(RESULT_CANCELED);
         if(savedInstanceState == null)
-            getFragmentManager().beginTransaction().add(new MainFragment(), MainFragment.TAG).commit();
+            getSupportFragmentManager().beginTransaction().add(new MainFragment(), MainFragment.TAG).commit();
 	}
 }

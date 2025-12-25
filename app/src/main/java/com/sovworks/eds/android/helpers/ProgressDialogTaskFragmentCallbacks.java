@@ -1,7 +1,8 @@
 package com.sovworks.eds.android.helpers;
 
+import androidx.appcompat.app.AppCompatActivity;
 import android.app.Activity;
-import android.app.DialogFragment;
+import androidx.fragment.app.DialogFragment;
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
@@ -54,7 +55,7 @@ public class ProgressDialogTaskFragmentCallbacks implements TaskCallbacks
 	{
 		_dialog = initDialog(args);
 		if(_dialog!=null)		
-			_dialog.show(_context.getFragmentManager(), Dialog.TAG);
+   _dialog.show(((AppCompatActivity)_context).getSupportFragmentManager(), Dialog.TAG);
 	}
 	
 	@Override

@@ -56,7 +56,7 @@ public class EDSLocationOpenerFragment extends LocationOpenerFragment implements
             LocationsManager.storePathsInBundle(b, baseLocation, null);
             b.putString(PARAM_RECEIVER_FRAGMENT_TAG, getTag());
             f.setArguments(b);
-            getFragmentManager().beginTransaction().add(f, getOpenerTag(baseLocation)).commit();
+            getParentFragmentManager().beginTransaction().add(f, getOpenerTag(baseLocation)).commit();
         }
         else
             super.openLocation();

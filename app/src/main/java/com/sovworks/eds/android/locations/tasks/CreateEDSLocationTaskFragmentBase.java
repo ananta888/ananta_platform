@@ -45,7 +45,7 @@ public abstract class CreateEDSLocationTaskFragmentBase extends
     @Override
     protected TaskCallbacks getTaskCallbacks(Activity activity)
     {
-        CreateEDSLocationFragment f = (CreateEDSLocationFragment) getFragmentManager().findFragmentByTag(SettingsBaseActivity.SETTINGS_FRAGMENT_TAG);
+        CreateEDSLocationFragment f = (CreateEDSLocationFragment) getParentFragmentManager().findFragmentByTag(SettingsBaseActivity.SETTINGS_FRAGMENT_TAG);
         return f == null ? null : f.getCreateLocationTaskCallbacks();
     }
 

@@ -1,10 +1,10 @@
 package com.sovworks.eds.android.filemanager.dialogs;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
 import android.app.Dialog;
-import android.app.DialogFragment;
-import android.app.FragmentManager;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentManager;
 import android.content.Context;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
@@ -63,7 +63,7 @@ public class DeleteConfirmationDialog extends DialogFragment
 				.setPositiveButton(R.string.yes,
 						(dialog, id) ->
 						{
-							FileListViewFragment frag = (FileListViewFragment) getFragmentManager().findFragmentByTag(FileListViewFragment.TAG);
+							FileListViewFragment frag = (FileListViewFragment) getParentFragmentManager().findFragmentByTag(FileListViewFragment.TAG);
 							if(frag!=null)
 								frag.deleteFiles(loc, paths, wipe);
                             dialog.dismiss();

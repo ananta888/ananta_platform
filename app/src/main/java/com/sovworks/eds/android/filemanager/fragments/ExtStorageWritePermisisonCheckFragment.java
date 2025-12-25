@@ -2,7 +2,9 @@ package com.sovworks.eds.android.filemanager.fragments;
 
 import android.Manifest;
 import android.annotation.TargetApi;
-import android.app.FragmentManager;
+import androidx.fragment.app.FragmentManager;
+import com.trello.rxlifecycle2.components.support.RxAppCompatActivity;
+import com.trello.rxlifecycle2.components.support.RxFragment;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -12,8 +14,8 @@ import androidx.core.content.ContextCompat;
 
 import com.sovworks.eds.android.dialogs.AskPrimaryStoragePermissionDialog;
 import com.trello.rxlifecycle2.android.FragmentEvent;
-import com.trello.rxlifecycle2.components.RxActivity;
-import com.trello.rxlifecycle2.components.RxFragment;
+import com.trello.rxlifecycle2.components.support.RxAppCompatActivity;
+import com.trello.rxlifecycle2.components.support.RxFragment;
 
 import io.reactivex.Completable;
 import io.reactivex.subjects.CompletableSubject;
@@ -23,7 +25,7 @@ public class ExtStorageWritePermisisonCheckFragment extends RxFragment
 {
     public static final String TAG = "com.sovworks.eds.android.filemanager.fragments.ExtStorageWritePermisisonCheckFragment";
 
-    public static Completable getObservable(RxActivity activity)
+    public static Completable getObservable(RxAppCompatActivity activity)
     {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || (
                 ContextCompat.checkSelfPermission(
@@ -37,12 +39,12 @@ public class ExtStorageWritePermisisonCheckFragment extends RxFragment
         )
             return Completable.complete();
 
-        FragmentManager fm = activity.getFragmentManager();
+        FragmentManager fm = activity.getSupportFragmentManager();
         ExtStorageWritePermisisonCheckFragment f = (ExtStorageWritePermisisonCheckFragment) fm.findFragmentByTag(TAG);
         if(f == null)
         {
             f = new ExtStorageWritePermisisonCheckFragment();
-            activity.getFragmentManager().beginTransaction().add(f, TAG).commit();
+            activity.getSupportFragmentManager().beginTransaction().add(f, TAG).commit();
         }
         return f._extStoragePermissionCheckSubject;
     }
@@ -71,7 +73,7 @@ public class ExtStorageWritePermisisonCheckFragment extends RxFragment
     public void cancelExtStoragePermissionRequest()
     {
         _extStoragePermissionCheckSubject.onComplete();
-        getFragmentManager().beginTransaction().remove(this).commitAllowingStateLoss();
+        getParentFragmentManager().beginTransaction().remove(this).commitAllowingStateLoss();
     }
 
     @Override
@@ -102,7 +104,7 @@ public class ExtStorageWritePermisisonCheckFragment extends RxFragment
                 || shouldShowRequestPermissionRationale(
                 Manifest.permission.WRITE_EXTERNAL_STORAGE))
         {
-            AskPrimaryStoragePermissionDialog.showDialog(getFragmentManager());
+            AskPrimaryStoragePermissionDialog.showDialog(getParentFragmentManager());
             return true;
         }
         return false;

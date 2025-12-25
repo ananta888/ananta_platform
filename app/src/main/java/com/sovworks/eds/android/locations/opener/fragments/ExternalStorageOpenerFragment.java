@@ -70,7 +70,7 @@ public class ExternalStorageOpenerFragment extends LocationOpenerBaseFragment
         @Override
         protected TaskCallbacks getTaskCallbacks(Activity activity)
         {
-            final ExternalStorageOpenerFragment f = (ExternalStorageOpenerFragment) getFragmentManager().findFragmentByTag(getArguments().getString(ARG_OPENER_TAG));
+            final ExternalStorageOpenerFragment f = (ExternalStorageOpenerFragment) getParentFragmentManager().findFragmentByTag(getArguments().getString(ARG_OPENER_TAG));
             return f == null ? null : new TaskCallbacks()
             {
                 @Override
@@ -255,12 +255,12 @@ public class ExternalStorageOpenerFragment extends LocationOpenerBaseFragment
         args.putString(ARG_OPENER_TAG, getTag());
         TaskFragment f = new CheckLocationWritableTaskFragment();
         f.setArguments(args);
-        getFragmentManager().beginTransaction().add(f, getCheckWritableTaskTag(loc)).commit();
+        getParentFragmentManager().beginTransaction().add(f, getCheckWritableTaskTag(loc)).commit();
     }
 
     private void askWritePermission()
     {
-        AskExtStorageWritePermissionDialog.showDialog(getFragmentManager(), getTag());
+        AskExtStorageWritePermissionDialog.showDialog(getParentFragmentManager(), getTag());
     }
 
     private static int REQUEST_CODE_ADD_LOCATION = Activity.RESULT_FIRST_USER;

@@ -1,7 +1,9 @@
 package com.sovworks.eds.android.locations.fragments;
 
 import android.annotation.SuppressLint;
-import android.app.ListFragment;
+import com.sovworks.eds.android.helpers.CompatHelper;
+import androidx.fragment.app.ListFragment;
+import androidx.fragment.app.FragmentManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -154,9 +156,9 @@ public abstract class LocationListBaseFragment extends ListFragment
     public void onResume()
     {
         super.onResume();
-        getActivity().registerReceiver(_reloadLocationsReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED));
-        getActivity().registerReceiver(_reloadLocationsReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_REMOVED));
-        getActivity().registerReceiver(_reloadLocationsReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CREATED));
+        CompatHelper.registerReceiver(getActivity(), _reloadLocationsReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED), false);
+        CompatHelper.registerReceiver(getActivity(), _reloadLocationsReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_REMOVED), false);
+        CompatHelper.registerReceiver(getActivity(), _reloadLocationsReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CREATED), false);
         loadLocations();
     }
 
@@ -266,7 +268,7 @@ public abstract class LocationListBaseFragment extends ListFragment
         LocationsManager.storePathsInBundle(args, loc, null);
         LocationCloserBaseFragment closer = LocationCloserBaseFragment.getDefaultCloserForLocation(loc);
         closer.setArguments(args);
-        getFragmentManager().beginTransaction().add(closer, LocationCloserBaseFragment.getCloserTag(loc)).commit();
+        getParentFragmentManager().beginTransaction().add(closer, LocationCloserBaseFragment.getCloserTag(loc)).commit();
     }
 
     protected int getContextMenuId()
@@ -337,7 +339,7 @@ public abstract class LocationListBaseFragment extends ListFragment
     private void removeSelectedLocation()
     {
         RemoveLocationConfirmationDialog.showDialog(
-                getFragmentManager(),
+                getParentFragmentManager(),
                 getSelectedLocationInfo().location
         );
     }

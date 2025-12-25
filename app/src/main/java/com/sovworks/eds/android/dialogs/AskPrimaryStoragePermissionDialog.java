@@ -1,10 +1,10 @@
 package com.sovworks.eds.android.dialogs;
 
 
-import android.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
 import android.app.Dialog;
-import android.app.DialogFragment;
-import android.app.FragmentManager;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentManager;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 
@@ -29,14 +29,14 @@ public class AskPrimaryStoragePermissionDialog extends DialogFragment
 						(dialog, id) ->
 						{
                             dialog.dismiss();
-							ExtStorageWritePermisisonCheckFragment stateFragment = (ExtStorageWritePermisisonCheckFragment) getFragmentManager().findFragmentByTag(ExtStorageWritePermisisonCheckFragment.TAG);
+							ExtStorageWritePermisisonCheckFragment stateFragment = (ExtStorageWritePermisisonCheckFragment) getParentFragmentManager().findFragmentByTag(ExtStorageWritePermisisonCheckFragment.TAG);
 							if(stateFragment!=null)
 								stateFragment.requestExtStoragePermission();
                         })
 				.setNegativeButton(android.R.string.cancel,
 						(dialog, id) ->
 						{
-							ExtStorageWritePermisisonCheckFragment stateFragment = (ExtStorageWritePermisisonCheckFragment) getFragmentManager().findFragmentByTag(ExtStorageWritePermisisonCheckFragment.TAG);
+							ExtStorageWritePermisisonCheckFragment stateFragment = (ExtStorageWritePermisisonCheckFragment) getParentFragmentManager().findFragmentByTag(ExtStorageWritePermisisonCheckFragment.TAG);
 							if(stateFragment!=null)
 								stateFragment.cancelExtStoragePermissionRequest();
                         });

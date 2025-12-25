@@ -1,6 +1,6 @@
 package com.sovworks.eds.android.settings.activities;
 
-import android.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.content.Intent;
 
 import com.sovworks.eds.android.Logger;
@@ -13,7 +13,7 @@ public class OpeningOptionsActivity extends SettingsBaseActivity
     @Override
     public void onBackPressed()
     {
-        PropertiesHostWithStateBundle frag = (PropertiesHostWithStateBundle) getFragmentManager().findFragmentByTag(SETTINGS_FRAGMENT_TAG);
+        PropertiesHostWithStateBundle frag = (PropertiesHostWithStateBundle) getSupportFragmentManager().findFragmentByTag(SETTINGS_FRAGMENT_TAG);
         if(frag!=null)
         {
             try

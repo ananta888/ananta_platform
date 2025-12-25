@@ -1,9 +1,9 @@
 package com.sovworks.eds.android.locations.opener.fragments;
 
 import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.net.Uri;
@@ -100,7 +100,7 @@ public class LocationOpenerBaseFragment extends Fragment
         @Override
         protected TaskCallbacks getTaskCallbacks(Activity activity)
         {
-            LocationOpenerBaseFragment f = (LocationOpenerBaseFragment) getFragmentManager().findFragmentByTag(getArguments().getString(ARG_OPENER_TAG));
+            LocationOpenerBaseFragment f = (LocationOpenerBaseFragment) getParentFragmentManager().findFragmentByTag(getArguments().getString(ARG_OPENER_TAG));
             return f == null ? null : f.getOpenLocationTaskCallbacks();
         }
 
@@ -128,7 +128,7 @@ public class LocationOpenerBaseFragment extends Fragment
         @Override
         protected void detachTask()
         {
-            FragmentManager fm = getFragmentManager();
+            FragmentManager fm = getParentFragmentManager();
             if(fm!=null)
             {
                 FragmentTransaction trans = fm.beginTransaction();
@@ -264,7 +264,7 @@ public class LocationOpenerBaseFragment extends Fragment
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        if(getFragmentManager().findFragmentByTag(getOpenLocationTaskTag()) == null)
+        if(getParentFragmentManager().findFragmentByTag(getOpenLocationTaskTag()) == null)
             openLocation();
     }
 
@@ -298,14 +298,14 @@ public class LocationOpenerBaseFragment extends Fragment
 		@Override
 		public void onResumeUI(Bundle args)
 		{
-			_dialog = ProgressDialog.showDialog(getFragmentManager(), getString(R.string.opening_container));
+			_dialog = ProgressDialog.showDialog(getParentFragmentManager(), getString(R.string.opening_container));
 			_dialog.setCancelable(true);
 			_dialog.setOnCancelListener(new DialogInterface.OnCancelListener()
 			{
 				@Override
 				public void onCancel(DialogInterface dialog)
 				{
-					OpenLocationTaskFragment f = (OpenLocationTaskFragment) getFragmentManager().findFragmentByTag(getOpenLocationTaskTag());
+					OpenLocationTaskFragment f = (OpenLocationTaskFragment) getParentFragmentManager().findFragmentByTag(getOpenLocationTaskTag());
 					if(f!=null)
 						f.cancel();
 				}
@@ -383,7 +383,7 @@ public class LocationOpenerBaseFragment extends Fragment
     LocationOpenerResultReceiver getResultReceiver()
     {
         String recTag = getArguments()!=null ? getArguments().getString(PARAM_RECEIVER_FRAGMENT_TAG) : null;
-        return recTag != null ? (LocationOpenerResultReceiver) getFragmentManager().findFragmentByTag(recTag) : null;
+        return recTag != null ? (LocationOpenerResultReceiver) getParentFragmentManager().findFragmentByTag(recTag) : null;
     }
 
     protected void onLocationNotOpened()
@@ -395,7 +395,7 @@ public class LocationOpenerBaseFragment extends Fragment
 
     protected void finishOpener(boolean opened, Location location)
     {
-        getFragmentManager().beginTransaction().remove(this).commitAllowingStateLoss();
+        getParentFragmentManager().beginTransaction().remove(this).commitAllowingStateLoss();
         if (opened)
             onLocationOpened(location);
         else
@@ -427,7 +427,7 @@ public class LocationOpenerBaseFragment extends Fragment
 	{
         TaskFragment f = getOpenLocationTask();
         f.setArguments(args);
-        getFragmentManager().beginTransaction().add(f, getOpenLocationTaskTag()).commit();
+        getParentFragmentManager().beginTransaction().add(f, getOpenLocationTaskTag()).commit();
 	}
 
     private static final String TAG = "com.sovworks.eds.android.locations.opener.fragments.LocationOpenerFragment";

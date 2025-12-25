@@ -43,7 +43,7 @@ public class LoadLocationInfoTask extends TaskFragment
 	@Override
     protected TaskCallbacks getTaskCallbacks(Activity activity)
     {
-        final EDSLocationSettingsFragment f = (EDSLocationSettingsFragment) getFragmentManager().findFragmentByTag(SettingsBaseActivity.SETTINGS_FRAGMENT_TAG);
+        final EDSLocationSettingsFragment f = (EDSLocationSettingsFragment) getParentFragmentManager().findFragmentByTag(SettingsBaseActivity.SETTINGS_FRAGMENT_TAG);
         return f != null ? f.getLoadLocationInfoTaskCallbacks() : null;
     }
 

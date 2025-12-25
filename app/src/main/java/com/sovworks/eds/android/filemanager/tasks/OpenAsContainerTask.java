@@ -22,7 +22,7 @@ public class OpenAsContainerTask extends CheckStartPathTask
     @Override
     protected TaskCallbacks getTaskCallbacks(Activity activity)
     {
-        FileListViewFragment f = (FileListViewFragment) getFragmentManager().findFragmentByTag(FileListViewFragment.TAG);
+        FileListViewFragment f = (FileListViewFragment) getParentFragmentManager().findFragmentByTag(FileListViewFragment.TAG);
         return f == null ? null : f.getOpenAsContainerTaskCallbacks();
     }
 }
