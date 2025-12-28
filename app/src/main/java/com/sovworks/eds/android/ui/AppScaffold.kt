@@ -1,26 +1,40 @@
 package com.sovworks.eds.android.ui
 
+nimport android.app.Activity
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sovworks.eds.android.filemanager.viewmodel.FileListViewModel
 import com.sovworks.eds.android.navigation.NavigationViewModel
 import com.sovworks.eds.android.navigation.Screen
 import com.sovworks.eds.android.filemanager.ui.BreadcrumbBar
 import com.sovworks.eds.android.filemanager.viewmodel.FileListEvent
+import com.sovworks.eds.android.locations.ContainerBasedLocation
+import com.sovworks.eds.android.locations.activities.CreateLocationActivity
+import com.sovworks.eds.android.locations.activities.OpenLocationsActivity
 import com.sovworks.eds.android.ui.transfers.FileTransferDashboardScreen
 import com.sovworks.eds.android.ui.peer.PeerConnectionsScreen
 import com.sovworks.eds.android.ui.peer.PeerManagementScreen
 import com.sovworks.eds.android.ui.peer.PeerViewModel
 import com.sovworks.eds.android.ui.messenger.MessengerScreen
+import com.sovworks.eds.locations.Location
+import com.sovworks.eds.locations.LocationsManager
 import com.sovworks.eds.locations.LocationsManagerBase
 import kotlinx.coroutines.launch
 
@@ -37,6 +51,19 @@ fun AppScaffold(
     val navigationStack by navigationViewModel.navigationStack.collectAsState()
     val fileListState by fileListViewModel.state.collectAsState()
     val context = LocalContext.current
+    val pendingLocation = remember { mutableStateOf<Location?>(null) }
+    val openLocationLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val location = pendingLocation.value
+        if (result.resultCode == Activity.RESULT_OK && location != null) {
+            fileListViewModel.onEvent(FileListEvent.LocationChanged(location), context)
+            navigationViewModel.navigateTo(Screen.FileList)
+        }
+        pendingLocation.value = null
+    }
+    val showCreateDialog = remember { mutableStateOf(false) }
+    val createName = remember { mutableStateOf("") }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -66,6 +93,32 @@ fun AppScaffold(
                         fileListViewModel.onEvent(FileListEvent.LocationChanged(location), context)
                     }
                 )
+            },
+            floatingActionButton = {
+                when (currentScreen) {
+                    is Screen.FileList -> {
+                        if (fileListState.location != null) {
+                            FloatingActionButton(onClick = { showCreateDialog.value = true }) {
+                                Text("+")
+                            }
+                        }
+                    }
+                    is Screen.Vaults -> {
+                        FloatingActionButton(
+                            onClick = {
+                                val intent = Intent(context, CreateLocationActivity::class.java)
+                                intent.putExtra(
+                                    CreateLocationActivity.EXTRA_LOCATION_TYPE,
+                                    ContainerBasedLocation.URI_SCHEME
+                                )
+                                context.startActivity(intent)
+                            }
+                        ) {
+                            Text("+")
+                        }
+                    }
+                    else -> Unit
+                }
             }
         ) { paddingValues ->
             Box(
@@ -86,8 +139,10 @@ fun AppScaffold(
                         LocationListScreen(
                             locations = locations,
                             onLocationClick = { location ->
-                                fileListViewModel.onEvent(FileListEvent.LocationChanged(location), context)
-                                navigationViewModel.navigateTo(Screen.FileList)
+                                pendingLocation.value = location
+                                val intent = Intent(context, OpenLocationsActivity::class.java)
+                                LocationsManager.storeLocationsInIntent(intent, listOf(location))
+                                openLocationLauncher.launch(intent)
                             }
                         )
                     }
@@ -97,8 +152,10 @@ fun AppScaffold(
                         LocationListScreen(
                             locations = locations,
                             onLocationClick = { location ->
-                                fileListViewModel.onEvent(FileListEvent.LocationChanged(location), context)
-                                navigationViewModel.navigateTo(Screen.FileList)
+                                pendingLocation.value = location
+                                val intent = Intent(context, OpenLocationsActivity::class.java)
+                                LocationsManager.storeLocationsInIntent(intent, listOf(location))
+                                openLocationLauncher.launch(intent)
                             }
                         )
                     }
@@ -109,8 +166,10 @@ fun AppScaffold(
                         LocationListScreen(
                             locations = locations,
                             onLocationClick = { location ->
-                                fileListViewModel.onEvent(FileListEvent.LocationChanged(location), context)
-                                navigationViewModel.navigateTo(Screen.FileList)
+                                pendingLocation.value = location
+                                val intent = Intent(context, OpenLocationsActivity::class.java)
+                                LocationsManager.storeLocationsInIntent(intent, listOf(location))
+                                openLocationLauncher.launch(intent)
                             }
                         )
                     }
@@ -134,6 +193,68 @@ fun AppScaffold(
                         MessengerScreen(peerId = screen.peerId, groupId = screen.groupId)
                     }
                 }
+            }
+            if (showCreateDialog.value && fileListState.location != null) {
+                val isEncrypted = fileListState.location?.isEncrypted == true
+                AlertDialog(
+                    onDismissRequest = {
+                        showCreateDialog.value = false
+                        createName.value = ""
+                    },
+                    title = { Text("Create") },
+                    text = {
+                        Column {
+                            OutlinedTextField(
+                                value = createName.value,
+                                onValueChange = { createName.value = it },
+                                label = { Text("Name") },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            if (!isEncrypted) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "This location is not encrypted. Create a vault for encrypted files.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        Row {
+                            TextButton(onClick = {
+                                fileListViewModel.createEntry(
+                                    context,
+                                    createName.value,
+                                    com.sovworks.eds.android.filemanager.tasks.CreateNewFileBase.FILE_TYPE_FILE
+                                )
+                                showCreateDialog.value = false
+                                createName.value = ""
+                            }) {
+                                Text("Create File")
+                            }
+                            TextButton(onClick = {
+                                fileListViewModel.createEntry(
+                                    context,
+                                    createName.value,
+                                    com.sovworks.eds.android.filemanager.tasks.CreateNewFileBase.FILE_TYPE_FOLDER
+                                )
+                                showCreateDialog.value = false
+                                createName.value = ""
+                            }) {
+                                Text("Create Folder")
+                            }
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            showCreateDialog.value = false
+                            createName.value = ""
+                        }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
             }
         }
     }

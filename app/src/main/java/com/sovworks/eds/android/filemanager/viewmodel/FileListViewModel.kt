@@ -7,6 +7,7 @@ import com.sovworks.eds.android.filemanager.DirectorySettings
 import com.sovworks.eds.android.filemanager.activities.FileManagerActivity
 import com.sovworks.eds.android.filemanager.records.BrowserRecord
 import com.sovworks.eds.android.filemanager.tasks.LoadDirSettingsObservable
+import com.sovworks.eds.android.filemanager.tasks.CreateNewFileBase
 import com.sovworks.eds.android.filemanager.tasks.ReadDir
 import com.sovworks.eds.locations.Location
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
@@ -128,6 +129,37 @@ class FileListViewModel : ViewModel() {
             }
             it.copy(selectedItems = newSelection)
         }
+    }
+
+    fun createEntry(context: Context, name: String, fileType: Int) {
+        val location = _state.value.location ?: run {
+            _state.update { it.copy(error = "No location selected") }
+            return
+        }
+        val trimmedName = name.trim()
+        if (trimmedName.isEmpty()) {
+            _state.update { it.copy(error = "Name is required") }
+            return
+        }
+        val disposable = CreateNewFileBase
+            .createObservable(context, location, trimmedName, fileType, false)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { record ->
+                    _state.update {
+                        it.copy(
+                            items = sortItems(it.items + record),
+                            error = null
+                        )
+                    }
+                },
+                { error ->
+                    Logger.log(error)
+                    _state.update { it.copy(error = error.message) }
+                }
+            )
+        disposables.add(disposable)
     }
 
     private fun updateBreadcrumbs(location: Location) {
