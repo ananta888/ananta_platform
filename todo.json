@@ -2,16 +2,7 @@
   "project": "Ananta Platform (WebRTC & Secure Exchange)",
   "version": "1.0.0-draft",
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform für sichere Kommunikation und Dateiaustausch.",
-  "tasks": [
-    {
-      "id": "TASK-006",
-      "category": "UI/UX",
-      "title": "Web-of-Trust Visualisierung",
-      "description": "Graph-basierte Darstellung des eigenen Vertrauensnetzwerks und der Reputationspfade zu anderen Peers.",
-      "status": "planned",
-      "priority": "low"
-    }
-  ],
+  "tasks": [],
   "architecture_goals": [
     "Vollständige Dezentralität (kein zentraler Server außer Signaling/STUN)",
     "Ende-zu-Ende Verschlüsselung für alle Transfers",

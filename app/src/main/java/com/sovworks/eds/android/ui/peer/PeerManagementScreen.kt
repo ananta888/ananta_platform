@@ -1,5 +1,7 @@
 package com.sovworks.eds.android.ui.peer
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,38 +13,313 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.sovworks.eds.android.identity.IdentityManager
 import com.sovworks.eds.android.trust.TrustedKey
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.min
+import kotlin.math.sin
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PeerManagementScreen(viewModel: PeerViewModel) {
     val peers by viewModel.peers.collectAsState()
+    val context = LocalContext.current
+    val identity = remember { IdentityManager.loadIdentity(context) }
+    val selectedTab = remember { mutableStateOf(0) }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Peer Management") })
+            TopAppBar(title = { Text("Trust Network") })
         }
     ) { padding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(padding)
         ) {
-            items(peers) { peer ->
-                PeerItem(
-                    peer = peer,
-                    onTrustLevelChange = { level -> viewModel.updateTrustLevel(peer.fingerprint, level) },
-                    onDelete = { viewModel.removePeer(peer.fingerprint) }
+            TabRow(selectedTabIndex = selectedTab.value) {
+                Tab(
+                    selected = selectedTab.value == 0,
+                    onClick = { selectedTab.value = 0 },
+                    text = { Text("Peers") }
+                )
+                Tab(
+                    selected = selectedTab.value == 1,
+                    onClick = { selectedTab.value = 1 },
+                    text = { Text("Web of Trust") }
+                )
+            }
+
+            when (selectedTab.value) {
+                0 -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(peers) { peer ->
+                            PeerItem(
+                                peer = peer,
+                                onTrustLevelChange = { level ->
+                                    viewModel.updateTrustLevel(peer.fingerprint, level)
+                                },
+                                onDelete = { viewModel.removePeer(peer.fingerprint) }
+                            )
+                        }
+                    }
+                }
+                1 -> {
+                    TrustGraphSection(
+                        peers = peers,
+                        selfFingerprint = identity?.getFingerprint(),
+                        selfLabel = identity?.id ?: "Me"
+                    )
+                }
+            }
+        }
+    }
+}
+
+private data class TrustGraphNode(
+    val id: String,
+    val label: String,
+    val trustLevel: Int,
+    val status: TrustedKey.TrustStatus?,
+    val isSelf: Boolean
+)
+
+private data class TrustGraphEdge(
+    val from: String,
+    val to: String,
+    val trustLevel: Int
+)
+
+@Composable
+private fun TrustGraphSection(
+    peers: List<TrustedKey>,
+    selfFingerprint: String?,
+    selfLabel: String
+) {
+    val (nodes, edges) = remember(peers, selfFingerprint, selfLabel) {
+        buildGraphData(peers, selfFingerprint, selfLabel)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "Trust-Verbindungen und Empfehlungen",
+            style = MaterialTheme.typography.titleMedium
+        )
+        Text(
+            text = "Knoten = Peers, Linien = Empfehlungen",
+            style = MaterialTheme.typography.bodySmall
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            TrustGraphCanvas(nodes = nodes, edges = edges)
+        }
+
+        TrustLegend()
+    }
+}
+
+@Composable
+private fun TrustGraphCanvas(
+    nodes: List<TrustGraphNode>,
+    edges: List<TrustGraphEdge>
+) {
+    val labelPaint = remember {
+        android.graphics.Paint().apply {
+            isAntiAlias = true
+            color = android.graphics.Color.DKGRAY
+            textSize = 28f
+        }
+    }
+
+    val trustedColor = Color(0xFF2E7D32)
+    val pendingColor = Color(0xFFF9A825)
+    val distrustColor = Color(0xFFC62828)
+    val neutralColor = MaterialTheme.colorScheme.primary
+
+    Canvas(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        if (nodes.isEmpty()) {
+            drawIntoCanvas { canvas ->
+                labelPaint.textAlign = android.graphics.Paint.Align.CENTER
+                canvas.nativeCanvas.drawText(
+                    "Noch keine Peers vorhanden",
+                    size.width / 2f,
+                    size.height / 2f,
+                    labelPaint
+                )
+            }
+            return@Canvas
+        }
+
+        val center = Offset(size.width / 2f, size.height / 2f)
+        val minDim = min(size.width, size.height)
+        val baseRadius = minDim * 0.18f
+        val ringSpacing = minDim * 0.14f
+
+        val selfNode = nodes.firstOrNull { it.isSelf }
+        val others = nodes.filterNot { it.isSelf }
+            .sortedByDescending { it.trustLevel }
+
+        val nodePositions = mutableMapOf<String, Offset>()
+        if (selfNode != null) {
+            nodePositions[selfNode.id] = center
+        }
+
+        val ringSize = 10
+        val rings = others.chunked(ringSize)
+        rings.forEachIndexed { ringIndex, ringNodes ->
+            val radius = baseRadius + ringIndex * ringSpacing
+            ringNodes.forEachIndexed { index, node ->
+                val angle = (2 * PI * index / ringNodes.size) - (PI / 2)
+                val x = center.x + (radius * cos(angle)).toFloat()
+                val y = center.y + (radius * sin(angle)).toFloat()
+                nodePositions[node.id] = Offset(x, y)
+            }
+        }
+
+        edges.forEach { edge ->
+            val from = nodePositions[edge.from] ?: return@forEach
+            val to = nodePositions[edge.to] ?: return@forEach
+            val alpha = 0.2f + (edge.trustLevel.coerceIn(1, 5) / 5f) * 0.5f
+            drawLine(
+                color = Color(0xFF546E7A).copy(alpha = alpha),
+                start = from,
+                end = to,
+                strokeWidth = 3f
+            )
+        }
+
+        nodes.forEach { node ->
+            val position = nodePositions[node.id] ?: return@forEach
+            val radius = if (node.isSelf) 18f else 10f + (node.trustLevel * 2f)
+            val nodeColor = when (node.status) {
+                TrustedKey.TrustStatus.TRUSTED -> trustedColor
+                TrustedKey.TrustStatus.DISTRUSTED -> distrustColor
+                TrustedKey.TrustStatus.PENDING -> pendingColor
+                null -> neutralColor
+            }
+
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(nodeColor, nodeColor.copy(alpha = 0.6f)),
+                    center = position,
+                    radius = radius * 1.6f
+                ),
+                radius = radius,
+                center = position
+            )
+
+            drawIntoCanvas { canvas ->
+                labelPaint.textAlign = android.graphics.Paint.Align.CENTER
+                canvas.nativeCanvas.drawText(
+                    node.label,
+                    position.x,
+                    position.y - radius - 8f,
+                    labelPaint
                 )
             }
         }
     }
+}
+
+@Composable
+private fun TrustLegend() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        LegendItem(color = Color(0xFF2E7D32), label = "Trusted")
+        LegendItem(color = Color(0xFFF9A825), label = "Pending")
+        LegendItem(color = Color(0xFFC62828), label = "Distrusted")
+    }
+}
+
+@Composable
+private fun LegendItem(color: Color, label: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(10.dp)
+                .padding(end = 6.dp)
+                .background(color, shape = MaterialTheme.shapes.small)
+        )
+        Text(text = label, style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp))
+    }
+}
+
+private fun buildGraphData(
+    peers: List<TrustedKey>,
+    selfFingerprint: String?,
+    selfLabel: String
+): Pair<List<TrustGraphNode>, List<TrustGraphEdge>> {
+    val nodes = mutableListOf<TrustGraphNode>()
+    val edges = mutableListOf<TrustGraphEdge>()
+
+    if (selfFingerprint != null) {
+        nodes.add(
+            TrustGraphNode(
+                id = selfFingerprint,
+                label = selfLabel,
+                trustLevel = 5,
+                status = null,
+                isSelf = true
+            )
+        )
+    }
+
+    peers.forEach { peer ->
+        val label = peer.name ?: peer.fingerprint.take(6)
+        nodes.add(
+            TrustGraphNode(
+                id = peer.fingerprint,
+                label = label,
+                trustLevel = peer.trustLevel,
+                status = peer.status,
+                isSelf = false
+            )
+        )
+
+        peer.recommendations.forEach { rec ->
+            edges.add(
+                TrustGraphEdge(
+                    from = rec.recommenderFingerprint,
+                    to = peer.fingerprint,
+                    trustLevel = rec.trustLevel
+                )
+            )
+        }
+    }
+
+    val nodeIds = nodes.map { it.id }.toSet()
+    val filteredEdges = edges.filter { nodeIds.contains(it.from) && nodeIds.contains(it.to) }
+    return nodes to filteredEdges
 }
 
 @Composable
