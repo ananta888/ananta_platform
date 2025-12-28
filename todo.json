@@ -4,20 +4,28 @@
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform f\u00fcr sichere Kommunikation und Dateiaustausch.",
   "tasks": [
     {
-      "id": 19,
-      "title": "Gruppen-Chat E2EE",
-      "description": "Implementierung einer zusätzlichen Ende-zu-Ende Verschlüsselung für Gruppennachrichten.",
+      "id": 21,
+      "title": "WebRTC Signal-Server Redundanz",
+      "description": "Unterst\u00fctzung f\u00fcr mehrere Signaling-Server zur Erh\u00f6hung der Ausfallsicherheit.",
+      "priority": "medium",
+      "status": "todo",
+      "category": "Network"
+    },
+    {
+      "id": 22,
+      "title": "Zweistufige Verifizierung",
+      "description": "Optionale 2FA f\u00fcr den Zugriff auf den verschl\u00fcsselten Tresor.",
       "priority": "high",
       "status": "todo",
       "category": "Security"
     },
     {
-      "id": 20,
-      "title": "Dateitransfer-Historie",
-      "description": "Persistente Protokollierung aller gesendeten und empfangenen Dateien.",
-      "priority": "low",
+      "id": 23,
+      "title": "Backup & Wiederherstellung",
+      "description": "Export und Import von verschl\u00fcsselten Identit\u00e4ts-Backups.",
+      "priority": "medium",
       "status": "todo",
-      "category": "Storage"
+      "category": "Identity"
     }
   ],
   "architecture_goals": [

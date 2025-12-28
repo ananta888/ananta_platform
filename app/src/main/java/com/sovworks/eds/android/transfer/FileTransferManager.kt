@@ -9,12 +9,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+import com.sovworks.eds.android.db.AppDatabase
+import com.sovworks.eds.android.db.FileTransferEntity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+
 object FileTransferManager {
     private val lock = Any()
     private var context: Context? = null
-    private val gson = Gson()
-    private const val PREFS_NAME = "file_transfers"
-    private const val KEY_TRANSFERS = "transfers_list"
+    private var database: AppDatabase? = null
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private val transfers = ConcurrentHashMap<String, FileTransferEntry>()
     private val _state = MutableStateFlow<List<FileTransferEntry>>(emptyList())
@@ -22,36 +29,52 @@ object FileTransferManager {
 
     fun initialize(context: Context) {
         this.context = context.applicationContext
+        database = AppDatabase.getDatabase(this.context!!)
         loadTransfers()
     }
 
     private fun loadTransfers() {
-        val prefs = context?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) ?: return
-        val json = prefs.getString(KEY_TRANSFERS, null)
-        if (json != null) {
-            try {
-                val type = object : TypeToken<List<FileTransferEntry>>() {}.type
-                val list: List<FileTransferEntry> = gson.fromJson(json, type)
-                list.forEach { 
+        scope.launch {
+            database?.fileTransferDao()?.getAllTransfers()?.collect { entities ->
+                entities.forEach { entity ->
+                    val entry = FileTransferEntry(
+                        id = entity.id,
+                        peerId = entity.peerId,
+                        fileName = entity.fileName,
+                        direction = TransferDirection.valueOf(entity.direction),
+                        bytesTransferred = entity.bytesTransferred,
+                        totalBytes = entity.totalBytes,
+                        status = FileTransferStatus.valueOf(entity.status),
+                        updatedAt = entity.updatedAt
+                    )
                     // Reset transient status if needed
-                    val entry = if (it.status == FileTransferStatus.IN_PROGRESS) {
-                        it.copy(status = FileTransferStatus.PAUSED)
+                    val finalEntry = if (entry.status == FileTransferStatus.IN_PROGRESS) {
+                        entry.copy(status = FileTransferStatus.PAUSED)
                     } else {
-                        it
+                        entry
                     }
-                    transfers[entry.id] = entry 
+                    transfers[finalEntry.id] = finalEntry
                 }
                 publish()
-            } catch (e: Exception) {
-                // Ignore
             }
         }
     }
 
-    private fun saveTransfers() {
-        val prefs = context?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) ?: return
-        val json = gson.toJson(transfers.values.toList())
-        prefs.edit().putString(KEY_TRANSFERS, json).apply()
+    private fun saveTransfer(entry: FileTransferEntry) {
+        scope.launch {
+            database?.fileTransferDao()?.insertTransfer(
+                FileTransferEntity(
+                    id = entry.id,
+                    peerId = entry.peerId,
+                    fileName = entry.fileName,
+                    direction = entry.direction.name,
+                    bytesTransferred = entry.bytesTransferred,
+                    totalBytes = entry.totalBytes,
+                    status = entry.status.name,
+                    updatedAt = entry.updatedAt
+                )
+            )
+        }
     }
 
     fun startIncomingTransfer(peerId: String, fileName: String, totalBytes: Long?): String {
@@ -123,7 +146,7 @@ object FileTransferManager {
         )
         synchronized(lock) {
             transfers[id] = entry
-            saveTransfers()
+            saveTransfer(entry)
             publish()
         }
         return id
@@ -135,8 +158,9 @@ object FileTransferManager {
     ) {
         synchronized(lock) {
             val current = transfers[transferId] ?: return
-            transfers[transferId] = update(current)
-            saveTransfers()
+            val updated = update(current)
+            transfers[transferId] = updated
+            saveTransfer(updated)
             publish()
         }
     }

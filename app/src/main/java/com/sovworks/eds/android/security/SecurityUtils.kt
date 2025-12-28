@@ -60,10 +60,14 @@ object SecurityUtils {
     }
 
     fun encrypt(data: String, alias: String = KEY_ALIAS): EncryptionResult {
+        return encrypt(data.toByteArray(Charsets.UTF_8), getOrCreateSecretKey(alias))
+    }
+
+    fun encrypt(data: ByteArray, secretKey: SecretKey): EncryptionResult {
         val cipher = Cipher.getInstance(TRANSFORMATION)
-        cipher.init(Cipher.ENCRYPT_MODE, getOrCreateSecretKey(alias))
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey)
         val iv = cipher.iv
-        val encryptedData = cipher.doFinal(data.toByteArray(Charsets.UTF_8))
+        val encryptedData = cipher.doFinal(data)
         return EncryptionResult(
             Base64.encodeToString(encryptedData, Base64.NO_WRAP),
             Base64.encodeToString(iv, Base64.NO_WRAP)
@@ -71,11 +75,30 @@ object SecurityUtils {
     }
 
     fun decrypt(encryptedData: String, iv: String, alias: String = KEY_ALIAS): String {
+        return decrypt(encryptedData, iv, getOrCreateSecretKey(alias))
+    }
+
+    fun decrypt(encryptedData: String, iv: String, secretKey: SecretKey): String {
         val cipher = Cipher.getInstance(TRANSFORMATION)
         val spec = GCMParameterSpec(128, Base64.decode(iv, Base64.NO_WRAP))
-        cipher.init(Cipher.DECRYPT_MODE, getOrCreateSecretKey(alias), spec)
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, spec)
         val decodedData = Base64.decode(encryptedData, Base64.NO_WRAP)
         return String(cipher.doFinal(decodedData), Charsets.UTF_8)
+    }
+
+    fun generateGroupKey(): SecretKey {
+        val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES)
+        keyGenerator.init(256)
+        return keyGenerator.generateKey()
+    }
+
+    fun keyToString(secretKey: SecretKey): String {
+        return Base64.encodeToString(secretKey.encoded, Base64.NO_WRAP)
+    }
+
+    fun stringToKey(keyStr: String): SecretKey {
+        val decodedKey = Base64.decode(keyStr, Base64.NO_WRAP)
+        return javax.crypto.spec.SecretKeySpec(decodedKey, 0, decodedKey.size, "AES")
     }
 
     data class EncryptionResult(val data: String, val iv: String)

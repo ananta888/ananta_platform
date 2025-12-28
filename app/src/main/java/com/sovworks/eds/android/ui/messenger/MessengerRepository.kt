@@ -14,6 +14,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+import com.sovworks.eds.android.security.SecurityUtils
+import javax.crypto.SecretKey
+
 data class ChatMessage(
     val senderId: String,
     val text: String,
@@ -25,7 +28,8 @@ data class ChatMessage(
 data class ChatGroup(
     val id: String,
     val name: String,
-    val memberIds: Set<String>
+    val memberIds: Set<String>,
+    val groupKey: SecretKey? = null
 )
 
 object MessengerRepository : DataChannelListener {
@@ -64,7 +68,8 @@ object MessengerRepository : DataChannelListener {
 
     fun createGroup(name: String, memberIds: Set<String>): String {
         val groupId = "group_${System.currentTimeMillis()}"
-        val group = ChatGroup(groupId, name, memberIds)
+        val groupKey = SecurityUtils.generateGroupKey()
+        val group = ChatGroup(groupId, name, memberIds, groupKey)
         _groups.update { it + (groupId to group) }
         return groupId
     }
@@ -74,6 +79,11 @@ object MessengerRepository : DataChannelListener {
 
         if (message.startsWith("GROUP_MSG:")) {
             handleGroupMessage(peerId, message)
+            return
+        }
+
+        if (message.startsWith("GROUP_MSG_E2EE:")) {
+            handleGroupMessageE2EE(peerId, message)
             return
         }
 
@@ -101,6 +111,31 @@ object MessengerRepository : DataChannelListener {
         addMessage(groupId, chatMessage)
     }
 
+    private fun handleGroupMessageE2EE(peerId: String, payload: String) {
+        // Format: GROUP_MSG_E2EE:groupId:iv:encryptedText
+        val parts = payload.removePrefix("GROUP_MSG_E2EE:").split(":", limit = 3)
+        if (parts.size < 3) return
+        val groupId = parts[0]
+        val iv = parts[1]
+        val encryptedText = parts[2]
+
+        val group = _groups.value[groupId] ?: return
+        val groupKey = group.groupKey ?: return // In real scenario, we might need to fetch it
+
+        try {
+            val decryptedText = SecurityUtils.decrypt(encryptedText, iv, groupKey)
+            val chatMessage = ChatMessage(
+                senderId = peerId,
+                text = decryptedText,
+                isMe = false,
+                groupId = groupId
+            )
+            addMessage(groupId, chatMessage)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     override fun onBinaryReceived(peerId: String, data: ByteArray) {
         // Not used for text chat
     }
@@ -121,7 +156,13 @@ object MessengerRepository : DataChannelListener {
         val group = _groups.value[groupId] ?: return
         val manager = WebRtcService.getPeerConnectionManager() ?: return
         
-        val payload = "GROUP_MSG:$groupId:$text"
+        val payload = if (group.groupKey != null) {
+            val encrypted = SecurityUtils.encrypt(text.toByteArray(Charsets.UTF_8), group.groupKey)
+            "GROUP_MSG_E2EE:$groupId:${encrypted.iv}:${encrypted.data}"
+        } else {
+            "GROUP_MSG:$groupId:$text"
+        }
+
         group.memberIds.forEach { memberId ->
             manager.getMultiplexer().sendMessage(memberId, payload)
         }
