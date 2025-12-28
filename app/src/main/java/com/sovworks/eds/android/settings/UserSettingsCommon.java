@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 
+import com.sovworks.eds.android.BuildConfig;
 import com.sovworks.eds.android.EdsApplication;
 import com.sovworks.eds.android.helpers.Util;
 import com.sovworks.eds.crypto.SecureBuffer;
@@ -428,15 +429,15 @@ public abstract class UserSettingsCommon implements SettingsCommon
                 return _prefs.getBoolean(FORCE_TEMP_FILES, _defaultSettings.forceTempFiles());
         }
 
-        public String getSignalingMode()
-        {
-                return _prefs.getString(SIGNALING_MODE, SIGNALING_MODE_LOCAL);
-        }
+    public String getSignalingMode()
+    {
+                return _prefs.getString(SIGNALING_MODE, BuildConfig.SIGNALING_MODE);
+    }
 
-        public String getSignalingServerUrl()
-        {
-                return _prefs.getString(SIGNALING_SERVER_URL, "");
-        }
+    public String getSignalingServerUrl()
+    {
+                return _prefs.getString(SIGNALING_SERVER_URL, BuildConfig.SIGNALING_SERVER_URL);
+    }
 
         public List<String> getSignalingServerUrls()
         {

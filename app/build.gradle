@@ -38,10 +38,23 @@ android {
         }
     }    
 
-    flavorDimensions = ["fullOrLite", "licCheckType", "inet", "fsm"]
+    flavorDimensions = ["env", "fullOrLite", "licCheckType", "inet", "fsm"]
 
     productFlavors {
-        
+
+        dev {
+            dimension "env"
+            // Dev signaling defaults. Can be overridden via -PsignalServerUrl/-PsignalMode
+            buildConfigField "String", "SIGNALING_SERVER_URL", "\"ws://10.0.2.2:8080\""
+            buildConfigField "String", "SIGNALING_MODE", "\"websocket\""
+        }
+        prod {
+            dimension "env"
+            // Prod signaling defaults. Can be overridden via -PsignalServerUrl/-PsignalMode
+            buildConfigField "String", "SIGNALING_SERVER_URL", "\"wss://your-domain.example\""
+            buildConfigField "String", "SIGNALING_MODE", "\"websocket\""
+        }
+
         lite {
             dimension "fullOrLite"
             applicationId "com.sovworks.edslite"
@@ -60,6 +73,33 @@ android {
         }
         nofsml {
             dimension "fsm"
+        }
+    }
+
+    def overrideSignalingUrl = project.findProperty("signalServerUrl")
+    def overrideSignalingMode = project.findProperty("signalMode")
+    if (overrideSignalingUrl || overrideSignalingMode) {
+        applicationVariants.all { variant ->
+            if (overrideSignalingUrl) {
+                variant.buildConfigFields.put(
+                    "SIGNALING_SERVER_URL",
+                    new com.android.build.gradle.internal.dsl.BuildConfigField(
+                        "String",
+                        "\"${overrideSignalingUrl}\"",
+                        "CLI override"
+                    )
+                )
+            }
+            if (overrideSignalingMode) {
+                variant.buildConfigFields.put(
+                    "SIGNALING_MODE",
+                    new com.android.build.gradle.internal.dsl.BuildConfigField(
+                        "String",
+                        "\"${overrideSignalingMode}\"",
+                        "CLI override"
+                    )
+                )
+            }
         }
     }
 

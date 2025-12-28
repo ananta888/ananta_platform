@@ -263,7 +263,7 @@
         <string name="signaling_mode">Signaling mode</string>
         <string name="signaling_mode_desc">Choose how peers exchange WebRTC offers</string>
         <string name="signaling_mode_local">Local (mDNS)</string>
-        <string name="signaling_mode_http">HTTP server</string>
+    <string name="signaling_mode_http">HTTP server</string>
         <string name="signaling_server_url">Signaling server URL</string>
         <string name="signaling_server_url_desc">Used when HTTP signaling is selected</string>
         <string name="wrong_path">Wrong path</string>

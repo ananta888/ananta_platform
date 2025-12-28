@@ -1,0 +1,5 @@
+# Local overrides for signaling defaults
+# Use with: ./gradlew assembleDevDebug -PsignalServerUrl=ws://10.0.2.2:8080 -PsignalMode=websocket
+# or set here to apply to all builds on this machine:
+# signalServerUrl=ws://10.0.2.2:8080
+# signalMode=websocket
