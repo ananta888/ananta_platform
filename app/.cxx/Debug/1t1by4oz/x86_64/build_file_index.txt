@@ -1,1 +1,0 @@
-C:\Users\stuib\AndroidStudioProjects\ananta_platform\app\CMakeLists.txt
