@@ -11,6 +11,7 @@ import androidx.multidex.MultiDexApplication;
 import android.widget.Toast;
 
 import com.sovworks.eds.android.helpers.ExtendedFileInfoLoader;
+import com.sovworks.eds.android.network.WebRtcService;
 import com.sovworks.eds.android.providers.MainContentProvider;
 import com.sovworks.eds.android.settings.UserSettings;
 import com.sovworks.eds.crypto.SecureBuffer;
@@ -41,12 +42,13 @@ public class EdsApplicationBase extends MultiDexApplication
 		return _exitSubject;
 	}
 
-	public static void stopProgramBase(Context context, boolean removeNotifications)
-	{
-		_exitSubject.onNext(true);
-		if(removeNotifications)
-			((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE)).cancelAll();
-		setMasterPassword(null);
+        public static void stopProgramBase(Context context, boolean removeNotifications)
+        {
+                _exitSubject.onNext(true);
+                WebRtcService.shutdown();
+                if(removeNotifications)
+                        ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE)).cancelAll();
+                setMasterPassword(null);
 		LocationsManager.setGlobalLocationsManager(null);
 		UserSettings.closeSettings();
 		try
@@ -166,21 +168,22 @@ public class EdsApplicationBase extends MultiDexApplication
 		_lastActivityTime = SystemClock.elapsedRealtime();
 	}
 
-	protected void init(UserSettings settings)
-	{
-		try
-		{
-			if(settings.disableDebugLog())
+        protected void init(UserSettings settings)
+        {
+                try
+                {
+                        if(settings.disableDebugLog())
 				Logger.disableLog(true);
-			else
-				Logger.initLogger();
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace();
-			Toast.makeText(this, Logger.getExceptionMessage(this, e), Toast.LENGTH_LONG).show();
-		}
-	}
+                        else
+                                Logger.initLogger();
+                }
+                catch (Throwable e)
+                {
+                        e.printStackTrace();
+                        Toast.makeText(this, Logger.getExceptionMessage(this, e), Toast.LENGTH_LONG).show();
+                }
+                WebRtcService.initialize(getApplicationContext(), settings);
+        }
 
 	private static SecureBuffer _masterPass;
 	private static Map<String,String> _mimeTypes;

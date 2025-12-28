@@ -22,8 +22,17 @@ class PeerConnectionManager(
     
     private val multiplexer = DataChannelMultiplexer(this)
     private val vaultFileReceiver = VaultFileReceiver(context)
+    private val vaultFileSender = VaultFileSender(multiplexer)
 
     fun getMultiplexer(): DataChannelMultiplexer = multiplexer
+
+    fun sendFile(peerId: String, file: com.sovworks.eds.fs.File) {
+        vaultFileSender.sendFile(peerId, file)
+    }
+
+    fun sendFileStream(peerId: String, fileName: String, totalBytes: Long?, input: java.io.InputStream) {
+        vaultFileSender.sendStream(peerId, fileName, totalBytes, input)
+    }
 
     fun setListener(listener: PeerConnectionListener) {
         this.listener = listener
@@ -44,6 +53,7 @@ class PeerConnectionManager(
             override fun onIceConnectionChange(newState: PeerConnection.IceConnectionState?) {
                 newState?.let {
                     listener?.onConnectionStateChange(peerId, it)
+                    PeerConnectionRegistry.updateStatus(peerId, it.name.lowercase())
                     if (it == PeerConnection.IceConnectionState.DISCONNECTED ||
                         it == PeerConnection.IceConnectionState.FAILED) {
                         // Automatischer Reconnect-Versuch nach Verzögerung
@@ -65,7 +75,7 @@ class PeerConnectionManager(
             override fun onRemoveStream(stream: MediaStream?) {}
             override fun onDataChannel(dataChannel: DataChannel?) {
                 dataChannel?.let {
-                    multiplexer.onDataChannelCreated(peerId, it)
+                    multiplexer.onDataChannelCreated(peerId, it, false)
                 }
             }
             override fun onRenegotiationNeeded() {}
@@ -77,14 +87,15 @@ class PeerConnectionManager(
     }
 
     fun initiateConnection(peerId: String) {
+        PeerConnectionRegistry.updateStatus(peerId, "connecting")
         val pc = getOrCreatePeerConnection(peerId) ?: return
         
         // DataChannels erstellen (nur eine Seite muss dies tun)
         val chatChannel = pc.createDataChannel("chat", DataChannel.Init())
         val fileChannel = pc.createDataChannel("file", DataChannel.Init())
-        
-        multiplexer.onDataChannelCreated(peerId, chatChannel)
-        multiplexer.onDataChannelCreated(peerId, fileChannel)
+
+        multiplexer.onDataChannelCreated(peerId, chatChannel, true)
+        multiplexer.onDataChannelCreated(peerId, fileChannel, true)
 
         val constraints = MediaConstraints()
         
@@ -153,5 +164,6 @@ class PeerConnectionManager(
 
     fun closeConnection(peerId: String) {
         peerConnections.remove(peerId)?.dispose()
+        PeerConnectionRegistry.updateStatus(peerId, "closed")
     }
 }

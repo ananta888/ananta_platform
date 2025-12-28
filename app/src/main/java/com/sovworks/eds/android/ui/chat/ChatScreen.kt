@@ -1,15 +1,19 @@
 package com.sovworks.eds.android.ui.chat
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -17,6 +21,15 @@ import androidx.compose.ui.unit.dp
 fun ChatScreen(viewModel: ChatViewModel) {
     val messages by viewModel.messages.collectAsState()
     var inputText by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val filePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+        onResult = { uri ->
+            if (uri != null) {
+                viewModel.sendFileFromUri(context, uri)
+            }
+        }
+    )
 
     Scaffold(
         topBar = {
@@ -34,13 +47,16 @@ fun ChatScreen(viewModel: ChatViewModel) {
                         modifier = Modifier.weight(1f),
                         placeholder = { Text("Message...") }
                     )
+                    IconButton(onClick = { filePicker.launch(arrayOf("*/*")) }) {
+                        Icon(Icons.Default.AttachFile, contentDescription = "Attach file")
+                    }
                     IconButton(onClick = {
                         if (inputText.isNotBlank()) {
                             viewModel.sendMessage(inputText)
                             inputText = ""
                         }
                     }) {
-                        Icon(Icons.Default.Send, contentDescription = "Send")
+                        Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send")
                     }
                 }
             }

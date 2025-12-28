@@ -14,6 +14,8 @@ import com.sovworks.eds.android.navigation.NavigationViewModel
 import com.sovworks.eds.android.navigation.Screen
 import com.sovworks.eds.android.filemanager.ui.BreadcrumbBar
 import com.sovworks.eds.android.filemanager.viewmodel.FileListEvent
+import com.sovworks.eds.android.ui.transfers.FileTransferDashboardScreen
+import com.sovworks.eds.android.ui.peer.PeerConnectionsScreen
 import kotlinx.coroutines.launch
 
 @Composable
@@ -78,6 +80,8 @@ fun AppScaffold(
                     is Screen.About -> AboutScreen()
                     is Screen.Help -> HelpScreen()
                     is Screen.DebugLog -> DebugLogScreen()
+                    is Screen.FileTransfers -> FileTransferDashboardScreen()
+                    is Screen.PeerConnections -> PeerConnectionsScreen()
                 }
             }
         }

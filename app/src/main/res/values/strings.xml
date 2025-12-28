@@ -250,8 +250,14 @@
 	<string name="exfat_module_required">Please install the <xliff:g id="exfat">exFAT</xliff:g> module</string>
     <string name="restart_application">Please restart EDS</string>
     <string name="force_temp_files">Force temp files</string>
-	<string name="force_temp_files_desc">Use temp files instead of \"pipes\" even for read-only requests. Some apps can\'t work with \"pipes\".</string>
-	<string name="wrong_path">Wrong path</string>
+        <string name="force_temp_files_desc">Use temp files instead of \"pipes\" even for read-only requests. Some apps can\'t work with \"pipes\".</string>
+        <string name="signaling_mode">Signaling mode</string>
+        <string name="signaling_mode_desc">Choose how peers exchange WebRTC offers</string>
+        <string name="signaling_mode_local">Local (mDNS)</string>
+        <string name="signaling_mode_http">HTTP server</string>
+        <string name="signaling_server_url">Signaling server URL</string>
+        <string name="signaling_server_url_desc">Used when HTTP signaling is selected</string>
+        <string name="wrong_path">Wrong path</string>
 	<string name="encfs_config_file_not_found">EncFs config file not found</string>
     <string name="container_opened_read_only">The container has been opened in read-only mode.</string>
 	<string name="service_notifications_channel_name">Service notifications</string>

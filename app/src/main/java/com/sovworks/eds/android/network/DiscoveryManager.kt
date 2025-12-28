@@ -3,6 +3,7 @@ package com.sovworks.eds.android.network
 import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
+import android.os.Build
 import com.sovworks.eds.android.Logger
 
 class DiscoveryManager(private val context: Context) {
@@ -42,15 +43,39 @@ class DiscoveryManager(private val context: Context) {
 
             override fun onServiceFound(service: NsdServiceInfo) {
                 if (service.serviceType == serviceType) {
-                    nsdManager.resolveService(service, object : NsdManager.ResolveListener {
-                        override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
-                            Logger.log("Resolve failed: $errorCode")
-                        }
+                    if (Build.VERSION.SDK_INT >= 34) {
+                        @Suppress("DEPRECATION")
+                        nsdManager.resolveService(
+                            service,
+                            context.mainExecutor,
+                            object : NsdManager.ResolveListener {
+                                override fun onResolveFailed(
+                                    serviceInfo: NsdServiceInfo,
+                                    errorCode: Int
+                                ) {
+                                    Logger.log("Resolve failed: $errorCode")
+                                }
 
-                        override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
-                            onPeerFound(serviceInfo)
-                        }
-                    })
+                                override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
+                                    onPeerFound(serviceInfo)
+                                }
+                            }
+                        )
+                    } else {
+                        @Suppress("DEPRECATION")
+                        nsdManager.resolveService(service, object : NsdManager.ResolveListener {
+                            override fun onResolveFailed(
+                                serviceInfo: NsdServiceInfo,
+                                errorCode: Int
+                            ) {
+                                Logger.log("Resolve failed: $errorCode")
+                            }
+
+                            override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
+                                onPeerFound(serviceInfo)
+                            }
+                        })
+                    }
                 }
             }
 

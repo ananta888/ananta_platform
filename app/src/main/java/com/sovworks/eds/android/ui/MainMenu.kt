@@ -26,7 +26,7 @@ fun MainMenu(
             .padding(16.dp)
     ) {
         Text(
-            text = "Hauptmenü",
+            text = "HauptmenÃ¼",
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -36,7 +36,7 @@ fun MainMenu(
             navigationViewModel.navigateToRoot(Screen.LocalFiles)
             onCloseDrawer()
         })
-        MenuItem(text = "Verschlüsselte Container", onClick = {
+        MenuItem(text = "VerschlÃ¼sselte Container", onClick = {
             navigationViewModel.navigateToRoot(Screen.EncryptedContainers)
             onCloseDrawer()
         })
@@ -51,12 +51,16 @@ fun MainMenu(
             navigationViewModel.navigateToRoot(Screen.ProgramSettings)
             onCloseDrawer()
         })
-        MenuItem(text = "Öffnungsoptionen", onClick = {
+        MenuItem(text = "Ã–ffnungsoptionen", onClick = {
             navigationViewModel.navigateToRoot(Screen.OpeningOptions)
             onCloseDrawer()
         })
-        MenuItem(text = "Verschlüsselungseinstellungen", onClick = {
+        MenuItem(text = "VerschlÃ¼sselungseinstellungen", onClick = {
             navigationViewModel.navigateToRoot(Screen.EncryptionSettings)
+            onCloseDrawer()
+        })
+        MenuItem(text = "Signaling", onClick = {
+            navigationViewModel.navigateToRoot(Screen.ProgramSettings)
             onCloseDrawer()
         })
 
@@ -66,12 +70,20 @@ fun MainMenu(
             navigationViewModel.navigateToRoot(Screen.VersionHistory)
             onCloseDrawer()
         })
-        MenuItem(text = "Über die App", onClick = {
+        MenuItem(text = "Ãœber die App", onClick = {
             navigationViewModel.navigateToRoot(Screen.About)
             onCloseDrawer()
         })
         MenuItem(text = "Hilfe", onClick = {
             navigationViewModel.navigateToRoot(Screen.Help)
+            onCloseDrawer()
+        })
+        MenuItem(text = "File Transfers", onClick = {
+            navigationViewModel.navigateToRoot(Screen.FileTransfers)
+            onCloseDrawer()
+        })
+        MenuItem(text = "Peer Connections", onClick = {
+            navigationViewModel.navigateToRoot(Screen.PeerConnections)
             onCloseDrawer()
         })
         MenuItem(text = "Debug Log", onClick = {

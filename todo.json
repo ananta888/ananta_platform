@@ -1,36 +1,11 @@
 {
   "project": "Ananta Platform (WebRTC & Secure Exchange)",
   "version": "1.0.0-draft",
-  "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform für sichere Kommunikation und Dateiaustausch.",
-  "tasks": [
-    {
-      "id": "SEC-005",
-      "title": "DataChannel Perfect Forward Secrecy",
-      "description": "Integration von Noise Protocol Framework oder Double Ratchet für PFS auf den WebRTC DataChannels.",
-      "status": "todo",
-      "priority": "high",
-      "assignee": "Junie"
-    },
-    {
-      "id": "NET-001",
-      "title": "Local Network Peer Discovery (mDNS)",
-      "description": "Implementierung von NSD (Network Service Discovery) zum automatischen Finden von Peers im selben WLAN ohne Signalling-Server.",
-      "status": "todo",
-      "priority": "medium",
-      "assignee": "Junie"
-    },
-    {
-      "id": "UI-002",
-      "title": "File Transfer Progress Dashboard",
-      "description": "Zentrale Ansicht zur Überwachung aller ein- und ausgehenden Dateitransfers inklusive Pausieren/Fortsetzen.",
-      "status": "todo",
-      "priority": "low",
-      "assignee": "Junie"
-    }
-  ],
+  "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform fÃƒÂ¼r sichere Kommunikation und Dateiaustausch.",
+  "tasks": [],
   "architecture_goals": [
-    "Vollständige Dezentralität (kein zentraler Server außer Signaling/STUN)",
-    "Ende-zu-Ende Verschlüsselung für alle Transfers",
-    "Offline-First Ansatz für das Trust-Ranking"
+    "VollstÃƒÂ¤ndige DezentralitÃƒÂ¤t (kein zentraler Server auÃƒÅ¸er Signaling/STUN)",
+    "Ende-zu-Ende VerschlÃƒÂ¼sselung fÃƒÂ¼r alle Transfers",
+    "Offline-First Ansatz fÃƒÂ¼r das Trust-Ranking"
   ]
 }

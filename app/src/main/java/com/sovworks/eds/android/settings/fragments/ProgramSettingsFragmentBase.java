@@ -19,9 +19,11 @@ import com.sovworks.eds.android.settings.IntPropertyEditor;
 import com.sovworks.eds.android.settings.MultilineTextPropertyEditor;
 import com.sovworks.eds.android.settings.PathPropertyEditor;
 import com.sovworks.eds.android.settings.SwitchPropertyEditor;
+import com.sovworks.eds.android.settings.TextPropertyEditor;
 import com.sovworks.eds.android.settings.UserSettings;
 import com.sovworks.eds.android.settings.program.ExtFileManagerPropertyEditor;
 import com.sovworks.eds.android.settings.program.InstallExFatModulePropertyEditor;
+import com.sovworks.eds.android.network.WebRtcService;
 import com.sovworks.eds.crypto.SecureBuffer;
 import com.sovworks.eds.fs.util.PathUtil;
 import com.sovworks.eds.locations.Location;
@@ -42,6 +44,9 @@ import static com.sovworks.eds.android.settings.UserSettingsCommon.FORCE_TEMP_FI
 import static com.sovworks.eds.android.settings.UserSettingsCommon.IS_FLAG_SECURE_ENABLED;
 import static com.sovworks.eds.android.settings.UserSettingsCommon.MAX_FILE_SIZE_TO_OPEN;
 import static com.sovworks.eds.android.settings.UserSettingsCommon.NEVER_SAVE_HISTORY;
+import static com.sovworks.eds.android.settings.UserSettingsCommon.SIGNALING_MODE;
+import static com.sovworks.eds.android.settings.UserSettingsCommon.SIGNALING_MODE_HTTP;
+import static com.sovworks.eds.android.settings.UserSettingsCommon.SIGNALING_SERVER_URL;
 import static com.sovworks.eds.android.settings.UserSettingsCommon.SHOW_PREVIEWS;
 import static com.sovworks.eds.android.settings.UserSettingsCommon.THEME;
 import static com.sovworks.eds.android.settings.UserSettingsCommon.USE_INTERNAL_IMAGE_VIEWER;
@@ -267,6 +272,53 @@ public abstract class ProgramSettingsFragmentBase extends PropertiesFragmentBase
             }
         }));
         commonPropertiesIds.add(getPropertiesView().addProperty(new ExtFileManagerPropertyEditor(this)));
+        commonPropertiesIds.add(getPropertiesView().addProperty(
+                new ChoiceDialogPropertyEditor(this, R.string.signaling_mode, R.string.signaling_mode_desc, getTag())
+                {
+                    @Override
+                    protected int loadValue()
+                    {
+                        int value = SIGNALING_MODE_HTTP.equals(_settings.getSignalingMode()) ? 1 : 0;
+                        getPropertiesView().setPropertyState(R.string.signaling_server_url, value == 1);
+                        return value;
+                    }
+
+                    @Override
+                    protected void saveValue(int value)
+                    {
+                        editSettings().putString(SIGNALING_MODE, value == 1 ? SIGNALING_MODE_HTTP : com.sovworks.eds.android.settings.UserSettingsCommon.SIGNALING_MODE_LOCAL).commit();
+                        getPropertiesView().setPropertyState(R.string.signaling_server_url, value == 1);
+                        WebRtcService.initialize(getActivity().getApplicationContext(), _settings);
+                    }
+
+                    @Override
+                    protected List<String> getEntries()
+                    {
+                        return Arrays.asList(
+                                getString(R.string.signaling_mode_local),
+                                getString(R.string.signaling_mode_http)
+                        );
+                    }
+                }));
+        commonPropertiesIds.add(getPropertiesView().addProperty(
+                new TextPropertyEditor(this, R.string.signaling_server_url, R.string.signaling_server_url_desc, getTag())
+                {
+                    @Override
+                    protected String loadText()
+                    {
+                        return _settings.getSignalingServerUrl();
+                    }
+
+                    @Override
+                    protected void saveText(String text)
+                    {
+                        if (text != null && text.trim().length() > 0)
+                            editSettings().putString(SIGNALING_SERVER_URL, text.trim()).commit();
+                        else
+                            editSettings().remove(SIGNALING_SERVER_URL).commit();
+                        WebRtcService.initialize(getActivity().getApplicationContext(), _settings);
+                    }
+                }));
         commonPropertiesIds.add(getPropertiesView().addProperty(new IntPropertyEditor(this, R.string.max_temporary_file_size, R.string.max_temporary_file_size_desc, getTag())
         {
             @Override

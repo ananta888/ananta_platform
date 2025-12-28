@@ -1,7 +1,6 @@
 package com.sovworks.eds.android.network
 
 import org.webrtc.DataChannel
-import java.nio.ByteBuffer
 import java.util.concurrent.ConcurrentHashMap
 
 interface DataChannelListener {
@@ -12,8 +11,8 @@ interface DataChannelListener {
 class DataChannelMultiplexer(
     private val peerConnectionManager: PeerConnectionManager
 ) {
-    private val chatChannels = ConcurrentHashMap<String, DataChannel>()
-    private val fileChannels = ConcurrentHashMap<String, DataChannel>()
+    private val chatChannels = ConcurrentHashMap<String, SecureDataChannel>()
+    private val fileChannels = ConcurrentHashMap<String, SecureDataChannel>()
     private val listeners = mutableListOf<DataChannelListener>()
 
     fun addListener(listener: DataChannelListener) {
@@ -24,62 +23,51 @@ class DataChannelMultiplexer(
         listeners.remove(listener)
     }
 
-    fun onDataChannelCreated(peerId: String, dataChannel: DataChannel) {
+    fun onDataChannelCreated(peerId: String, dataChannel: DataChannel, isInitiator: Boolean) {
         when (dataChannel.label()) {
-            "chat" -> setupChatChannel(peerId, dataChannel)
-            "file" -> setupFileChannel(peerId, dataChannel)
+            "chat" -> setupChatChannel(peerId, dataChannel, isInitiator)
+            "file" -> setupFileChannel(peerId, dataChannel, isInitiator)
         }
     }
 
-    private fun setupChatChannel(peerId: String, channel: DataChannel) {
-        chatChannels[peerId] = channel
-        channel.registerObserver(object : DataChannel.Observer {
-            override fun onBufferedAmountChange(previousAmount: Long) {}
-            override fun onStateChange() {}
-            override fun onMessage(buffer: DataChannel.Buffer) {
-                if (!buffer.binary) {
-                    val bytes = ByteArray(buffer.data.remaining())
-                    buffer.data.get(bytes)
-                    val message = String(bytes)
-                    listeners.forEach { it.onMessageReceived(peerId, message) }
-                }
-            }
-        })
+    private fun setupChatChannel(peerId: String, channel: DataChannel, isInitiator: Boolean) {
+        chatChannels[peerId] = SecureDataChannel(
+            channel = channel,
+            isInitiator = isInitiator,
+            onTextMessage = { message ->
+                listeners.forEach { it.onMessageReceived(peerId, message) }
+            },
+            onBinaryMessage = {}
+        )
     }
 
-    private fun setupFileChannel(peerId: String, channel: DataChannel) {
-        fileChannels[peerId] = channel
-        channel.registerObserver(object : DataChannel.Observer {
-            override fun onBufferedAmountChange(previousAmount: Long) {
-                // Flow control logic could go here
+    private fun setupFileChannel(peerId: String, channel: DataChannel, isInitiator: Boolean) {
+        fileChannels[peerId] = SecureDataChannel(
+            channel = channel,
+            isInitiator = isInitiator,
+            onTextMessage = { message ->
+                listeners.forEach { it.onMessageReceived(peerId, message) }
+            },
+            onBinaryMessage = { data ->
+                listeners.forEach { it.onBinaryReceived(peerId, data) }
             }
-            override fun onStateChange() {}
-            override fun onMessage(buffer: DataChannel.Buffer) {
-                if (buffer.binary) {
-                    val bytes = ByteArray(buffer.data.remaining())
-                    buffer.data.get(bytes)
-                    listeners.forEach { it.onBinaryReceived(peerId, bytes) }
-                }
-            }
-        })
+        )
     }
 
     fun sendMessage(peerId: String, message: String) {
         val channel = chatChannels[peerId] ?: return
-        val buffer = ByteBuffer.wrap(message.toByteArray())
-        channel.send(DataChannel.Buffer(buffer, false))
+        channel.sendText(message)
     }
 
-    fun sendFileData(peerId: String, data: ByteArray) {
-        val channel = fileChannels[peerId] ?: return
-        
+    fun sendFileData(peerId: String, data: ByteArray): Boolean {
+        val channel = fileChannels[peerId] ?: return false
+
         // Simple Flow Control: Wait if buffer is too full
         if (channel.bufferedAmount() > 1024 * 1024) { // 1MB threshold
-             // In a real app, we would use a callback or coroutine to wait
-             return
+            // In a real app, we would use a callback or coroutine to wait
+            return false
         }
-
-        val buffer = ByteBuffer.wrap(data)
-        channel.send(DataChannel.Buffer(buffer, true))
+        channel.sendBinary(data)
+        return true
     }
 }

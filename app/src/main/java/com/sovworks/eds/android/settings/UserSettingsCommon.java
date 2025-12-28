@@ -48,9 +48,14 @@ public abstract class UserSettingsCommon implements SettingsCommon
 	public static final String SETTINGS_PROTECTION_KEY_USER = "settings_protection_key_user";
 	public static final String SETTINGS_PROTECTION_KEY_AUTO = "settings_protection_key_auto";
 	public static final String THEME = "theme";
-	public static final String EXTERNAL_FILE_MANAGER = "external_file_manager";
-	public static final String DONT_USE_CONTENT_PROVIDER = "dont_use_content_provider";
-	public static final String FORCE_TEMP_FILES = "force_temp_files";
+        public static final String EXTERNAL_FILE_MANAGER = "external_file_manager";
+        public static final String DONT_USE_CONTENT_PROVIDER = "dont_use_content_provider";
+        public static final String FORCE_TEMP_FILES = "force_temp_files";
+        public static final String SIGNALING_MODE = "signaling_mode";
+        public static final String SIGNALING_SERVER_URL = "signaling_server_url";
+        public static final String SIGNALING_PEER_ID = "signaling_peer_id";
+        public static final String SIGNALING_MODE_LOCAL = "local";
+        public static final String SIGNALING_MODE_HTTP = "http";
 
 	public static final String SETTINGS_PROTECTION_KEY_CHECK = "protection_key_check";
 
@@ -414,11 +419,21 @@ public abstract class UserSettingsCommon implements SettingsCommon
 		return _prefs.getBoolean(DONT_USE_CONTENT_PROVIDER, _defaultSettings.dontUseContentProvider());
 	}
 
-	@Override
-	public boolean forceTempFiles()
-	{
-		return _prefs.getBoolean(FORCE_TEMP_FILES, _defaultSettings.forceTempFiles());
-	}
+        @Override
+        public boolean forceTempFiles()
+        {
+                return _prefs.getBoolean(FORCE_TEMP_FILES, _defaultSettings.forceTempFiles());
+        }
+
+        public String getSignalingMode()
+        {
+                return _prefs.getString(SIGNALING_MODE, SIGNALING_MODE_LOCAL);
+        }
+
+        public String getSignalingServerUrl()
+        {
+                return _prefs.getString(SIGNALING_SERVER_URL, "");
+        }
 
 	public synchronized void saveSettingsProtectionKey() throws InvalidSettingsPassword
     {

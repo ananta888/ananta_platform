@@ -19,6 +19,8 @@ sealed class Screen(val title: String) {
     object About : Screen("Über die App")
     object Help : Screen("Hilfe")
     object DebugLog : Screen("Debug Log")
+    object FileTransfers : Screen("File Transfers")
+    object PeerConnections : Screen("Peer Connections")
 }
 
 class NavigationViewModel : ViewModel() {
