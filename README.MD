@@ -60,6 +60,24 @@ graph TD
 *   **Container Logic**: Unterstützung für VeraCrypt, LUKS und TrueCrypt.
 *   **Crypto Core & Native Implementation**: Kombiniert asymmetrische Kryptographie für Identitäten mit performanter symmetrischer Verschlüsselung (C/JNI).
 
+## Tech-Stack
+
+Die Ananta Platform nutzt moderne Technologien für Sicherheit und Performance:
+*   **Sprache**: Kotlin (UI & Logik), C (Krypto-Kern)
+*   **UI-Framework**: Jetpack Compose mit Material 3
+*   **P2P-Kommunikation**: WebRTC (DataChannels für Chat & File-Transfer)
+*   **Kryptographie**: Ed25519 (Identitäten), AES/Serpent/Twofish (Container-Verschlüsselung via JNI)
+*   **Netzwerk**: OkHttp (Signaling), Google Gson (Serialisierung)
+*   **Datenhaltung**: Room (für lokale Metadaten), EDS Lite Core (für verschlüsselte Container)
+
+## Hauptfunktionalitäten
+
+1.  **Sicherer Datentresor**: Erstellung und Verwaltung von verschlüsselten Containern (VeraCrypt, LUKS, TrueCrypt kompatibel).
+2.  **Dezentraler P2P Chat**: Ende-zu-Ende verschlüsselte Echtzeit-Kommunikation ohne zentrale Server.
+3.  **High-Speed File Transfer**: Direkter Austausch von Dateien zwischen Geräten über WebRTC DataChannels.
+4.  **Web-of-Trust**: Ein dezentrales Bewertungssystem für Nutzer-Identitäten zur Vermeidung von Man-in-the-Middle Angriffen.
+5.  **Offline-First**: Trust-Rankings und Nachrichten-Metadaten werden lokal verwaltet und bei Verbindung synchronisiert.
+
 ## Vision: Ananta Secure Exchange
 Basierend auf der soliden Basis von EDS Lite wird die Ananta Platform zu einem Werkzeug für dezentrale, sichere Kommunikation entwickelt:
 *   **Dezentrale Vertrauenskette**: Nutzer bewerten Public Keys und teilen diese Bewertungen im Peer-Netzwerk.
