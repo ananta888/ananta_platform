@@ -10,6 +10,7 @@ import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import org.bouncycastle.crypto.signers.Ed25519Signer
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import com.sovworks.eds.android.security.SecurityUtils
 import java.io.File
 import java.security.SecureRandom
 import java.security.Security
@@ -28,14 +29,31 @@ object IdentityManager {
         val privateKey = keyPair.private as Ed25519PrivateKeyParameters
         val publicKey = keyPair.public as Ed25519PublicKeyParameters
 
+        val privateKeyRaw = Base64.encodeToString(privateKey.encoded, Base64.NO_WRAP)
+        val encryptionResult = SecurityUtils.encrypt(privateKeyRaw)
+
         val identity = Identity(
             id = name,
             publicKeyBase64 = Base64.encodeToString(publicKey.encoded, Base64.NO_WRAP),
-            privateKeyBase64 = Base64.encodeToString(privateKey.encoded, Base64.NO_WRAP)
+            privateKeyBase64 = encryptionResult.data,
+            ivBase64 = encryptionResult.iv
         )
 
         saveIdentity(context, identity)
         return identity
+    }
+
+    fun getDecryptedPrivateKey(identity: Identity): Ed25519PrivateKeyParameters? {
+        val encryptedKey = identity.getEncryptedPrivateKey() ?: return null
+        val iv = identity.getIv() ?: return identity.getPrivateKey() // Fallback for old unencrypted keys
+
+        return try {
+            val decryptedKeyRaw = SecurityUtils.decrypt(encryptedKey, iv)
+            identity.getPrivateKey(decryptedKeyRaw)
+        } catch (e: Exception) {
+            // Fallback for migration or if encryption failed
+            identity.getPrivateKey()
+        }
     }
 
     private fun saveIdentity(context: Context, identity: Identity) {

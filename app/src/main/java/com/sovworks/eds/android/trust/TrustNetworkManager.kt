@@ -11,7 +11,7 @@ object TrustNetworkManager {
     private val gson = Gson()
 
     fun exportTrustNetwork(identity: Identity, keysToExport: List<TrustedKey>): TrustNetworkPackage? {
-        val privateKey = identity.getPrivateKey() ?: return null
+        val privateKey = IdentityManager.getDecryptedPrivateKey(identity) ?: return null
         val keysJson = gson.toJson(keysToExport)
         val signature = IdentityManager.sign(privateKey, keysJson.toByteArray())
         

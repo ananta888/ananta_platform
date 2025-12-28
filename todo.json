@@ -4,17 +4,9 @@
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform für sichere Kommunikation und Dateiaustausch.",
   "tasks": [
     {
-      "id": "SEC-001",
-      "title": "AndroidKeyStore Integration",
-      "description": "Verschlüsselung des privaten Schlüssels der Nutzeridentität mittels AndroidKeyStore (AES/GCM).",
-      "status": "todo",
-      "priority": "high",
-      "assignee": "Junie"
-    },
-    {
-      "id": "NET-004",
-      "title": "WebRTC Signaling Service",
-      "description": "Implementierung eines dezentralen oder einfachen Signaling-Mechanismus für Internet-Verbindungen.",
+      "id": "SEC-002",
+      "title": "Key Rotation & Recovery",
+      "description": "Implementierung eines Mechanismus zur Erneuerung von Schlüsseln und Wiederherstellung der Identität.",
       "status": "todo",
       "priority": "medium",
       "assignee": "Junie"

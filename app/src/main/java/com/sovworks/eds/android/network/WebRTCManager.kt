@@ -1,7 +1,6 @@
 package com.sovworks.eds.android.network
 
 import android.content.Context
-import io.getstream.webrtc.android.WebRtcBinary
 import org.webrtc.DefaultVideoDecoderFactory
 import org.webrtc.DefaultVideoEncoderFactory
 import org.webrtc.PeerConnection
