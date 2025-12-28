@@ -258,7 +258,7 @@
 	<string name="file_operations_notifications_channel_name">File operation notifications</string>
 
     <!-- Secure Sharing -->
-    <string name="secure_share">Secure Share (age)</string>
+    <string name="secure_share_age_title">Secure Share (age)</string>
     <string name="secure_share_desc">Encrypt files before sharing</string>
     <string name="share_with_passphrase">Share with passphrase</string>
     <string name="share_with_public_key">Share with public key</string>

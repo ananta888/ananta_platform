@@ -71,7 +71,7 @@ public class SecureShareDialog extends DialogFragment {
         });
 
         builder.setView(view)
-                .setTitle(R.string.secure_share)
+                .setTitle(R.string.secure_share_age_title)
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
