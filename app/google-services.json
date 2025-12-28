@@ -10,7 +10,12 @@
         "android_client_info": {
           "package_name": "com.sovworks.edslite"
         }
-      }
+      },
+      "api_key": [
+        {
+          "current_key": "dummy_key"
+        }
+      ]
     }
   ]
 }

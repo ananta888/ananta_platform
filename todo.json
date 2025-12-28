@@ -4,20 +4,20 @@
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform f\u00fcr sichere Kommunikation und Dateiaustausch.",
   "tasks": [
     {
-      "id": 29,
-      "title": "Dezentrale Dateisuche",
-      "description": "Protokoll zur Suche von freigegebenen Dateien \u00fcber das Trust-Network ohne Index-Server.",
+      "id": 31,
+      "title": "UI Integration der Dateisuche",
+      "description": "Erstellung einer Suchmaske und Ergebnisliste für die dezentrale Dateisuche.",
       "priority": "medium",
       "status": "todo",
-      "category": "Discovery"
+      "category": "UI"
     },
     {
-      "id": 30,
-      "title": "Offline-Messaging via Store-and-Forward",
-      "description": "Implementierung eines Mechanismus zum Zwischenspeichern von verschl\u00fcsselten Nachrichten auf vertrauensw\u00fcrdigen Peers.",
+      "id": 32,
+      "title": "Verfeinerung des Trust-Rankings",
+      "description": "Implementierung eines gewichteten Trust-Ranking Algorithmus basierend auf Interaktionen.",
       "priority": "low",
       "status": "todo",
-      "category": "Network"
+      "category": "Trust"
     }
   ],
   "architecture_goals": [

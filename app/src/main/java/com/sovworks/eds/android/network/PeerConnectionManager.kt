@@ -161,9 +161,13 @@ class PeerConnectionManager(
         // DataChannels erstellen (nur eine Seite muss dies tun)
         val chatChannel = pc.createDataChannel("chat", DataChannel.Init())
         val fileChannel = pc.createDataChannel("file", DataChannel.Init())
+        val discoveryChannel = pc.createDataChannel("discovery", DataChannel.Init())
+        val offlineMsgChannel = pc.createDataChannel("offline_msg", DataChannel.Init())
 
         multiplexer.onDataChannelCreated(peerId, chatChannel, true)
         multiplexer.onDataChannelCreated(peerId, fileChannel, true)
+        multiplexer.onDataChannelCreated(peerId, discoveryChannel, true)
+        multiplexer.onDataChannelCreated(peerId, offlineMsgChannel, true)
 
         val constraints = MediaConstraints()
         
