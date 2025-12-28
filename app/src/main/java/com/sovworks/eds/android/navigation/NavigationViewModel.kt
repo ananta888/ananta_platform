@@ -21,6 +21,11 @@ sealed class Screen(val title: String) {
     object DebugLog : Screen("Debug Log")
     object FileTransfers : Screen("File Transfers")
     object PeerConnections : Screen("Peer Connections")
+    object IdentitySync : Screen("Identity Sync")
+    object Pairing : Screen("Device Pairing")
+    object Peers : Screen("Peers & Devices")
+    object Exchange : Screen("Exchange")
+    object Trust : Screen("Trust")
     data class Messenger(val peerId: String? = null, val groupId: String? = null) : Screen("Messenger")
 }
 

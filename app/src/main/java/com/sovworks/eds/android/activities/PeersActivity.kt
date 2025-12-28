@@ -11,15 +11,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.sovworks.eds.android.R
+import com.sovworks.eds.android.navigation.Screen
+import com.sovworks.eds.android.ui.setSettingsContent
 
 class PeersActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            MaterialTheme {
-                PeersScreen(onBackPressed = { finish() })
-            }
-        }
+        setSettingsContent(Screen.Peers)
     }
 }
 

@@ -18,6 +18,8 @@ import com.sovworks.eds.android.identity.IdentityManager
 import com.sovworks.eds.android.network.PairingManager
 import com.sovworks.eds.android.trust.TrustStore
 import com.sovworks.eds.android.trust.TrustedKey
+import com.sovworks.eds.android.navigation.Screen
+import com.sovworks.eds.android.ui.setSettingsContent
 
 class PairingActivity : ComponentActivity() {
     private val barcodeLauncher = registerForActivityResult(ScanContract()) { result ->
@@ -29,46 +31,10 @@ class PairingActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        val identity = IdentityManager.loadIdentity(this)
-        val myMetadata = identity?.let { PairingManager.createMyMetadata(it) }
-        val qrBitmap = myMetadata?.let { PairingManager.generateQrCode(it) }
-
-        setContent {
-            MaterialTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "My Pairing Code",
-                            style = MaterialTheme.typography.headlineMedium,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-                        
-                        qrBitmap?.let {
-                            Image(
-                                bitmap = it.asImageBitmap(),
-                                contentDescription = "My QR Code",
-                                modifier = Modifier.size(250.dp)
-                            )
-                        } ?: Text("Failed to generate QR Code")
-
-                        Spacer(modifier = Modifier.height(32.dp))
-
-                        Button(onClick = { startScanner() }) {
-                            Text("Scan Peer Code")
-                        }
-                    }
-                }
-            }
-        }
+        setSettingsContent(
+            screen = Screen.Pairing,
+            onStartPairingScanner = { startScanner() }
+        )
     }
 
     private fun startScanner() {

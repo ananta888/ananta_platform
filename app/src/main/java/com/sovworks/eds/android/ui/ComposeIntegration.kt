@@ -7,6 +7,7 @@ import com.sovworks.eds.android.filemanager.viewmodel.FileListViewModel
 import com.sovworks.eds.android.navigation.Screen
 import com.sovworks.eds.android.navigation.NavigationViewModel
 import com.sovworks.eds.android.ui.theme.AppTheme
+import kotlin.jvm.JvmOverloads
 
 fun ComponentActivity.setAppContent() {
     val fileListViewModel = ViewModelProvider(this)[FileListViewModel::class.java]
@@ -22,7 +23,12 @@ fun ComponentActivity.setAppContent() {
     }
 }
 
-fun ComponentActivity.setSettingsContent(screen: Screen) {
+@JvmOverloads
+fun ComponentActivity.setSettingsContent(
+    screen: Screen,
+    onStartIdentityScanner: (() -> Unit)? = null,
+    onStartPairingScanner: (() -> Unit)? = null
+) {
     val navigationViewModel = ViewModelProvider(this)[NavigationViewModel::class.java]
     navigationViewModel.navigateToRoot(screen)
     
@@ -34,7 +40,9 @@ fun ComponentActivity.setSettingsContent(screen: Screen) {
         AppTheme {
             AppScaffold(
                 navigationViewModel = navigationViewModel,
-                fileListViewModel = fileListViewModel
+                fileListViewModel = fileListViewModel,
+                onStartIdentityScanner = onStartIdentityScanner,
+                onStartPairingScanner = onStartPairingScanner
             )
         }
     }

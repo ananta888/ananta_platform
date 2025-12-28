@@ -1,10 +1,13 @@
 package com.sovworks.eds.android.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -22,7 +25,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun AppScaffold(
     navigationViewModel: NavigationViewModel = viewModel(),
-    fileListViewModel: FileListViewModel
+    fileListViewModel: FileListViewModel,
+    onStartIdentityScanner: (() -> Unit)? = null,
+    onStartPairingScanner: (() -> Unit)? = null
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -83,6 +88,11 @@ fun AppScaffold(
                     is Screen.DebugLog -> DebugLogScreen()
                     is Screen.FileTransfers -> FileTransferDashboardScreen()
                     is Screen.PeerConnections -> PeerConnectionsScreen()
+                    is Screen.IdentitySync -> IdentitySyncScreen(onStartScanner = { onStartIdentityScanner?.invoke() })
+                    is Screen.Pairing -> PairingScreen(onStartScanner = { onStartPairingScanner?.invoke() })
+                    is Screen.Peers -> PeersScreenContent()
+                    is Screen.Exchange -> PlaceholderScreen("Exchange")
+                    is Screen.Trust -> PlaceholderScreen("Trust")
                     is Screen.Messenger -> {
                         val screen = currentScreen as Screen.Messenger
                         MessengerScreen(peerId = screen.peerId, groupId = screen.groupId)
@@ -90,6 +100,17 @@ fun AppScaffold(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun PeersScreenContent() {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("No peers found yet.")
     }
 }
 

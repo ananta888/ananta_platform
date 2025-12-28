@@ -26,7 +26,7 @@ fun MainMenu(
             .padding(16.dp)
     ) {
         Text(
-            text = "HauptmenÃ¼",
+            text = "Ananta Platform",
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -36,7 +36,7 @@ fun MainMenu(
             navigationViewModel.navigateToRoot(Screen.LocalFiles)
             onCloseDrawer()
         })
-        MenuItem(text = "VerschlÃ¼sselte Container", onClick = {
+        MenuItem(text = "Verschlüsselte Container", onClick = {
             navigationViewModel.navigateToRoot(Screen.EncryptedContainers)
             onCloseDrawer()
         })
@@ -46,38 +46,45 @@ fun MainMenu(
         })
 
         Spacer(modifier = Modifier.height(16.dp))
+        MenuSection(title = "PLATFORM")
+        MenuItem(text = "Exchange", onClick = {
+            navigationViewModel.navigateToRoot(Screen.Exchange)
+            onCloseDrawer()
+        })
+        MenuItem(text = "Trust Network", onClick = {
+            navigationViewModel.navigateToRoot(Screen.Trust)
+            onCloseDrawer()
+        })
+        MenuItem(text = "Identity Sync", onClick = {
+            navigationViewModel.navigateToRoot(Screen.IdentitySync)
+            onCloseDrawer()
+        })
+        MenuItem(text = "Device Pairing", onClick = {
+            navigationViewModel.navigateToRoot(Screen.Pairing)
+            onCloseDrawer()
+        })
+        MenuItem(text = "Peers & Devices", onClick = {
+            navigationViewModel.navigateToRoot(Screen.Peers)
+            onCloseDrawer()
+        })
+
+        Spacer(modifier = Modifier.height(16.dp))
         MenuSection(title = "EINSTELLUNGEN")
         MenuItem(text = "Allgemeine Einstellungen", onClick = {
             navigationViewModel.navigateToRoot(Screen.ProgramSettings)
             onCloseDrawer()
         })
-        MenuItem(text = "Ã–ffnungsoptionen", onClick = {
+        MenuItem(text = "Öffnungsoptionen", onClick = {
             navigationViewModel.navigateToRoot(Screen.OpeningOptions)
             onCloseDrawer()
         })
-        MenuItem(text = "VerschlÃ¼sselungseinstellungen", onClick = {
+        MenuItem(text = "Verschlüsselungseinstellungen", onClick = {
             navigationViewModel.navigateToRoot(Screen.EncryptionSettings)
-            onCloseDrawer()
-        })
-        MenuItem(text = "Signaling", onClick = {
-            navigationViewModel.navigateToRoot(Screen.ProgramSettings)
             onCloseDrawer()
         })
 
         Spacer(modifier = Modifier.height(16.dp))
         MenuSection(title = "EXTRAS")
-        MenuItem(text = "Versionshistorie", onClick = {
-            navigationViewModel.navigateToRoot(Screen.VersionHistory)
-            onCloseDrawer()
-        })
-        MenuItem(text = "Ãœber die App", onClick = {
-            navigationViewModel.navigateToRoot(Screen.About)
-            onCloseDrawer()
-        })
-        MenuItem(text = "Hilfe", onClick = {
-            navigationViewModel.navigateToRoot(Screen.Help)
-            onCloseDrawer()
-        })
         MenuItem(text = "File Transfers", onClick = {
             navigationViewModel.navigateToRoot(Screen.FileTransfers)
             onCloseDrawer()
@@ -89,6 +96,26 @@ fun MainMenu(
         MenuItem(text = "Debug Log", onClick = {
             navigationViewModel.navigateToRoot(Screen.DebugLog)
             onCloseDrawer()
+        })
+        MenuItem(text = "Versionshistorie", onClick = {
+            navigationViewModel.navigateToRoot(Screen.VersionHistory)
+            onCloseDrawer()
+        })
+        MenuItem(text = "Hilfe", onClick = {
+            navigationViewModel.navigateToRoot(Screen.Help)
+            onCloseDrawer()
+        })
+        MenuItem(text = "Über die App", onClick = {
+            navigationViewModel.navigateToRoot(Screen.About)
+            onCloseDrawer()
+        })
+
+        Spacer(modifier = Modifier.weight(1f))
+        HorizontalDivider()
+        MenuItem(text = "Beenden", onClick = {
+            onCloseDrawer()
+            // In einer echten App würde hier der Exit-Code stehen
+            android.os.Process.killProcess(android.os.Process.myPid())
         })
     }
 }

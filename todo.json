@@ -26,6 +26,110 @@
       "priority": "high",
       "status": "todo",
       "category": "Network"
+    },
+    {
+      "id": 42,
+      "title": "Menüpunkt: Tresore",
+      "description": "Vollständige Integration der Tresor-Verwaltung im neuen Frontend-Design.",
+      "priority": "medium",
+      "status": "todo",
+      "category": "UI"
+    },
+    {
+      "id": 43,
+      "title": "Menüpunkt: Lokale Dateien",
+      "description": "Vollständige Integration des lokalen Dateimanagers im neuen Frontend-Design.",
+      "priority": "medium",
+      "status": "todo",
+      "category": "UI"
+    },
+    {
+      "id": 44,
+      "title": "Menüpunkt: Exchange",
+      "description": "Implementierung der Benutzeroberfläche für den dezentralen Dateiaustausch (Exchange).",
+      "priority": "high",
+      "status": "todo",
+      "category": "UI"
+    },
+    {
+      "id": 45,
+      "title": "Menüpunkt: Trust",
+      "description": "Implementierung der Benutzeroberfläche für das Trust-Ranking und Peer-Management.",
+      "priority": "medium",
+      "status": "todo",
+      "category": "UI"
+    },
+    {
+      "id": 46,
+      "title": "Menüpunkt: Einstellungen",
+      "description": "Vollständige Integration aller App-Einstellungen (Allgemein, Öffnen, Verschlüsselung, Signaling).",
+      "priority": "medium",
+      "status": "todo",
+      "category": "UI"
+    },
+    {
+      "id": 47,
+      "title": "Menüpunkt: Diagnostics/Log",
+      "description": "Vollständige Integration der Log-Anzeige und Diagnose-Werkzeuge.",
+      "priority": "low",
+      "status": "todo",
+      "category": "UI"
+    },
+    {
+      "id": 48,
+      "title": "Menüpunkt: Hilfe",
+      "description": "Integration des Hilfe-Systems und der Dokumentation im Frontend.",
+      "priority": "low",
+      "status": "todo",
+      "category": "UI"
+    },
+    {
+      "id": 49,
+      "title": "Menüpunkt: Über",
+      "description": "Integration der 'Über die App'-Seite mit Versionsinformationen.",
+      "priority": "low",
+      "status": "todo",
+      "category": "UI"
+    },
+    {
+      "id": 50,
+      "title": "Menüpunkt: Beenden",
+      "description": "Implementierung der Beenden-Funktion mit sicherem Schließen aller Ressourcen.",
+      "priority": "low",
+      "status": "todo",
+      "category": "UI"
+    },
+    {
+      "id": 51,
+      "title": "Menüpunkt: Cloud-Speicher",
+      "description": "Integration von Cloud-Speicher-Anbietern im neuen Frontend-Design.",
+      "priority": "low",
+      "status": "todo",
+      "category": "UI"
+    },
+    {
+      "id": 52,
+      "title": "Menüpunkt: Versionshistorie",
+      "description": "Anzeige der Versionshistorie innerhalb der App.",
+      "priority": "low",
+      "status": "todo",
+      "category": "UI"
+    },
+    {
+      "id": 53,
+      "title": "Menüpunkt: File Transfers",
+      "description": "Echtzeit-Anzeige und Management laufender Dateiübertragungen.",
+      "priority": "medium",
+      "status": "todo",
+      "category": "UI"
+    },
+    {
+      "id": 54,
+      "title": "Menüpunkt: Peer Connections",
+      "description": "Management und Anzeige aktiver WebRTC-Peer-Verbindungen.",
+      "priority": "medium",
+      "status": "todo",
+      "category": "UI"
     }
   ],
   "architecture_goals": [

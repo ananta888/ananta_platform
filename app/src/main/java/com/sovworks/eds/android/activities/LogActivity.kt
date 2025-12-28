@@ -29,15 +29,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sovworks.eds.android.DebugLogManager
 import com.sovworks.eds.android.R
+import com.sovworks.eds.android.navigation.Screen
+import com.sovworks.eds.android.ui.setSettingsContent
 
 class LogActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            MaterialTheme {
-                LogTerminalScreen(onBackPressed = { finish() })
-            }
-        }
+        setSettingsContent(Screen.DebugLog)
     }
 }
 
