@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import android.view.MenuItem;
@@ -14,14 +15,20 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.sovworks.eds.android.R;
-import com.sovworks.eds.android.filemanager.activities.FileManagerActivity;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public abstract class DrawerControllerBase
 {
-    public DrawerControllerBase(FileManagerActivity activity)
+    public interface Host
+    {
+        boolean isSelectAction();
+        void invalidateOptionsMenu();
+        Intent getIntent();
+    }
+
+    public DrawerControllerBase(AppCompatActivity activity)
     {
         _activity = activity;
     }
@@ -43,7 +50,7 @@ public abstract class DrawerControllerBase
         //noinspection deprecation
         _drawerLayout.setDrawerListener(_drawerToggle);
 
-        ActionBar ab = _activity.getActionBar();
+        androidx.appcompat.app.ActionBar ab = _activity.getSupportActionBar();
         if(ab!=null)
         {
             ab.setDisplayHomeAsUpEnabled(true);
@@ -111,12 +118,12 @@ public abstract class DrawerControllerBase
         _drawerLayout.openDrawer(_drawerListView);
     }
 
-    public FileManagerActivity getMainActivity()
+    public AppCompatActivity getMainActivity()
     {
         return _activity;
     }
 
-    ListView getDrawerListView()
+    public ListView getDrawerListView()
     {
         return _drawerListView;
     }
@@ -190,12 +197,12 @@ public abstract class DrawerControllerBase
     protected List<DrawerMenuItemBase> fillDrawer()
     {
         Intent i = getMainActivity().getIntent();
-        boolean isSelectAction = getMainActivity().isSelectAction();
+        boolean isSelectAction = (_activity instanceof Host) && ((Host) _activity).isSelectAction();
         ArrayList<DrawerMenuItemBase> list = new ArrayList<>();
         DrawerAdapter adapter = new DrawerAdapter(list);
-        if(i.getBooleanExtra(FileManagerActivity.EXTRA_ALLOW_BROWSE_CONTAINERS, true))
+        if(i.getBooleanExtra("EXTRA_ALLOW_BROWSE_CONTAINERS", true))
             adapter.add(new DrawerContainersMenu(this));
-        if(i.getBooleanExtra(FileManagerActivity.EXTRA_ALLOW_BROWSE_DEVICE, true))
+        if(i.getBooleanExtra("EXTRA_ALLOW_BROWSE_DEVICE", true))
             adapter.add(new DrawerLocalFilesMenu(this));
         if(!isSelectAction)
         {
@@ -246,7 +253,7 @@ public abstract class DrawerControllerBase
 	    }
 
 	}
-    private final FileManagerActivity _activity;
+    private final AppCompatActivity _activity;
     private ListView _drawerListView;
     private DrawerLayout _drawerLayout;
 

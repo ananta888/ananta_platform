@@ -96,13 +96,21 @@ public class DrawerLocationMenuItem extends DrawerMenuItemBase
 
     public void openLocation()
     {
-        FragmentManager fm = getDrawerController().getMainActivity().getSupportFragmentManager();
-        String openerTag = LocationOpenerBaseFragment.getOpenerTag(_location);
-        if(fm.findFragmentByTag(openerTag)==null)
+        androidx.appcompat.app.AppCompatActivity activity = getDrawerController().getMainActivity();
+        if (activity instanceof FileManagerActivity)
         {
-            LocationOpenerBaseFragment opener = getOpener();
-            opener.setArguments(getOpenerArgs());
-            fm.beginTransaction().add(opener, openerTag).commit();
+            androidx.fragment.app.FragmentManager fm = activity.getSupportFragmentManager();
+            String openerTag = LocationOpenerBaseFragment.getOpenerTag(_location);
+            if(fm.findFragmentByTag(openerTag)==null)
+            {
+                LocationOpenerBaseFragment opener = getOpener();
+                opener.setArguments(getOpenerArgs());
+                fm.beginTransaction().add(opener, openerTag).commit();
+            }
+        }
+        else
+        {
+            FileManagerActivity.openFileManager(activity, _location, 0);
         }
     }
 

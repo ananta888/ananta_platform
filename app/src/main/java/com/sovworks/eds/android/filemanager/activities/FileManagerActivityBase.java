@@ -64,9 +64,13 @@ import io.reactivex.rxjava3.core.SingleTransformer;
 import io.reactivex.rxjava3.disposables.Disposable;
 
 import com.sovworks.eds.android.helpers.RxLifecycleProvider;
+import com.sovworks.eds.android.navigdrawer.DrawerControllerBase;
+import com.sovworks.eds.android.navigdrawer.DrawerController;
+
+import com.sovworks.eds.android.activities.DrawerActivityBase;
 
 @SuppressLint({"CommitPrefEdits", "ApplySharedPref"})
-public abstract class FileManagerActivityBase extends AppCompatActivity implements PreviewFragment.Host, RxLifecycleProvider
+public abstract class FileManagerActivityBase extends DrawerActivityBase implements PreviewFragment.Host, RxLifecycleProvider
 {
     protected final CompositeDisposable _disposables = new CompositeDisposable();
 
@@ -226,6 +230,7 @@ public abstract class FileManagerActivityBase extends AppCompatActivity implemen
     {
         return loc;
     }
+    @Override
     public boolean isSelectAction()
     {
         String action = getIntent().getAction();
@@ -371,7 +376,7 @@ public abstract class FileManagerActivityBase extends AppCompatActivity implemen
         CompatHelper.registerReceiver(this, _locationChangedReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED), false);
         CompatHelper.registerReceiver(this, _locationAddedOrRemovedReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED), false);
 
-        _drawer.init(savedInstanceState);
+        getDrawerController().init(savedInstanceState);
         AppInitHelper.
                 createObservable(this).
                 compose(bindToLifecycleCompletable()).
@@ -449,7 +454,7 @@ public abstract class FileManagerActivityBase extends AppCompatActivity implemen
     @Override
     public boolean onOptionsItemSelected(MenuItem menuItem)
     {
-        return _drawer.onOptionsItemSelected(menuItem) || super.onOptionsItemSelected(menuItem);
+        return super.onOptionsItemSelected(menuItem);
     }
 
     @Override
@@ -457,7 +462,7 @@ public abstract class FileManagerActivityBase extends AppCompatActivity implemen
     {
         Logger.debug(TAG + ": onBackPressed");
 
-        if(_drawer.onBackPressed())
+        if(getDrawerController().onBackPressed())
             return;
 
         Fragment f = getSupportFragmentManager().findFragmentById(R.id.fragment2);
@@ -475,10 +480,9 @@ public abstract class FileManagerActivityBase extends AppCompatActivity implemen
     }
 
     @Override
-    public void onConfigurationChanged(Configuration newConfig)
+    public void onConfigurationChanged(@NonNull Configuration newConfig)
     {
         super.onConfigurationChanged(newConfig);
-        _drawer.onConfigurationChanged(newConfig);
     }
 
     public FileListDataFragment getFileListDataFragment()
@@ -493,9 +497,10 @@ public abstract class FileManagerActivityBase extends AppCompatActivity implemen
         return f != null && f.isAdded() ? f : null;
     }
 
+    @Override
     public DrawerController getDrawerController()
     {
-        return _drawer;
+        return super.getDrawerController();
     }
 
 
@@ -532,14 +537,12 @@ public abstract class FileManagerActivityBase extends AppCompatActivity implemen
     protected void onSaveInstanceState(@NonNull Bundle outState)
     {
         super.onSaveInstanceState(outState);
-        _drawer.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onPostCreate(Bundle state)
     {
         super.onPostCreate(state);
-        _drawer.onPostCreate();
     }
 
 
@@ -610,7 +613,7 @@ public abstract class FileManagerActivityBase extends AppCompatActivity implemen
     protected abstract DrawerController createDrawerController();
 
     protected static final String FOLDER_MIME_TYPE = "resource/folder";
-    protected final DrawerController _drawer = createDrawerController();
+    //protected final DrawerController _drawer = createDrawerController();
     protected boolean _isLargeScreenLayout;
     protected UserSettings _settings;
 

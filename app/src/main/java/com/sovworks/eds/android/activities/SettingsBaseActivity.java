@@ -4,11 +4,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import android.os.Bundle;
 
+import com.sovworks.eds.android.R;
 import com.sovworks.eds.android.helpers.CompatHelper;
 import com.sovworks.eds.android.helpers.Util;
 import com.sovworks.eds.android.settings.UserSettings;
 
-public abstract class SettingsBaseActivity extends AppCompatActivity
+public abstract class SettingsBaseActivity extends DrawerActivityBase
 {
     public static final String SETTINGS_FRAGMENT_TAG = "com.sovworks.eds.android.locations.SETTINGS_FRAGMENT";
 
@@ -22,7 +23,7 @@ public abstract class SettingsBaseActivity extends AppCompatActivity
         if(savedInstanceState == null)
             getSupportFragmentManager().
                 beginTransaction().
-                add(android.R.id.content, getSettingsFragment(), SETTINGS_FRAGMENT_TAG).
+                replace(R.id.content_frame, getSettingsFragment(), SETTINGS_FRAGMENT_TAG).
                 commit();
     }
 

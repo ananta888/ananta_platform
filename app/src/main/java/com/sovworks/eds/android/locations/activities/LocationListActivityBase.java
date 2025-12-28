@@ -4,6 +4,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import android.os.Bundle;
 
+import com.sovworks.eds.android.R;
+import com.sovworks.eds.android.activities.DrawerActivityBase;
 import com.sovworks.eds.android.helpers.CompatHelper;
 import com.sovworks.eds.android.helpers.Util;
 import com.sovworks.eds.android.locations.ContainerBasedLocation;
@@ -13,7 +15,7 @@ import com.sovworks.eds.android.locations.fragments.DocumentTreeLocationsListFra
 import com.sovworks.eds.android.locations.fragments.LocationListBaseFragment;
 import com.sovworks.eds.android.settings.UserSettings;
 
-public abstract class LocationListActivityBase extends AppCompatActivity
+public abstract class LocationListActivityBase extends DrawerActivityBase
 {
     public static final String EXTRA_LOCATION_TYPE = "com.sovworks.eds.android.LOCATION_TYPE";
 
@@ -27,7 +29,7 @@ public abstract class LocationListActivityBase extends AppCompatActivity
         if(savedInstanceState == null)
             getSupportFragmentManager().
                 beginTransaction().
-                add(android.R.id.content, getCreateLocationFragment(), LocationListBaseFragment.TAG).
+                add(R.id.content_frame, getCreateLocationFragment(), LocationListBaseFragment.TAG).
                 commit();
     }
 

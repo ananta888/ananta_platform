@@ -2,6 +2,7 @@ package com.sovworks.eds.android.navigdrawer;
 
 
 import android.annotation.SuppressLint;
+import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
