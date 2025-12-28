@@ -4,11 +4,11 @@
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform für sichere Kommunikation und Dateiaustausch.",
   "tasks": [
     {
-      "id": "SEC-002",
-      "title": "Key Rotation & Recovery",
-      "description": "Implementierung eines Mechanismus zur Erneuerung von Schlüsseln und Wiederherstellung der Identität.",
+      "id": "SEC-003",
+      "title": "Decentralized Key Distribution & Verification",
+      "description": "Implementierung eines Mechanismus zur Verbreitung von Key Rotation Zertifikaten im Trust-Netzwerk.",
       "status": "todo",
-      "priority": "medium",
+      "priority": "high",
       "assignee": "Junie"
     }
   ],

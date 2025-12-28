@@ -8,7 +8,9 @@ data class Identity(
     val id: String, // z.B. Anzeigename oder UUID
     val publicKeyBase64: String,
     private val privateKeyBase64: String? = null,
-    private val ivBase64: String? = null
+    private val ivBase64: String? = null,
+    val previousPublicKeyBase64: String? = null,
+    val rotationSignatureBase64: String? = null
 ) {
     fun getPublicKey(): Ed25519PublicKeyParameters {
         return Ed25519PublicKeyParameters(Base64.decode(publicKeyBase64, Base64.NO_WRAP), 0)

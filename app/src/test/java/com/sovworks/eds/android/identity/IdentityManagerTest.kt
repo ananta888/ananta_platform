@@ -43,4 +43,16 @@ class IdentityManagerTest {
         val tamperedData = "Hello, World!".toByteArray()
         assertTrue(!IdentityManager.verify(publicKey, tamperedData, signature))
     }
+
+    @Test
+    fun testRecoveryFromSeed() {
+        val seed = IdentityManager.generateSeed()
+        val keyPair1 = IdentityManager.generateKeyPairFromSeed(seed)
+        val keyPair2 = IdentityManager.generateKeyPairFromSeed(seed)
+        
+        val pub1 = keyPair1.public as Ed25519PublicKeyParameters
+        val pub2 = keyPair2.public as Ed25519PublicKeyParameters
+        
+        assertTrue(pub1.encoded.contentEquals(pub2.encoded))
+    }
 }

@@ -25,7 +25,40 @@ object IdentityManager {
     }
 
     fun createNewIdentity(context: Context, name: String): Identity {
-        val keyPair = generateKeyPair()
+        val seed = generateSeed()
+        return recoverIdentity(context, seed, name)
+    }
+
+    fun rotateKeys(context: Context): Identity? {
+        val currentIdentity = loadIdentity(context) ?: return null
+        val oldPrivateKey = getDecryptedPrivateKey(currentIdentity) ?: return null
+
+        val newKeyPair = generateKeyPair()
+        val newPrivateKey = newKeyPair.private as Ed25519PrivateKeyParameters
+        val newPublicKey = newKeyPair.public as Ed25519PublicKeyParameters
+
+        val newPublicKeyEncoded = Base64.encodeToString(newPublicKey.encoded, Base64.NO_WRAP)
+
+        // Sign the new public key with the old private key as proof of rotation
+        val rotationSignature = sign(oldPrivateKey, newPublicKey.encoded)
+
+        val privateKeyRaw = Base64.encodeToString(newPrivateKey.encoded, Base64.NO_WRAP)
+        val encryptionResult = SecurityUtils.encrypt(privateKeyRaw)
+
+        val newIdentity = currentIdentity.copy(
+            publicKeyBase64 = newPublicKeyEncoded,
+            privateKeyBase64 = encryptionResult.data,
+            ivBase64 = encryptionResult.iv,
+            previousPublicKeyBase64 = currentIdentity.publicKeyBase64,
+            rotationSignatureBase64 = Base64.encodeToString(rotationSignature, Base64.NO_WRAP)
+        )
+
+        saveIdentity(context, newIdentity)
+        return newIdentity
+    }
+
+    fun recoverIdentity(context: Context, seed: ByteArray, name: String): Identity {
+        val keyPair = generateKeyPairFromSeed(seed)
         val privateKey = keyPair.private as Ed25519PrivateKeyParameters
         val publicKey = keyPair.public as Ed25519PublicKeyParameters
 
@@ -70,10 +103,22 @@ object IdentityManager {
         }
     }
 
+    fun generateSeed(): ByteArray {
+        val seed = ByteArray(32)
+        SecureRandom().nextBytes(seed)
+        return seed
+    }
+
     fun generateKeyPair(): AsymmetricCipherKeyPair {
         val generator = Ed25519KeyPairGenerator()
         generator.init(Ed25519KeyGenerationParameters(SecureRandom()))
         return generator.generateKeyPair()
+    }
+
+    fun generateKeyPairFromSeed(seed: ByteArray): AsymmetricCipherKeyPair {
+        val privateKey = Ed25519PrivateKeyParameters(seed, 0)
+        val publicKey = privateKey.generatePublicKey()
+        return AsymmetricCipherKeyPair(publicKey, privateKey)
     }
 
     fun sign(privateKey: Ed25519PrivateKeyParameters, data: ByteArray): ByteArray {
