@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.sovworks.eds.android.navigation.NavigationViewModel
 import com.sovworks.eds.android.navigation.Screen
 
@@ -18,6 +17,7 @@ fun MainMenu(
     navigationViewModel: NavigationViewModel,
     onCloseDrawer: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxHeight()
@@ -36,8 +36,8 @@ fun MainMenu(
             navigationViewModel.navigateToRoot(Screen.LocalFiles)
             onCloseDrawer()
         })
-        MenuItem(text = "Verschlüsselte Container", onClick = {
-            navigationViewModel.navigateToRoot(Screen.EncryptedContainers)
+        MenuItem(text = "Tresore", onClick = {
+            navigationViewModel.navigateToRoot(Screen.Vaults)
             onCloseDrawer()
         })
         MenuItem(text = "Cloud-Speicher", onClick = {
@@ -114,7 +114,10 @@ fun MainMenu(
         HorizontalDivider()
         MenuItem(text = "Beenden", onClick = {
             onCloseDrawer()
-            // In einer echten App würde hier der Exit-Code stehen
+            val lm = com.sovworks.eds.locations.LocationsManagerBase.getLocationsManager(context)
+            lm.closeAllLocations(true, true)
+            // Beenden der App
+            (context as? android.app.Activity)?.finishAffinity()
             android.os.Process.killProcess(android.os.Process.myPid())
         })
     }

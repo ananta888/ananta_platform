@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap
 class SearchManager private constructor(private val context: Context) {
     private val gson = Gson()
     private val processedRequests = Collections.synchronizedSet(mutableSetOf<String>())
+    private val requestSourceMap = ConcurrentHashMap<String, String>() // requestId -> sourcePeerId
     private val searchListeners = mutableListOf<(SearchResponse) -> Unit>()
     private var minTrustLevel: Double = 0.0
     
@@ -50,12 +51,23 @@ class SearchManager private constructor(private val context: Context) {
         multiplexer?.sendFileMessage(peerId, "FILE_REQUEST:$fileName")
     }
 
+    fun sendRelayReady(peerId: String, sessionId: String) {
+        multiplexer?.sendDiscoveryMessage(peerId, gson.toJson(DiscoveryMessage("relay_ready", sessionId)))
+    }
+
+    fun sendRelayRequest(relayPeerId: String, targetPeerId: String, sessionId: String) {
+        val payload = "RELAY_REQUEST:$targetPeerId:$sessionId"
+        multiplexer?.sendDiscoveryMessage(relayPeerId, gson.toJson(DiscoveryMessage("relay_request", payload)))
+    }
+
     fun onMessageReceived(peerId: String, json: String) {
         try {
             val msg = gson.fromJson(json, DiscoveryMessage::class.java)
             when (msg.type) {
                 "search" -> handleSearchRequest(peerId, gson.fromJson(msg.payload, SearchRequest::class.java))
                 "response" -> handleSearchResponse(gson.fromJson(msg.payload, SearchResponse::class.java))
+                "relay_request" -> RelayManager.getInstance(context).handleRelayRequest(peerId, msg.payload)
+                "relay_ready" -> RelayManager.getInstance(context).onRelayReady(peerId, msg.payload)
             }
         } catch (e: Exception) {
             // Log error
@@ -65,15 +77,18 @@ class SearchManager private constructor(private val context: Context) {
     private fun handleSearchRequest(peerId: String, request: SearchRequest) {
         if (processedRequests.contains(request.requestId)) return
         processedRequests.add(request.requestId)
+        requestSourceMap[request.requestId] = peerId
 
         // 1. Lokal suchen
         val results = SharedFileManager.getInstance(context).searchFiles(request.query)
         if (results.isNotEmpty()) {
             val identity = IdentityManager.loadIdentity(context)
+            val myFingerprint = identity?.getFingerprint() ?: "unknown"
             val response = SearchResponse(
                 requestId = request.requestId,
                 results = results,
-                peerId = identity?.getFingerprint() ?: "unknown"
+                peerId = myFingerprint,
+                path = listOf(myFingerprint)
             )
             val msg = DiscoveryMessage("response", gson.toJson(response))
             multiplexer?.sendDiscoveryMessage(peerId, gson.toJson(msg))
@@ -94,10 +109,21 @@ class SearchManager private constructor(private val context: Context) {
     }
 
     private fun handleSearchResponse(response: SearchResponse) {
-        val trustRank = TrustNetworkManager.calculateTrustRank(context, response.peerId)
-        if (trustRank < this.minTrustLevel) return
-        
-        searchListeners.forEach { it(response) }
+        val sourcePeerId = requestSourceMap[response.requestId]
+        val identity = IdentityManager.loadIdentity(context)
+        val myFingerprint = identity?.getFingerprint() ?: "unknown"
+
+        if (sourcePeerId != null) {
+            // Wir sind ein Zwischenknoten. Weiterleiten!
+            val updatedResponse = response.copy(path = response.path + myFingerprint)
+            val msg = DiscoveryMessage("response", gson.toJson(updatedResponse))
+            multiplexer?.sendDiscoveryMessage(sourcePeerId, gson.toJson(msg))
+        } else {
+            // Wir sind (wahrscheinlich) der Bestimmungsort
+            val trustRank = TrustNetworkManager.calculateTrustRank(context, response.peerId)
+            if (trustRank < this.minTrustLevel) return
+            searchListeners.forEach { it(response) }
+        }
     }
 
     companion object {

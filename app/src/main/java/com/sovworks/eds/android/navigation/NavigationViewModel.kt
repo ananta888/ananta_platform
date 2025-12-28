@@ -1,7 +1,6 @@
 package com.sovworks.eds.android.navigation
 
 import androidx.lifecycle.ViewModel
-import com.sovworks.eds.settings.GlobalConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -9,7 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 sealed class Screen(val title: String) {
     object FileList : Screen("Dateimanager")
     object LocalFiles : Screen("Lokale Dateien")
-    object EncryptedContainers : Screen("Verschlüsselte Container")
+    object Vaults : Screen("Tresore")
     object CloudStorage : Screen("Cloud-Speicher")
     object Settings : Screen("Einstellungen")
     object ProgramSettings : Screen("Allgemeine Einstellungen")

@@ -17,32 +17,12 @@ fun SettingsScreen() {
 
 @Composable
 fun ProgramSettingsScreen() {
-    PlaceholderScreen("Allgemeine Einstellungen")
+    GeneralSettingsScreen()
 }
 
 @Composable
 fun OpeningOptionsScreen() {
-    PlaceholderScreen("Öffnungsoptionen")
-}
-
-@Composable
-fun EncryptionSettingsScreen() {
-    PlaceholderScreen("Verschlüsselungseinstellungen")
-}
-
-@Composable
-fun VersionHistoryScreen() {
-    PlaceholderScreen("Versionshistorie")
-}
-
-@Composable
-fun AboutScreen() {
-    PlaceholderScreen("Über die App")
-}
-
-@Composable
-fun HelpScreen() {
-    PlaceholderScreen("Hilfe")
+    ConnectionSettingsScreen()
 }
 
 @Composable

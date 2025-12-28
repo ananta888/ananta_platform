@@ -13,7 +13,8 @@ data class SearchRequest(
 data class SearchResponse(
     @SerializedName("rid") val requestId: String,
     @SerializedName("results") val results: List<SharedFile>,
-    @SerializedName("peer") val peerId: String
+    @SerializedName("peer") val peerId: String,
+    @SerializedName("path") val path: List<String> = emptyList()
 )
 
 data class SharedFile(

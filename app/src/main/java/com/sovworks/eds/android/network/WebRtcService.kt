@@ -18,6 +18,10 @@ object WebRtcService {
     fun initialize(context: Context, settings: UserSettings) {
         synchronized(lock) {
             shutdownLocked()
+            
+            // Start background integrity check
+            IntegrityCheckWorker.enqueuePeriodicWork(context)
+
             val myId = resolvePeerId(context, settings)
             val client = createSignalingClient(context, settings, myId) ?: return
             signalingClient = client

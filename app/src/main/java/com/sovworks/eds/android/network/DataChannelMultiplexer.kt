@@ -25,6 +25,7 @@ class DataChannelMultiplexer(
     private val fileChannels = ConcurrentHashMap<String, SecureDataChannel>()
     private val discoveryChannels = ConcurrentHashMap<String, SecureDataChannel>()
     private val offlineMsgChannels = ConcurrentHashMap<String, SecureDataChannel>()
+    private val relayChannels = ConcurrentHashMap<String, SecureDataChannel>()
     private val listeners = mutableListOf<DataChannelListener>()
 
     fun addListener(listener: DataChannelListener) {
@@ -41,6 +42,7 @@ class DataChannelMultiplexer(
             "file" -> setupFileChannel(peerId, dataChannel, isInitiator)
             "discovery" -> setupDiscoveryChannel(peerId, dataChannel, isInitiator)
             "offline_msg" -> setupOfflineMsgChannel(peerId, dataChannel, isInitiator)
+            "relay" -> setupRelayChannel(peerId, dataChannel, isInitiator)
         }
     }
 
@@ -138,6 +140,41 @@ class DataChannelMultiplexer(
     fun sendOfflineMessagingMessage(peerId: String, message: String) {
         val channel = offlineMsgChannels[peerId] ?: return
         channel.sendText(message)
+    }
+
+    private fun setupRelayChannel(peerId: String, channel: DataChannel, isInitiator: Boolean) {
+        val localIdentity = IdentityManager.loadIdentity(context) ?: return
+        val localPrivateKey = IdentityManager.getDecryptedPrivateKey(localIdentity) ?: return
+        
+        val trustStore = TrustStore.getInstance(context)
+        val trustedKey = trustStore.getKey(peerId) ?: return
+        val remotePublicKey = Ed25519PublicKeyParameters(Base64.decode(trustedKey.getPublicKey(), Base64.NO_WRAP), 0)
+
+        relayChannels[peerId] = SecureDataChannel(
+            channel = channel,
+            isInitiator = isInitiator,
+            localIdentityKey = localPrivateKey,
+            remoteIdentityKey = remotePublicKey,
+            onTextMessage = { message ->
+                RelayManager.getInstance(context).onRelayControlReceived(peerId, message)
+            },
+            onBinaryMessage = { data ->
+                RelayManager.getInstance(context).onRelayDataReceived(peerId, data)
+            }
+        )
+    }
+
+    fun sendRelayControl(peerId: String, message: String) {
+        relayChannels[peerId]?.sendText(message)
+    }
+
+    suspend fun sendRelayData(peerId: String, data: ByteArray): Boolean {
+        val channel = relayChannels[peerId] ?: return false
+        if (channel.bufferedAmount() > BUFFER_THRESHOLD) {
+            channel.bufferedAmountFlow.first { it <= BUFFER_THRESHOLD }
+        }
+        channel.sendBinary(data)
+        return true
     }
 
     fun sendMessage(peerId: String, message: String) {

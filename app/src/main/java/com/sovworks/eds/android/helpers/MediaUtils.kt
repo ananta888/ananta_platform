@@ -3,6 +3,8 @@ package com.sovworks.eds.android.helpers
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.ThumbnailUtils
+import android.media.MediaMetadataRetriever
+import android.media.MediaDataSource
 import android.os.Build
 import android.util.Log
 import com.sovworks.eds.fs.File
@@ -48,9 +50,35 @@ object MediaUtils {
     }
 
     private fun createVideoThumbnail(file: File): Bitmap? {
-        // Für Videos aus einem verschlüsselten Stream ist es komplex.
-        // In dieser Version unterstützen wir vorerst nur Bilder-Thumbnails direkt aus dem Stream.
-        // Video-Unterstützung könnte später durch temporäre Dateien hinzugefügt werden.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val retriever = MediaMetadataRetriever()
+            return try {
+                val rao = file.getRandomAccessIO(File.AccessMode.Read)
+                retriever.setDataSource(object : MediaDataSource() {
+                    override fun readAt(position: Long, buffer: ByteArray, offset: Int, size: Int): Int {
+                        rao.seek(position)
+                        return rao.read(buffer, offset, size)
+                    }
+
+                    override fun getSize(): Long = try {
+                        file.getSize()
+                    } catch (e: Exception) {
+                        -1L
+                    }
+
+                    override fun close() = rao.close()
+                })
+                retriever.getFrameAtTime(1000000, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to create video thumbnail for ${file.getName()}", e)
+                null
+            } finally {
+                try {
+                    retriever.release()
+                } catch (e: Exception) {
+                }
+            }
+        }
         return null
     }
 

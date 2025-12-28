@@ -11,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.sovworks.eds.android.filemanager.ui.FileListScreen
 import com.sovworks.eds.android.filemanager.viewmodel.FileListViewModel
 import com.sovworks.eds.android.navigation.NavigationViewModel
 import com.sovworks.eds.android.navigation.Screen
@@ -19,7 +18,10 @@ import com.sovworks.eds.android.filemanager.ui.BreadcrumbBar
 import com.sovworks.eds.android.filemanager.viewmodel.FileListEvent
 import com.sovworks.eds.android.ui.transfers.FileTransferDashboardScreen
 import com.sovworks.eds.android.ui.peer.PeerConnectionsScreen
+import com.sovworks.eds.android.ui.peer.PeerManagementScreen
+import com.sovworks.eds.android.ui.peer.PeerViewModel
 import com.sovworks.eds.android.ui.messenger.MessengerScreen
+import com.sovworks.eds.locations.LocationsManagerBase
 import kotlinx.coroutines.launch
 
 @Composable
@@ -72,10 +74,44 @@ fun AppScaffold(
                     .padding(paddingValues)
             ) {
                 when (currentScreen) {
-                    is Screen.FileList, Screen.LocalFiles, Screen.EncryptedContainers, Screen.CloudStorage -> {
+                    is Screen.FileList -> {
                         FileListScreenContent(
                             viewModel = fileListViewModel,
                             context = context
+                        )
+                    }
+                    is Screen.LocalFiles -> {
+                        val lm = LocationsManagerBase.getLocationsManager(context)
+                        val locations = lm.getLoadedLocations(true).filter { it !is com.sovworks.eds.locations.EDSLocation }
+                        LocationListScreen(
+                            locations = locations,
+                            onLocationClick = { location ->
+                                fileListViewModel.onEvent(FileListEvent.LocationChanged(location), context)
+                                navigationViewModel.navigateTo(Screen.FileList)
+                            }
+                        )
+                    }
+                    is Screen.Vaults -> {
+                        val lm = LocationsManagerBase.getLocationsManager(context)
+                        val locations = lm.getLoadedEDSLocations(true)
+                        LocationListScreen(
+                            locations = locations,
+                            onLocationClick = { location ->
+                                fileListViewModel.onEvent(FileListEvent.LocationChanged(location), context)
+                                navigationViewModel.navigateTo(Screen.FileList)
+                            }
+                        )
+                    }
+                    is Screen.CloudStorage -> {
+                        val lm = LocationsManagerBase.getLocationsManager(context)
+                        // Cloud storage often uses DocumentTreeLocation in this app
+                        val locations = lm.getLoadedLocations(true).filter { it is com.sovworks.eds.android.locations.DocumentTreeLocation }
+                        LocationListScreen(
+                            locations = locations,
+                            onLocationClick = { location ->
+                                fileListViewModel.onEvent(FileListEvent.LocationChanged(location), context)
+                                navigationViewModel.navigateTo(Screen.FileList)
+                            }
                         )
                     }
                     is Screen.Settings -> SettingsScreen()
@@ -90,9 +126,9 @@ fun AppScaffold(
                     is Screen.PeerConnections -> PeerConnectionsScreen()
                     is Screen.IdentitySync -> IdentitySyncScreen(onStartScanner = { onStartIdentityScanner?.invoke() })
                     is Screen.Pairing -> PairingScreen(onStartScanner = { onStartPairingScanner?.invoke() })
-                    is Screen.Peers -> PeersScreenContent()
-                    is Screen.Exchange -> PlaceholderScreen("Exchange")
-                    is Screen.Trust -> PlaceholderScreen("Trust")
+                    is Screen.Peers -> PeerManagementScreen(viewModel = viewModel())
+                    is Screen.Exchange -> ExchangeScreen()
+                    is Screen.Trust -> PeerManagementScreen(viewModel = viewModel())
                     is Screen.Messenger -> {
                         val screen = currentScreen as Screen.Messenger
                         MessengerScreen(peerId = screen.peerId, groupId = screen.groupId)
@@ -100,17 +136,6 @@ fun AppScaffold(
                 }
             }
         }
-    }
-}
-
-@Composable
-fun PeersScreenContent() {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("No peers found yet.")
     }
 }
 
