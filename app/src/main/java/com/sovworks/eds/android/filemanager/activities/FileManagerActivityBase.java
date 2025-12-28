@@ -374,6 +374,10 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
         // setAppContent directly in onCreate to start Compose early
         com.sovworks.eds.android.ui.ComposeIntegrationKt.setAppContent(this);
 
+        // Dismiss splash screen immediately to show the initial screen (Debug Log)
+        _initFinished = true;
+        Logger.debug("FileManagerActivityBase: _initFinished set to true immediately");
+
         // Load settings and perform initialization in background to avoid blocking main thread
         new Thread(() -> {
             try {
@@ -396,8 +400,6 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
                     CompatHelper.registerReceiver(this, _locationAddedOrRemovedReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED), false);
 
                     Logger.debug("FileManagerActivityBase: calling AppInitHelper");
-                    _initFinished = true; // Dismiss splash screen before starting AppInitHelper which might show dialogs
-                    Logger.debug("FileManagerActivityBase: _initFinished set to true");
                     AppInitHelper.
                             createObservable(this).
                             compose(bindToLifecycleCompletable()).
@@ -413,10 +415,6 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
                 });
             } catch (Throwable e) {
                 Logger.log(e);
-                runOnUiThread(() -> {
-                    _initFinished = true;
-                    Logger.debug("FileManagerActivityBase: _initFinished set to true (on exception)");
-                });
             }
         }).start();
 

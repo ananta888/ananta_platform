@@ -22,7 +22,7 @@ sealed class Screen(val title: String) {
 }
 
 class NavigationViewModel : ViewModel() {
-    private val startScreen = if (GlobalConfig.isDebug()) Screen.DebugLog else Screen.FileList
+    private val startScreen = Screen.DebugLog
     
     private val _currentScreen = MutableStateFlow<Screen>(startScreen)
     val currentScreen: StateFlow<Screen> = _currentScreen.asStateFlow()

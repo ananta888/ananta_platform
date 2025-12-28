@@ -15,6 +15,11 @@ public class UserSettings extends UserSettingsCommon implements Settings
         return _instance;
     }
 
+    public static UserSettings getSettingsIfLoaded()
+    {
+        return _instance;
+    }
+
     public synchronized static void closeSettings()
     {
         if(_instance!=null)

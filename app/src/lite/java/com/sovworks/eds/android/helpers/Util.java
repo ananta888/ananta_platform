@@ -25,7 +25,8 @@ public class Util extends UtilBase
 
     public static void setTheme(Activity act)
     {
-        int theme = UserSettings.getSettings(act.getApplicationContext()).getCurrentTheme();
+        UserSettings settings = UserSettings.getSettingsIfLoaded();
+        int theme = (settings != null) ? settings.getCurrentTheme() : 0; // 0 is default theme
         act.setTheme(theme == SettingsCommon.THEME_DARK ?
                 R.style.Theme_EDS_Dark :
                 R.style.Theme_EDS
