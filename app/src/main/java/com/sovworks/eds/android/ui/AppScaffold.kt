@@ -80,6 +80,7 @@ fun AppScaffold(
                     is Screen.VersionHistory -> VersionHistoryScreen()
                     is Screen.About -> AboutScreen()
                     is Screen.Help -> HelpScreen()
+                    is Screen.DebugLog -> DebugLogScreen()
                 }
             }
         }

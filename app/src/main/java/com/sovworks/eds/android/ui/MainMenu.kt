@@ -74,6 +74,10 @@ fun MainMenu(
             navigationViewModel.navigateToRoot(Screen.Help)
             onCloseDrawer()
         })
+        MenuItem(text = "Debug Log", onClick = {
+            navigationViewModel.navigateToRoot(Screen.DebugLog)
+            onCloseDrawer()
+        })
     }
 }
 

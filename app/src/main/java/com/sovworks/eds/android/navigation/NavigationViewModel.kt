@@ -1,6 +1,7 @@
 package com.sovworks.eds.android.navigation
 
 import androidx.lifecycle.ViewModel
+import com.sovworks.eds.settings.GlobalConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,13 +18,16 @@ sealed class Screen(val title: String) {
     object VersionHistory : Screen("Versionshistorie")
     object About : Screen("Über die App")
     object Help : Screen("Hilfe")
+    object DebugLog : Screen("Debug Log")
 }
 
 class NavigationViewModel : ViewModel() {
-    private val _currentScreen = MutableStateFlow<Screen>(Screen.FileList)
+    private val startScreen = if (GlobalConfig.isDebug()) Screen.DebugLog else Screen.FileList
+    
+    private val _currentScreen = MutableStateFlow<Screen>(startScreen)
     val currentScreen: StateFlow<Screen> = _currentScreen.asStateFlow()
 
-    private val _navigationStack = MutableStateFlow<List<Screen>>(listOf(Screen.FileList))
+    private val _navigationStack = MutableStateFlow<List<Screen>>(listOf(startScreen))
     val navigationStack: StateFlow<List<Screen>> = _navigationStack.asStateFlow()
 
     fun navigateTo(screen: Screen) {

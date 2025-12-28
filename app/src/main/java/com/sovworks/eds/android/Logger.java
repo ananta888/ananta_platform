@@ -62,6 +62,7 @@ public class Logger implements UncaughtExceptionHandler
 		if(_disableLog)
 			return;
 		Log.i(TAG, message);
+		DebugLogManager.addLog("I", TAG, message);
 	}
 	
 	public static void log(Throwable e)
@@ -69,14 +70,17 @@ public class Logger implements UncaughtExceptionHandler
 		if(_disableLog)
 			return;
 		Log.e(TAG, "Error", e);
+		DebugLogManager.addLog("E", TAG, "Error", e);
 	}
 	
 	public static void debug(String message)
 	{
 		if(_disableLog)
 			return;
-		if(GlobalConfig.isDebug())
+		if(GlobalConfig.isDebug()) {
 			Log.d(TAG, message);
+			DebugLogManager.addLog("D", TAG, message);
+		}
 	}
 
 	public static String getExceptionMessage(Context context,Throwable err)
@@ -109,8 +113,10 @@ public class Logger implements UncaughtExceptionHandler
 	@Override
 	public void uncaughtException(Thread thread, Throwable ex)
 	{
-		if(!Logger._disableLog)
-			Log.e(TAG, "Uncaught main thread exception" ,ex);
+		if(!Logger._disableLog) {
+			Log.e(TAG, "Uncaught main thread exception", ex);
+			DebugLogManager.addLog("F", TAG, "Uncaught main thread exception", ex);
+		}
 		thread.getThreadGroup().destroy();
 	}
 
@@ -119,6 +125,7 @@ public class Logger implements UncaughtExceptionHandler
 		try
 		{
 			Log.w(TAG, err);
+			DebugLogManager.addLog("W", TAG, "Warning", err);
 			if(context!=null && Thread.currentThread().equals(Looper.getMainLooper().getThread()))
 				showErrorMessage(context, err);
 		}
