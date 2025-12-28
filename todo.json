@@ -1,11 +1,69 @@
 {
   "project": "Ananta Platform (WebRTC & Secure Exchange)",
   "version": "1.0.0-draft",
-  "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform f\u00fcr sichere Kommunikation und Dateiaustausch.",
-  "tasks": [],
+  "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform für sichere Kommunikation und Dateiaustausch.",
+  "tasks": [
+    {
+      "id": "TASK-001",
+      "category": "Networking",
+      "title": "Lokale Peer Discovery (mDNS/NSD)",
+      "description": "Implementierung von mDNS zur automatischen Erkennung von Peers im selben WLAN ohne Signaling-Server.",
+      "status": "planned",
+      "priority": "high"
+    },
+    {
+      "id": "TASK-002",
+      "category": "Security",
+      "title": "Perfect Forward Secrecy (PFS) für Private Chats",
+      "description": "Integration des Double Ratchet Algorithmus oder eines ähnlichen Protokolls zur Sicherstellung von PFS.",
+      "status": "planned",
+      "priority": "high"
+    },
+    {
+      "id": "TASK-003",
+      "category": "Trust",
+      "title": "QR-Code Trust Verifizierung",
+      "description": "Möglichkeit zum Scannen von QR-Codes für den direkten Austausch und die Verifizierung von Public Keys (In-Person Trust).",
+      "status": "planned",
+      "priority": "medium"
+    },
+    {
+      "id": "TASK-004",
+      "category": "Messaging",
+      "title": "Offline-Messaging via Trusted Relays",
+      "description": "Protokoll zur Zwischenspeicherung von verschlüsselten Nachrichten auf vertrauenswürdigen Peers (Trust-Level > X).",
+      "status": "planned",
+      "priority": "medium"
+    },
+    {
+      "id": "TASK-005",
+      "category": "File Exchange",
+      "title": "Erweiterte dezentrale Suche",
+      "description": "Integration von Trust-Rankings in die Suchergebnisse und Implementierung von Suchfiltern (Dateityp, Größe).",
+      "status": "planned",
+      "priority": "medium"
+    },
+    {
+      "id": "TASK-006",
+      "category": "UI/UX",
+      "title": "Web-of-Trust Visualisierung",
+      "description": "Graph-basierte Darstellung des eigenen Vertrauensnetzwerks und der Reputationspfade zu anderen Peers.",
+      "status": "planned",
+      "priority": "low"
+    },
+    {
+      "id": "TASK-007",
+      "category": "Identity",
+      "title": "Automatisierte Key Rotation",
+      "description": "Vollständige Automatisierung der Schlüsselrotation und Benachrichtigung aller verbundenen Peers über den neuen Schlüssel.",
+      "status": "in_progress",
+      "priority": "medium"
+    }
+  ],
   "architecture_goals": [
-    "Vollst\u00e4ndige Dezentralit\u00e4t (kein zentraler Server au\u00dfer Signaling/STUN)",
-    "Ende-zu-Ende Verschl\u00fcsselung f\u00fcr alle Transfers",
-    "Offline-First Ansatz f\u00fcr das Trust-Ranking"
+    "Vollständige Dezentralität (kein zentraler Server außer Signaling/STUN)",
+    "Ende-zu-Ende Verschlüsselung für alle Transfers",
+    "Offline-First Ansatz für das Trust-Ranking",
+    "Forward Secrecy für alle Kommunikationskanäle"
   ]
 }
