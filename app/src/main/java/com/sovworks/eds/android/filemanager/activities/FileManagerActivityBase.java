@@ -5,7 +5,8 @@ import android.app.Activity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.core.content.ContextCompat;
+import androidx.core.splashscreen.SplashScreen;
+import androidx.core.splashscreen.SplashScreen.KeepOnScreenCondition;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -26,6 +27,7 @@ import com.sovworks.eds.android.activities.VersionHistory;
 import com.sovworks.eds.android.dialogs.AskOverwriteDialog;
 import com.sovworks.eds.android.filemanager.FileManagerFragment;
 import com.sovworks.eds.android.filemanager.fragments.FileListComposeFragment;
+import com.sovworks.eds.android.filemanager.fragments.FileListViewFragment;
 import com.sovworks.eds.android.filemanager.fragments.FileListViewFragmentBase;
 import com.sovworks.eds.android.filemanager.fragments.FileListDataFragment;
 import com.sovworks.eds.android.filemanager.fragments.FilePropertiesFragment;
@@ -353,6 +355,8 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
     @Override
 	public void onCreate(Bundle savedInstanceState)
 	{
+        SplashScreen.installSplashScreen(this);
+
 	    if(GlobalConfig.isTest())
 	        TEST_INIT_OBSERVABLE.onNext(false);
         Util.setTheme(this);
@@ -759,7 +763,7 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
         {
             FragmentTransaction trans = getSupportFragmentManager().beginTransaction();
             trans.add(FileListDataFragment.newInstance(), FileListDataFragment.TAG);
-            trans.add(R.id.fragment1, FileListComposeFragment.newInstance(), LIST_VIEW_FRAGMENT_TAG);
+            trans.add(R.id.fragment1, FileListViewFragment.newInstance(), LIST_VIEW_FRAGMENT_TAG);
             trans.commit();
         }
     }
