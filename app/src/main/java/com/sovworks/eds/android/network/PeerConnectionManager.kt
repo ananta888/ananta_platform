@@ -240,14 +240,7 @@ class PeerConnectionManager(
             multiplexer.sendMessage(peerId, "IDENTITY_TRUST_SYNC:$syncJson")
         }
 
-        val trustStore = TrustStore.getInstance(context)
-        val trustedKeys = trustStore.allKeys.values.filter { it.status == TrustedKey.TrustStatus.TRUSTED }
-        
-        val rotation = identity.getRotationCertificate()
-        val rotations = if (rotation != null) listOf(rotation) else emptyList()
-        val pkg = TrustNetworkManager.exportTrustNetwork(identity, trustedKeys, rotations) ?: return
-        val json = Gson().toJson(pkg)
-        multiplexer.sendMessage(peerId, "TRUST_PACKAGE:$json")
+        sendTrustPackage(peerId)
     }
 
     override fun onIceCandidateReceived(peerId: String, candidate: IceCandidate) {
@@ -268,6 +261,24 @@ class PeerConnectionManager(
     fun closeConnection(peerId: String) {
         peerConnections.remove(peerId)?.dispose()
         PeerConnectionRegistry.updateStatus(peerId, "closed")
+    }
+
+    fun broadcastTrustPackage() {
+        peerConnections.keys.forEach { peerId ->
+            sendTrustPackage(peerId)
+        }
+    }
+
+    private fun sendTrustPackage(peerId: String) {
+        val identity = IdentityManager.loadIdentity(context) ?: return
+        val trustStore = TrustStore.getInstance(context)
+        val trustedKeys = trustStore.allKeys.values.filter { it.status == TrustedKey.TrustStatus.TRUSTED }
+        
+        val rotation = identity.getRotationCertificate()
+        val rotations = if (rotation != null) listOf(rotation) else emptyList()
+        val pkg = TrustNetworkManager.exportTrustNetwork(identity, trustedKeys, rotations) ?: return
+        val json = Gson().toJson(pkg)
+        multiplexer.sendMessage(peerId, "TRUST_PACKAGE:$json")
     }
 
     fun shutdown() {

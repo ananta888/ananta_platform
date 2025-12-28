@@ -36,6 +36,11 @@ class DataChannelMultiplexer(
         listeners.remove(listener)
     }
 
+    fun isConnected(peerId: String): Boolean {
+        // Wir prüfen, ob der Relay-Kanal für diesen Peer offen ist
+        return relayChannels.containsKey(peerId)
+    }
+
     fun onDataChannelCreated(peerId: String, dataChannel: DataChannel, isInitiator: Boolean) {
         when (dataChannel.label()) {
             "chat" -> setupChatChannel(peerId, dataChannel, isInitiator)

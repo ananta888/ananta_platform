@@ -3,14 +3,17 @@ package com.sovworks.eds.android.network
 import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
+import android.net.wifi.WifiManager
 import android.os.Build
 import com.sovworks.eds.android.Logger
 
 class DiscoveryManager(private val context: Context) {
     private val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
+    private val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
     private val serviceType = "_ananta._tcp"
     private var registrationListener: NsdManager.RegistrationListener? = null
     private var discoveryListener: NsdManager.DiscoveryListener? = null
+    private var multicastLock: WifiManager.MulticastLock? = null
 
     fun registerService(port: Int, peerId: String) {
         val serviceInfo = NsdServiceInfo().apply {
@@ -36,6 +39,13 @@ class DiscoveryManager(private val context: Context) {
     }
 
     fun discoverPeers(onPeerFound: (NsdServiceInfo) -> Unit) {
+        if (multicastLock == null) {
+            multicastLock = wifiManager.createMulticastLock("AnantaDiscoveryLock").apply {
+                setReferenceCounted(true)
+            }
+        }
+        multicastLock?.acquire()
+
         discoveryListener = object : NsdManager.DiscoveryListener {
             override fun onDiscoveryStarted(regType: String) {
                 Logger.log("Discovery started")
@@ -95,5 +105,10 @@ class DiscoveryManager(private val context: Context) {
     fun stop() {
         registrationListener?.let { nsdManager.unregisterService(it) }
         discoveryListener?.let { nsdManager.stopServiceDiscovery(it) }
+        multicastLock?.let {
+            if (it.isHeld) {
+                it.release()
+            }
+        }
     }
 }

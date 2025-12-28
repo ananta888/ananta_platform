@@ -21,6 +21,7 @@ object WebRtcService {
             
             // Start background integrity check
             IntegrityCheckWorker.enqueuePeriodicWork(context)
+            com.sovworks.eds.android.identity.KeyRotationWorker.enqueuePeriodicWork(context)
 
             val myId = resolvePeerId(context, settings)
             val client = createSignalingClient(context, settings, myId) ?: return

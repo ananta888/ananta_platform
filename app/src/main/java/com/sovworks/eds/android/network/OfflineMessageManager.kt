@@ -89,6 +89,16 @@ class OfflineMessageManager private constructor(private val context: Context) {
         multiplexer?.sendOfflineMessagingMessage(peerId, gson.toJson(msg))
     }
 
+    fun storeRelayMessage(recipientId: String, senderId: String, payload: String) {
+        val trustStore = com.sovworks.eds.android.trust.TrustStore.getInstance(context)
+        // Nur speichern, wenn wir dem Empfänger vertrauen (Trust Level > 3)
+        val trust = trustStore.getKey(recipientId)
+        if (trust != null && trust.getTrustLevel() > 3) {
+            handleStoreRequest(StoreRequest(recipientId, senderId, payload, System.currentTimeMillis()))
+            com.sovworks.eds.android.Logger.debug("Stored offline message for $recipientId from $senderId")
+        }
+    }
+
     companion object {
         @Volatile
         private var instance: OfflineMessageManager? = null

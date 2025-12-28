@@ -2,6 +2,7 @@ package com.sovworks.eds.android.identity
 
 import android.content.Context
 import androidx.work.*
+import com.sovworks.eds.android.network.WebRtcService
 import java.util.concurrent.TimeUnit
 
 class KeyRotationWorker(
@@ -13,7 +14,11 @@ class KeyRotationWorker(
         val identity = IdentityManager.loadIdentity(applicationContext) ?: return Result.success()
         
         if (IdentityManager.shouldRotate(identity)) {
-            IdentityManager.rotateKeys(applicationContext)
+            val newIdentity = IdentityManager.rotateKeys(applicationContext)
+            if (newIdentity != null) {
+                // Benachrichtige verbundene Peers \u00fcber den neuen Schl\u00fcssel
+                WebRtcService.getPeerConnectionManager()?.broadcastTrustPackage()
+            }
         }
         
         return Result.success()

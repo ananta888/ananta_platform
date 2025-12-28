@@ -4,14 +4,6 @@
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform für sichere Kommunikation und Dateiaustausch.",
   "tasks": [
     {
-      "id": "TASK-001",
-      "category": "Networking",
-      "title": "Lokale Peer Discovery (mDNS/NSD)",
-      "description": "Implementierung von mDNS zur automatischen Erkennung von Peers im selben WLAN ohne Signaling-Server.",
-      "status": "planned",
-      "priority": "high"
-    },
-    {
       "id": "TASK-002",
       "category": "Security",
       "title": "Perfect Forward Secrecy (PFS) für Private Chats",
@@ -50,14 +42,6 @@
       "description": "Graph-basierte Darstellung des eigenen Vertrauensnetzwerks und der Reputationspfade zu anderen Peers.",
       "status": "planned",
       "priority": "low"
-    },
-    {
-      "id": "TASK-007",
-      "category": "Identity",
-      "title": "Automatisierte Key Rotation",
-      "description": "Vollständige Automatisierung der Schlüsselrotation und Benachrichtigung aller verbundenen Peers über den neuen Schlüssel.",
-      "status": "in_progress",
-      "priority": "medium"
     }
   ],
   "architecture_goals": [

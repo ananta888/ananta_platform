@@ -53,7 +53,13 @@ class RelayManager private constructor(private val context: Context) {
             val session = activeRelays[sessionId]
             if (session != null) {
                 val targetPeerId = if (fromPeerId == session.peerA) session.peerC else session.peerA
-                WebRtcService.getPeerConnectionManager()?.getMultiplexer()?.sendRelayControl(targetPeerId, message)
+                val multiplexer = WebRtcService.getPeerConnectionManager()?.getMultiplexer()
+                if (multiplexer?.isConnected(targetPeerId) == true) {
+                    multiplexer.sendRelayControl(targetPeerId, message)
+                } else {
+                    // Offline zwischenspeichern
+                    OfflineMessageManager.getInstance(context).storeRelayMessage(targetPeerId, fromPeerId, message)
+                }
             } else {
                 // Wir sind Endpunkt
                 relayControlListeners[sessionId]?.invoke(fromPeerId, ctrlMsg)
