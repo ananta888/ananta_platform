@@ -1,6 +1,6 @@
 package com.sovworks.eds.android.ui
 
-nimport android.app.Activity
+import android.app.Activity
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -184,7 +184,10 @@ fun AppScaffold(
                     is Screen.FileTransfers -> FileTransferDashboardScreen()
                     is Screen.PeerConnections -> PeerConnectionsScreen()
                     is Screen.IdentitySync -> IdentitySyncScreen(onStartScanner = { onStartIdentityScanner?.invoke() })
-                    is Screen.Pairing -> PairingScreen(onStartScanner = { onStartPairingScanner?.invoke() })
+                    is Screen.Pairing -> PairingScreen(
+                        onStartScanner = { onStartPairingScanner?.invoke() },
+                        onOpenIdentitySync = { navigationViewModel.navigateTo(Screen.IdentitySync) }
+                    )
                     is Screen.Peers -> PeerManagementScreen(viewModel = viewModel())
                     is Screen.Exchange -> ExchangeScreen()
                     is Screen.Trust -> PeerManagementScreen(viewModel = viewModel())

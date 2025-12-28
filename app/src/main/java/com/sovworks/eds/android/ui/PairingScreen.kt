@@ -19,7 +19,7 @@ import com.sovworks.eds.android.identity.IdentityManager
 import com.sovworks.eds.android.network.PairingManager
 
 @Composable
-fun PairingScreen(onStartScanner: () -> Unit) {
+fun PairingScreen(onStartScanner: () -> Unit, onOpenIdentitySync: (() -> Unit)? = null) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
     val identity = remember { IdentityManager.loadIdentity(context) }
@@ -46,6 +46,14 @@ fun PairingScreen(onStartScanner: () -> Unit) {
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
+            if (onOpenIdentitySync != null) {
+                TextButton(
+                    onClick = onOpenIdentitySync,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                ) {
+                    Text("Create or Sync Identity")
+                }
+            }
         } else {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
