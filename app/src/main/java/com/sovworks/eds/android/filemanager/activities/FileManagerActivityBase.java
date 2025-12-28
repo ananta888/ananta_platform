@@ -5,8 +5,6 @@ import android.app.Activity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.core.splashscreen.SplashScreen;
-import androidx.core.splashscreen.SplashScreen.KeepOnScreenCondition;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -352,18 +350,11 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
             showPreviewFragment(contextPath);
 	}
 
-    private boolean _initFinished = false;
-
     @Override
 	public void onCreate(Bundle savedInstanceState)
 	{
         Logger.debug("FileManagerActivityBase: onCreate start");
-        SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
-        splashScreen.setKeepOnScreenCondition(() -> {
-            Logger.debug("FileManagerActivityBase: keepOnScreenCondition check: " + !_initFinished);
-            return !_initFinished;
-        });
-
+        
 	    if(GlobalConfig.isTest())
 	        TEST_INIT_OBSERVABLE.onNext(false);
         Util.setTheme(this);
@@ -373,10 +364,6 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
         
         // setAppContent directly in onCreate to start Compose early
         com.sovworks.eds.android.ui.ComposeIntegrationKt.setAppContent(this);
-
-        // Dismiss splash screen immediately to show the initial screen (Debug Log)
-        _initFinished = true;
-        Logger.debug("FileManagerActivityBase: _initFinished set to true immediately");
 
         // Load settings and perform initialization in background to avoid blocking main thread
         new Thread(() -> {
