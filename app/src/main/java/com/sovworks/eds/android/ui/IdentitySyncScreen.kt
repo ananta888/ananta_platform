@@ -14,12 +14,17 @@ import androidx.compose.ui.unit.dp
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.journeyapps.barcodescanner.BarcodeEncoder
+import com.sovworks.eds.android.identity.IdentityManager
 import com.sovworks.eds.android.identity.IdentitySyncManager
 
 @Composable
 fun IdentitySyncScreen(onStartScanner: () -> Unit) {
     val context = LocalContext.current
-    val syncPackageJson = remember { IdentitySyncManager.exportSyncPackage(context) }
+    var identity by remember { mutableStateOf(IdentityManager.loadIdentity(context)) }
+    var identityName by remember { mutableStateOf("") }
+    val syncPackageJson = remember(identity) {
+        identity?.let { IdentitySyncManager.exportSyncPackage(context) }
+    }
     val qrBitmap = remember(syncPackageJson) { syncPackageJson?.let { generateQrCode(it) } }
 
     Column(
@@ -42,13 +47,38 @@ fun IdentitySyncScreen(onStartScanner: () -> Unit) {
             textAlign = TextAlign.Center
         )
         
-        qrBitmap?.let {
-            Image(
-                bitmap = it.asImageBitmap(),
-                contentDescription = "Sync QR Code",
-                modifier = Modifier.size(300.dp)
+        if (identity == null) {
+            Text(
+                text = "No identity found. Create one to enable QR sync.",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 12.dp),
+                textAlign = TextAlign.Center
             )
-        } ?: Text("Failed to generate sync package")
+            OutlinedTextField(
+                value = identityName,
+                onValueChange = { identityName = it },
+                label = { Text("Identity name") },
+                modifier = Modifier.fillMaxWidth(0.8f)
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = {
+                    identity = IdentityManager.createNewIdentity(context, identityName.trim())
+                    identityName = ""
+                },
+                enabled = identityName.isNotBlank()
+            ) {
+                Text("Create Identity")
+            }
+        } else {
+            qrBitmap?.let {
+                Image(
+                    bitmap = it.asImageBitmap(),
+                    contentDescription = "Sync QR Code",
+                    modifier = Modifier.size(300.dp)
+                )
+            } ?: Text("Failed to generate sync package")
+        }
 
         Spacer(modifier = Modifier.height(32.dp))
 
