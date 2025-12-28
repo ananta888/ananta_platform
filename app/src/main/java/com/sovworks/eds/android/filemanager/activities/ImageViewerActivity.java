@@ -3,6 +3,8 @@ package com.sovworks.eds.android.filemanager.activities;
 import android.annotation.SuppressLint;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
+
+import com.sovworks.eds.android.activities.DrawerActivityBase;
 import android.app.Activity;
 import android.os.Build;
 import android.os.Bundle;
@@ -31,7 +33,7 @@ import java.util.NavigableSet;
 import java.util.TreeSet;
 
 @SuppressLint({"CommitPrefEdits", "ApplySharedPref", "InlinedApi"})
-public class ImageViewerActivity extends AppCompatActivity implements PreviewFragment.Host
+public class ImageViewerActivity extends DrawerActivityBase implements PreviewFragment.Host
 {	
 	public static final String INTENT_PARAM_CURRENT_PATH = "current_path";
 	
@@ -54,7 +56,7 @@ public class ImageViewerActivity extends AppCompatActivity implements PreviewFra
 		@Override
 		protected void doWork(TaskState state) throws Exception
 		{			
-			ArrayList<Path> paths = Util.restorePaths(_loc.getFS(), _pathStrings);
+			ArrayList<Path> paths = com.sovworks.eds.fs.util.Util.restorePaths(_loc.getFS(), _pathStrings);
 			@SuppressWarnings("unchecked") TreeSet<CachedPathInfo> res = new TreeSet(FileListDataFragment.getComparator(_settings));
 			for(Path p: paths)
 			{
@@ -156,7 +158,7 @@ public class ImageViewerActivity extends AppCompatActivity implements PreviewFra
 	private void showFragment(String currentImagePathString)
 	{
 		PreviewFragment f = PreviewFragment.newInstance(currentImagePathString);
-		getSupportFragmentManager().beginTransaction().add(android.R.id.content, f, PreviewFragment.TAG).commit();
+		getSupportFragmentManager().beginTransaction().add(R.id.content_frame, f, PreviewFragment.TAG).commit();
 	}
 	
 	private void enableFullScreen()

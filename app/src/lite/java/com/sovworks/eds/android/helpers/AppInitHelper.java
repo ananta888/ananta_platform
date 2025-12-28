@@ -37,6 +37,7 @@ public class AppInitHelper extends AppInitHelperBase
                 {
                     if(!(err instanceof CancellationException))
                         Logger.log(err);
+                    _initFinished.onError(err);
                 });
     }
 }

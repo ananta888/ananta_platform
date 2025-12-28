@@ -357,7 +357,7 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
         if(_settings.isFlagSecureEnabled())
             CompatHelper.setWindowFlagSecure(this);
 	    _isLargeScreenLayout = UserSettings.isWideScreenLayout(_settings, this);
-	    setContentView(R.layout.main_activity);
+        getLayoutInflater().inflate(R.layout.main_activity, findViewById(R.id.content_frame));
 	    Fragment f = getSupportFragmentManager().findFragmentById(R.id.fragment2);
 	    if(f!=null)
         {
