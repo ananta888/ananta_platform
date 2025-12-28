@@ -105,6 +105,10 @@
             android:label="@string/device_pairing"
             android:theme="@style/Theme.EDS"/>
         <activity
+            android:name=".activities.IdentitySyncActivity"
+            android:label="Identity Sync"
+            android:theme="@style/Theme.EDS"/>
+        <activity
             android:name=".activities.PeersActivity"
             android:label="@string/peers_devices"
             android:theme="@style/Theme.EDS"/>

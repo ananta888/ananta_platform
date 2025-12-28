@@ -206,7 +206,7 @@ public class EdsApplicationBase extends MultiDexApplication
                         Toast.makeText(this, Logger.getExceptionMessage(this, e), Toast.LENGTH_LONG).show();
                 }
                 WebRtcService.initialize(getApplicationContext(), settings);
-                MessengerRepository.INSTANCE.initialize();
+                MessengerRepository.INSTANCE.initialize(this);
                 FileTransferManager.INSTANCE.initialize(getApplicationContext());
         }
 

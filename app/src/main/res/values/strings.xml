@@ -114,7 +114,8 @@
     <string name="share_logs">Logs teilen</string>
     <string name="clear_logs">Logs löschen</string>
     <string name="secure_share">Sicherer Austausch</string>
-    <string name="device_pairing">Gerät koppeln (QR)</string>
+   	<string name="device_pairing">Gerät koppeln (QR)</string>
+   	<string name="identity_sync">Identität synchronisieren (QR)</string>
     <string name="show_qr">QR anzeigen</string>
     <string name="peers_devices">Peers / Geräte</string>
     <string name="trust_chain">Schlüssel &amp; Vertrauen</string>

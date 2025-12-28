@@ -1,6 +1,7 @@
 package com.sovworks.eds.android.navigdrawer;
 
 import com.sovworks.eds.android.R;
+import com.sovworks.eds.android.activities.IdentitySyncActivity;
 import com.sovworks.eds.android.activities.PairingActivity;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,6 +25,7 @@ public class DrawerExchangeMenu extends DrawerSubMenuBase
         ArrayList<DrawerMenuItemBase> res = new ArrayList<>();
         res.add(new DrawerSimpleMenuItem(getDrawerController(), R.string.start_exchange, R.drawable.ic_menu_share));
         res.add(new DrawerSimpleMenuItem(getDrawerController(), R.string.device_pairing, R.drawable.ic_menu_fullscreen, PairingActivity.class));
+        res.add(new DrawerSimpleMenuItem(getDrawerController(), R.string.identity_sync, R.drawable.ic_menu_copy, IdentitySyncActivity.class));
         return res;
     }
 }

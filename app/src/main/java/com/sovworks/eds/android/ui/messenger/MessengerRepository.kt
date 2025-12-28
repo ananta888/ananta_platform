@@ -2,10 +2,17 @@ package com.sovworks.eds.android.ui.messenger
 
 import com.sovworks.eds.android.network.DataChannelListener
 import com.sovworks.eds.android.network.WebRtcService
+import com.sovworks.eds.android.db.AppDatabase
+import com.sovworks.eds.android.db.ChatMessageEntity
+import android.content.Context
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 data class ChatMessage(
     val senderId: String,
@@ -28,8 +35,31 @@ object MessengerRepository : DataChannelListener {
     private val _groups = MutableStateFlow<Map<String, ChatGroup>>(emptyMap())
     val groups: StateFlow<Map<String, ChatGroup>> = _groups.asStateFlow()
 
-    fun initialize() {
+    private var database: AppDatabase? = null
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+    fun initialize(context: Context) {
         WebRtcService.getPeerConnectionManager()?.getMultiplexer()?.addListener(this)
+        
+        database = AppDatabase.getDatabase(context)
+        
+        // Load messages from database
+        scope.launch {
+            database?.chatDao()?.getAllMessages()?.collect { entities ->
+                val mappedMessages = entities.groupBy { it.chatId }.mapValues { entry ->
+                    entry.value.map { entity ->
+                        ChatMessage(
+                            senderId = entity.senderId,
+                            text = entity.text,
+                            timestamp = entity.timestamp,
+                            isMe = entity.isMe,
+                            groupId = entity.groupId
+                        )
+                    }
+                }
+                _messages.value = mappedMessages
+            }
+        }
     }
 
     fun createGroup(name: String, memberIds: Set<String>): String {
@@ -47,11 +77,12 @@ object MessengerRepository : DataChannelListener {
             return
         }
 
-        addMessage(peerId, ChatMessage(
+        val chatMessage = ChatMessage(
             senderId = peerId,
             text = message,
             isMe = false
-        ))
+        )
+        addMessage(peerId, chatMessage)
     }
 
     private fun handleGroupMessage(peerId: String, payload: String) {
@@ -61,12 +92,13 @@ object MessengerRepository : DataChannelListener {
         val groupId = parts[0]
         val text = parts[1]
 
-        addMessage(groupId, ChatMessage(
+        val chatMessage = ChatMessage(
             senderId = peerId,
             text = text,
             isMe = false,
             groupId = groupId
-        ))
+        )
+        addMessage(groupId, chatMessage)
     }
 
     override fun onBinaryReceived(peerId: String, data: ByteArray) {
@@ -77,11 +109,12 @@ object MessengerRepository : DataChannelListener {
         val manager = WebRtcService.getPeerConnectionManager() ?: return
         manager.getMultiplexer().sendMessage(peerId, text)
         
-        addMessage(peerId, ChatMessage(
+        val chatMessage = ChatMessage(
             senderId = "me", 
             text = text,
             isMe = true
-        ))
+        )
+        addMessage(peerId, chatMessage)
     }
 
     fun sendGroupMessage(groupId: String, text: String) {
@@ -93,18 +126,33 @@ object MessengerRepository : DataChannelListener {
             manager.getMultiplexer().sendMessage(memberId, payload)
         }
 
-        addMessage(groupId, ChatMessage(
+        val chatMessage = ChatMessage(
             senderId = "me",
             text = text,
             isMe = true,
             groupId = groupId
-        ))
+        )
+        addMessage(groupId, chatMessage)
     }
 
     private fun addMessage(chatId: String, message: ChatMessage) {
         _messages.update { current ->
             val chatMessages = current[chatId] ?: emptyList()
             current + (chatId to (chatMessages + message))
+        }
+
+        // Save to database
+        scope.launch {
+            database?.chatDao()?.insertMessage(
+                ChatMessageEntity(
+                    chatId = chatId,
+                    senderId = message.senderId,
+                    text = message.text,
+                    timestamp = message.timestamp,
+                    isMe = message.isMe,
+                    groupId = message.groupId
+                )
+            )
         }
     }
 }

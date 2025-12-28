@@ -4,20 +4,20 @@
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform f\u00fcr sichere Kommunikation und Dateiaustausch.",
   "tasks": [
     {
-      "id": 17,
-      "title": "Chat-Historie Persistenz",
-      "description": "Speichern von Nachrichten in einer lokalen verschl\u00fcsselten Datenbank.",
-      "priority": "medium",
-      "status": "todo",
-      "category": "Messaging"
-    },
-    {
-      "id": 18,
-      "title": "UI f\u00fcr Identit\u00e4ts-Sync",
-      "description": "Erstellung einer Benutzeroberfl\u00e4che f\u00fcr den Export/Import der Identit\u00e4t via QR-Code.",
-      "priority": "low",
+      "id": 19,
+      "title": "Gruppen-Chat E2EE",
+      "description": "Implementierung einer zusätzlichen Ende-zu-Ende Verschlüsselung für Gruppennachrichten.",
+      "priority": "high",
       "status": "todo",
       "category": "Security"
+    },
+    {
+      "id": 20,
+      "title": "Dateitransfer-Historie",
+      "description": "Persistente Protokollierung aller gesendeten und empfangenen Dateien.",
+      "priority": "low",
+      "status": "todo",
+      "category": "Storage"
     }
   ],
   "architecture_goals": [
