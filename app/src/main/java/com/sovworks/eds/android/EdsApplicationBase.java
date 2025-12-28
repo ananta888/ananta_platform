@@ -93,6 +93,7 @@ public class EdsApplicationBase extends MultiDexApplication
     public void onCreate()
 	{
 		super.onCreate();
+        Logger.debug("EdsApplicationBase: onCreate start");
 		try {
 			PRNGFixes.apply();
 		} catch (Throwable e) {
@@ -104,6 +105,7 @@ public class EdsApplicationBase extends MultiDexApplication
 		UserSettings us;
 		try
 		{
+            Logger.debug("EdsApplicationBase: getting settings");
 			us = getSettings(getApplicationContext());
 		}
 		catch (Throwable e)
@@ -113,6 +115,7 @@ public class EdsApplicationBase extends MultiDexApplication
 			Toast.makeText(this, Logger.getExceptionMessage(this, e), Toast.LENGTH_LONG).show();
 			return;
 		}
+        Logger.debug("EdsApplicationBase: initializing with settings");
 		init(us);
 		Logger.debug("Android sdk version is " + Build.VERSION.SDK_INT);
 	}

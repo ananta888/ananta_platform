@@ -357,14 +357,22 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
     @Override
 	public void onCreate(Bundle savedInstanceState)
 	{
+        Logger.debug("FileManagerActivityBase: onCreate start");
         SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
-        splashScreen.setKeepOnScreenCondition(() -> false);
+        splashScreen.setKeepOnScreenCondition(() -> {
+            boolean shouldKeep = !_initFinished && !GlobalConfig.isDebug();
+            if (!shouldKeep) {
+                Logger.debug("FileManagerActivityBase: dismissing splash screen");
+            }
+            return shouldKeep;
+        });
 
 	    if(GlobalConfig.isTest())
 	        TEST_INIT_OBSERVABLE.onNext(false);
         Util.setTheme(this);
 	    super.onCreate(savedInstanceState);
         
+        Logger.debug("FileManagerActivityBase: setting app content");
         com.sovworks.eds.android.ui.ComposeIntegrationKt.setAppContent(this);
 
         Logger.debug("fm start intent: " + getIntent());
@@ -381,14 +389,26 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
         CompatHelper.registerReceiver(this, _locationChangedReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED), false);
         CompatHelper.registerReceiver(this, _locationAddedOrRemovedReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED), false);
 
+        Logger.debug("FileManagerActivityBase: starting AppInitHelper");
+        
+        // Fail-safe: dismiss splash screen after 5 seconds anyway
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            if (!_initFinished) {
+                Logger.debug("FileManagerActivityBase: init timeout reached, forcing splash screen dismissal");
+                _initFinished = true;
+            }
+        }, 5000);
+
         AppInitHelper.
                 createObservable(this).
                 compose(bindToLifecycleCompletable()).
                 subscribe(() -> {
+                    Logger.debug("FileManagerActivityBase: AppInitHelper finished");
                     _initFinished = true;
                     startAction(savedInstanceState);
                     rereadCurrentLocation();
                 }, err -> {
+                        Logger.debug("FileManagerActivityBase: AppInitHelper failed: " + err.getMessage());
                         _initFinished = true;
                         if(!(err instanceof CancellationException))
                             Logger.showAndLog(getApplicationContext(), err);

@@ -138,11 +138,21 @@ class FileListViewModel : ViewModel() {
                 currentPath = currentPath.getParentPath()
             }
             
-            while (currentPath != null) {
+            var depth = 0
+            while (currentPath != null && depth < 100) {
                 val loc = location.copy()
                 loc.setCurrentPath(currentPath)
                 crumbs.add(0, loc)
-                currentPath = currentPath.getParentPath()
+                
+                val parent = currentPath.getParentPath()
+                if (parent == null || parent.pathString == currentPath.pathString) {
+                    break
+                }
+                currentPath = parent
+                depth++
+            }
+            if (depth >= 100) {
+                Logger.debug("FileListViewModel: Breadcrumb depth exceeded 100, possible loop detected")
             }
         } catch (e: Exception) {
             Logger.log(e)
