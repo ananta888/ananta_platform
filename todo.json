@@ -4,38 +4,6 @@
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform f\u00fcr sichere Kommunikation und Dateiaustausch.",
   "tasks": [
     {
-      "id": 1,
-      "title": "Modernisierung der asynchronen Architektur",
-      "description": "Ersetzung von ScheduledExecutorService durch Kotlin Coroutines und Flows f\u00fcr Polling und Zustands\u00fcberwachung im WebRtcService und PeerConnectionManager.",
-      "priority": "high",
-      "status": "todo",
-      "category": "Architecture"
-    },
-    {
-      "id": 2,
-      "title": "Flow Control f\u00fcr WebRTC DataChannels",
-      "description": "Implementierung eines Backpressure-Mechanismus im DataChannelMultiplexer, um bei gro\u00dfen Dateitransfers das \u00dcberlaufen des Buffers zu verhindern (bufferedAmount Monitoring).",
-      "priority": "high",
-      "status": "todo",
-      "category": "WebRTC"
-    },
-    {
-      "id": 3,
-      "title": "WebSocket Signaling Provider",
-      "description": "Entwicklung eines WebSocket-basierten Signaling-Providers als schnellere Alternative zum aktuellen HTTP-Polling.",
-      "priority": "medium",
-      "status": "todo",
-      "category": "Networking"
-    },
-    {
-      "id": 4,
-      "title": "Automatisierter Trust-Austausch",
-      "description": "Hintergrund-Synchronisation von Trust-Network-Paketen zwischen Peers nach erfolgreichem Verbindungsaufbau (Web-of-Trust Automatisierung).",
-      "priority": "medium",
-      "status": "todo",
-      "category": "Security"
-    },
-    {
       "id": 5,
       "title": "Jetpack Compose Messenger UI",
       "description": "Erstellung einer modernen Chat-Oberfl\u00e4che f\u00fcr den E2EE-Austausch von Textnachrichten und Statusmeldungen.",
@@ -74,6 +42,22 @@
       "priority": "high",
       "status": "todo",
       "category": "Bugfix"
+    },
+    {
+      "id": 10,
+      "title": "Unit Tests f\u00fcr WebSocketSignalingClient",
+      "description": "Erstellung von Unit Tests zur Verifizierung der WebSocket-Verbindung, Nachrichtenübermittlung und Reconnect-Logik.",
+      "priority": "medium",
+      "status": "todo",
+      "category": "Testing"
+    },
+    {
+      "id": 11,
+      "title": "Integration von WebRTC-Statistiken",
+      "description": "Erfassung und Anzeige von Verbindungsstatistiken (Latenz, Paketverlust, Bitrate) im Dashboard.",
+      "priority": "low",
+      "status": "todo",
+      "category": "Performance"
     }
   ],
   "architecture_goals": [

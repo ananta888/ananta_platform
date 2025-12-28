@@ -2,16 +2,16 @@ package com.sovworks.eds.android.network
 
 import com.sovworks.eds.android.transfer.FileTransferManager
 import com.sovworks.eds.fs.File
+import kotlinx.coroutines.*
 import java.io.InputStream
-import java.util.concurrent.Executors
 
 class VaultFileSender(
     private val multiplexer: DataChannelMultiplexer
 ) {
-    private val executor = Executors.newCachedThreadPool()
+    private val senderScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     fun sendFile(peerId: String, file: File) {
-        executor.execute {
+        senderScope.launch {
             val fileName = try {
                 file.getName()
             } catch (e: Exception) {
@@ -33,7 +33,7 @@ class VaultFileSender(
         }
     }
 
-    fun sendStream(peerId: String, fileName: String, totalBytes: Long?, input: InputStream) {
+    suspend fun sendStream(peerId: String, fileName: String, totalBytes: Long?, input: InputStream) {
         val transferId = FileTransferManager.startOutgoingTransfer(peerId, fileName, totalBytes)
         try {
             sendStart(peerId, fileName, totalBytes)
@@ -54,23 +54,20 @@ class VaultFileSender(
         multiplexer.sendMessage(peerId, payload)
     }
 
-    private fun streamFile(peerId: String, transferId: String, input: InputStream) {
+    private suspend fun streamFile(peerId: String, transferId: String, input: InputStream) {
         val buffer = ByteArray(CHUNK_SIZE)
         while (true) {
-            var read = input.read(buffer)
+            val read = withContext(Dispatchers.IO) { input.read(buffer) }
             if (read <= 0) {
                 break
             }
             while (FileTransferManager.isPaused(transferId)) {
-                Thread.sleep(PAUSE_POLL_MS)
+                delay(PAUSE_POLL_MS)
             }
-            var sent = false
             val payload = if (read == buffer.size) buffer else buffer.copyOf(read)
-            while (!sent) {
-                sent = multiplexer.sendFileData(peerId, payload)
-                if (!sent) {
-                    Thread.sleep(SEND_RETRY_MS)
-                }
+            val sent = multiplexer.sendFileData(peerId, payload)
+            if (!sent) {
+                throw Exception("Data channel lost during transfer")
             }
             FileTransferManager.updateProgress(transferId, read.toLong())
         }

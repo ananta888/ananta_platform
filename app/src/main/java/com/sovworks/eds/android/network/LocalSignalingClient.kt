@@ -88,7 +88,7 @@ class LocalSignalingClient(
         this.listener = listener
     }
 
-    fun shutdown() {
+    override fun shutdown() {
         discoveryManager.stop()
         server.stop()
         ioExecutor.shutdownNow()

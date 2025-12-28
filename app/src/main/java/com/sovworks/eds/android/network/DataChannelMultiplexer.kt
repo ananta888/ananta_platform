@@ -1,5 +1,6 @@
 package com.sovworks.eds.android.network
 
+import kotlinx.coroutines.flow.first
 import org.webrtc.DataChannel
 import java.util.concurrent.ConcurrentHashMap
 
@@ -59,15 +60,18 @@ class DataChannelMultiplexer(
         channel.sendText(message)
     }
 
-    fun sendFileData(peerId: String, data: ByteArray): Boolean {
+    suspend fun sendFileData(peerId: String, data: ByteArray): Boolean {
         val channel = fileChannels[peerId] ?: return false
 
-        // Simple Flow Control: Wait if buffer is too full
-        if (channel.bufferedAmount() > 1024 * 1024) { // 1MB threshold
-            // In a real app, we would use a callback or coroutine to wait
-            return false
+        // Flow Control: Wait if buffer is too full
+        if (channel.bufferedAmount() > BUFFER_THRESHOLD) {
+            channel.bufferedAmountFlow.first { it <= BUFFER_THRESHOLD }
         }
         channel.sendBinary(data)
         return true
+    }
+
+    companion object {
+        private const val BUFFER_THRESHOLD = 1024 * 1024L // 1MB
     }
 }

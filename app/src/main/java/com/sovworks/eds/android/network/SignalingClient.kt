@@ -12,6 +12,7 @@ interface SignalingClient {
     fun sendIceCandidate(peerId: String, candidate: IceCandidate)
     
     fun setListener(listener: SignalingListener)
+    fun shutdown() {}
 }
 
 /**

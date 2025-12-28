@@ -56,6 +56,7 @@ public abstract class UserSettingsCommon implements SettingsCommon
         public static final String SIGNALING_PEER_ID = "signaling_peer_id";
         public static final String SIGNALING_MODE_LOCAL = "local";
         public static final String SIGNALING_MODE_HTTP = "http";
+        public static final String SIGNALING_MODE_WEBSOCKET = "websocket";
 
 	public static final String SETTINGS_PROTECTION_KEY_CHECK = "protection_key_check";
 

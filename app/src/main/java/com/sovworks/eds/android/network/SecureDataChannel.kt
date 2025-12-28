@@ -1,5 +1,8 @@
 package com.sovworks.eds.android.network
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import org.webrtc.DataChannel
 import java.nio.ByteBuffer
 import java.util.ArrayDeque
@@ -13,6 +16,9 @@ class SecureDataChannel(
     private val pfsSession = PfsSession(isInitiator)
     private val pendingText = ArrayDeque<String>()
     private val pendingBinary = ArrayDeque<ByteArray>()
+    
+    private val _bufferedAmountFlow = MutableStateFlow(0L)
+    val bufferedAmountFlow: StateFlow<Long> = _bufferedAmountFlow.asStateFlow()
 
     init {
         channel.registerObserver(this)
@@ -40,7 +46,9 @@ class SecureDataChannel(
         channel.send(DataChannel.Buffer(ByteBuffer.wrap(encrypted), true))
     }
 
-    override fun onBufferedAmountChange(previousAmount: Long) {}
+    override fun onBufferedAmountChange(previousAmount: Long) {
+        _bufferedAmountFlow.value = channel.bufferedAmount()
+    }
 
     override fun onStateChange() {
         if (channel.state() == DataChannel.State.OPEN) {

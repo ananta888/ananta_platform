@@ -1,6 +1,13 @@
 package com.sovworks.eds.android.network
 
 import android.content.Context
+import com.google.gson.Gson
+import com.sovworks.eds.android.identity.IdentityManager
+import com.sovworks.eds.android.trust.TrustNetworkManager
+import com.sovworks.eds.android.trust.TrustNetworkPackage
+import com.sovworks.eds.android.trust.TrustStore
+import com.sovworks.eds.android.trust.TrustedKey
+import kotlinx.coroutines.*
 import org.webrtc.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -12,8 +19,9 @@ class PeerConnectionManager(
     private val context: Context,
     private val signalingClient: SignalingClient,
     private val myId: String
-) : SignalingListener {
+) : SignalingListener, DataChannelListener {
 
+    private val managerScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val peerConnections = ConcurrentHashMap<String, PeerConnection>()
     private var listener: PeerConnectionListener? = null
     private val iceServers = listOf(
@@ -31,7 +39,9 @@ class PeerConnectionManager(
     }
 
     fun sendFileStream(peerId: String, fileName: String, totalBytes: Long?, input: java.io.InputStream) {
-        vaultFileSender.sendStream(peerId, fileName, totalBytes, input)
+        managerScope.launch {
+            vaultFileSender.sendStream(peerId, fileName, totalBytes, input)
+        }
     }
 
     fun setListener(listener: PeerConnectionListener) {
@@ -42,6 +52,7 @@ class PeerConnectionManager(
         WebRTCManager.initialize(context)
         signalingClient.setListener(this)
         multiplexer.addListener(vaultFileReceiver)
+        multiplexer.addListener(this)
     }
 
     @Synchronized
@@ -54,12 +65,16 @@ class PeerConnectionManager(
                 newState?.let {
                     listener?.onConnectionStateChange(peerId, it)
                     PeerConnectionRegistry.updateStatus(peerId, it.name.lowercase())
+                    if (it == PeerConnection.IceConnectionState.CONNECTED) {
+                        onPeerConnected(peerId)
+                    }
                     if (it == PeerConnection.IceConnectionState.DISCONNECTED ||
                         it == PeerConnection.IceConnectionState.FAILED) {
                         // Automatischer Reconnect-Versuch nach Verzögerung
-                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        managerScope.launch {
+                            delay(3000)
                             initiateConnection(peerId)
-                        }, 3000)
+                        }
                     }
                 }
             }
@@ -157,6 +172,16 @@ class PeerConnectionManager(
         }, sdp)
     }
 
+    private fun onPeerConnected(peerId: String) {
+        val identity = IdentityManager.loadIdentity(context) ?: return
+        val trustStore = TrustStore.getInstance(context)
+        val trustedKeys = trustStore.allKeys.values.filter { it.status == TrustedKey.TrustStatus.TRUSTED }
+        
+        val pkg = TrustNetworkManager.exportTrustNetwork(identity, trustedKeys) ?: return
+        val json = Gson().toJson(pkg)
+        multiplexer.sendMessage(peerId, "TRUST_PACKAGE:$json")
+    }
+
     override fun onIceCandidateReceived(peerId: String, candidate: IceCandidate) {
         val pc = peerConnections[peerId] ?: return
         pc.addIceCandidate(candidate)
@@ -166,4 +191,24 @@ class PeerConnectionManager(
         peerConnections.remove(peerId)?.dispose()
         PeerConnectionRegistry.updateStatus(peerId, "closed")
     }
+
+    fun shutdown() {
+        managerScope.cancel()
+        peerConnections.values.forEach { it.dispose() }
+        peerConnections.clear()
+    }
+
+    override fun onMessageReceived(peerId: String, message: String) {
+        if (message.startsWith("TRUST_PACKAGE:")) {
+            val json = message.removePrefix("TRUST_PACKAGE:")
+            try {
+                val pkg: TrustNetworkPackage = Gson().fromJson(json, TrustNetworkPackage::class.java)
+                TrustNetworkManager.verifyAndImportNetwork(context, pkg)
+            } catch (e: Exception) {
+                // Ignore malformed trust packages
+            }
+        }
+    }
+
+    override fun onBinaryReceived(peerId: String, data: ByteArray) {}
 }
