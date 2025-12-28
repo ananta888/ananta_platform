@@ -18,7 +18,7 @@
         <activity
             android:name=".filemanager.activities.FileManagerActivity"
             android:label="@string/eds"
-            android:theme="@style/Theme.EDS"
+            android:theme="@style/Theme.App.Starting"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

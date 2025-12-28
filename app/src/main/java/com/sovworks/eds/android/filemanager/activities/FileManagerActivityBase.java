@@ -69,10 +69,13 @@ import com.sovworks.eds.android.navigdrawer.DrawerControllerBase;
 import com.sovworks.eds.android.navigdrawer.DrawerController;
 
 import com.sovworks.eds.android.activities.DrawerActivityBase;
+import androidx.core.splashscreen.SplashScreen;
+
 
 @SuppressLint({"CommitPrefEdits", "ApplySharedPref"})
 public abstract class FileManagerActivityBase extends DrawerActivityBase implements PreviewFragment.Host, RxLifecycleProvider
 {
+    private boolean _isInitialized = false;
     protected final CompositeDisposable _disposables = new CompositeDisposable();
 
     @Override
@@ -354,7 +357,9 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
 	public void onCreate(Bundle savedInstanceState)
 	{
         Logger.debug("FileManagerActivityBase: onCreate start");
-        
+        SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
+        splashScreen.setKeepOnScreenCondition(() -> !_isInitialized);
+
 	    if(GlobalConfig.isTest())
 	        TEST_INIT_OBSERVABLE.onNext(false);
         Util.setTheme(this);
@@ -387,6 +392,7 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
                     CompatHelper.registerReceiver(this, _locationAddedOrRemovedReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED), false);
 
                     Logger.debug("FileManagerActivityBase: calling AppInitHelper");
+                    _isInitialized = true;
                     AppInitHelper.
                             createObservable(this).
                             compose(bindToLifecycleCompletable()).

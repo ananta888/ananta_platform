@@ -9,6 +9,7 @@
     </style>
 
     <style name="Theme.EDS" parent="Theme.Material3.DayNight">
+        <item name="android:windowBackground">@android:color/white</item>
         <item name="android:actionBarStyle">@style/ActionBar</item>
         <item name="android:buttonStyle">@style/Button</item>
         <item name="android:buttonBarButtonStyle">@style/Button</item>
@@ -57,6 +58,7 @@
         <item name="collapseIcon">@drawable/ic_action_collapse</item>
     </style>
     <style name="Theme.EDS.Dark" parent="Theme.Material3.Dark">
+        <item name="android:windowBackground">@android:color/black</item>
         <item name="android:actionBarStyle">@style/ActionBar.Dark</item>
         <item name="android:buttonStyle">@style/Button.Dark</item>
         <item name="android:buttonBarButtonStyle">@style/Button.Dark</item>
