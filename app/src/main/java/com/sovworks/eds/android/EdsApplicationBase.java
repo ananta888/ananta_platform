@@ -97,21 +97,22 @@ public class EdsApplicationBase extends MultiDexApplication
 
 		SystemConfig.setInstance(new com.sovworks.eds.android.settings.SystemConfig(getApplicationContext()));
 
-		UserSettings us;
-		try
-		{
-            Logger.debug("EdsApplicationBase: getting settings");
-			us = getSettings(getApplicationContext());
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace();
-			Logger.log("Failed to get settings: " + e.getMessage());
-			Toast.makeText(this, Logger.getExceptionMessage(this, e), Toast.LENGTH_LONG).show();
-			return;
-		}
-        Logger.debug("EdsApplicationBase: initializing with settings");
-		init(us);
+        // Load settings in background to avoid blocking main thread
+        new Thread(() -> {
+            UserSettings us;
+            try
+            {
+                Logger.debug("EdsApplicationBase: getting settings in background");
+                us = getSettings(getApplicationContext());
+                Logger.debug("EdsApplicationBase: initializing with settings");
+                init(us);
+            }
+            catch (Throwable e)
+            {
+                e.printStackTrace();
+                Logger.log("Failed to get settings in background: " + e.getMessage());
+            }
+        }).start();
 		Logger.debug("EdsApplicationBase: onCreate end. Android sdk version is " + Build.VERSION.SDK_INT);
 	}
 

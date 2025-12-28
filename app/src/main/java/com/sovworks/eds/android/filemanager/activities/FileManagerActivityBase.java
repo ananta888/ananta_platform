@@ -359,48 +359,66 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
 	{
         Logger.debug("FileManagerActivityBase: onCreate start");
         SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
-        splashScreen.setKeepOnScreenCondition(() -> !_initFinished);
+        splashScreen.setKeepOnScreenCondition(() -> {
+            Logger.debug("FileManagerActivityBase: keepOnScreenCondition check: " + !_initFinished);
+            return !_initFinished;
+        });
 
 	    if(GlobalConfig.isTest())
 	        TEST_INIT_OBSERVABLE.onNext(false);
         Util.setTheme(this);
 	    super.onCreate(savedInstanceState);
 
-        // Dismiss splash screen quickly so that dialogs are visible
-        _initFinished = true;
+        Logger.debug("FileManagerActivityBase: super.onCreate finished");
         
-        _settings = UserSettings.getSettings(this);
-        if(_settings.isFlagSecureEnabled())
-            CompatHelper.setWindowFlagSecure(this);
-	    _isLargeScreenLayout = UserSettings.isWideScreenLayout(_settings, this);
-        
-        EdsApplication.getExitObservable()
-                .compose(bindToLifecycle())
-                .subscribe(v -> finish(), err -> Logger.log(err));
-        CompatHelper.registerReceiver(this, _locationAddedOrRemovedReceiver, LocationsManager.getLocationAddedIntentFilter(), false);
-        CompatHelper.registerReceiver(this, _locationAddedOrRemovedReceiver, LocationsManager.getLocationRemovedIntentFilter(), false);
-        CompatHelper.registerReceiver(this, _locationChangedReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED), false);
-        CompatHelper.registerReceiver(this, _locationAddedOrRemovedReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED), false);
+        // setAppContent directly in onCreate to start Compose early
+        com.sovworks.eds.android.ui.ComposeIntegrationKt.setAppContent(this);
 
-        Logger.debug("FileManagerActivityBase: posting init tasks");
+        // Load settings and perform initialization in background to avoid blocking main thread
+        new Thread(() -> {
+            try {
+                Logger.debug("FileManagerActivityBase: loading settings in background");
+                final UserSettings settings = UserSettings.getSettings(this);
+                Logger.debug("FileManagerActivityBase: settings loaded");
 
-        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
-            Logger.debug("FileManagerActivityBase: setting app content");
-            com.sovworks.eds.android.ui.ComposeIntegrationKt.setAppContent(this);
+                runOnUiThread(() -> {
+                    _settings = settings;
+                    if(_settings.isFlagSecureEnabled())
+                        CompatHelper.setWindowFlagSecure(this);
+                    _isLargeScreenLayout = UserSettings.isWideScreenLayout(_settings, this);
 
-            AppInitHelper.
-                    createObservable(this).
-                    compose(bindToLifecycleCompletable()).
-                    subscribe(() -> {
-                        Logger.debug("FileManagerActivityBase: AppInitHelper finished");
-                        startAction(savedInstanceState);
-                        rereadCurrentLocation();
-                    }, err -> {
-                        Logger.debug("FileManagerActivityBase: AppInitHelper failed: " + err.getMessage());
-                        if (!(err instanceof CancellationException))
-                            Logger.showAndLog(getApplicationContext(), err);
-                    });
-        });
+                    EdsApplication.getExitObservable()
+                            .compose(bindToLifecycle())
+                            .subscribe(v -> finish(), err -> Logger.log(err));
+                    CompatHelper.registerReceiver(this, _locationAddedOrRemovedReceiver, LocationsManager.getLocationAddedIntentFilter(), false);
+                    CompatHelper.registerReceiver(this, _locationAddedOrRemovedReceiver, LocationsManager.getLocationRemovedIntentFilter(), false);
+                    CompatHelper.registerReceiver(this, _locationChangedReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED), false);
+                    CompatHelper.registerReceiver(this, _locationAddedOrRemovedReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED), false);
+
+                    Logger.debug("FileManagerActivityBase: calling AppInitHelper");
+                    _initFinished = true; // Dismiss splash screen before starting AppInitHelper which might show dialogs
+                    Logger.debug("FileManagerActivityBase: _initFinished set to true");
+                    AppInitHelper.
+                            createObservable(this).
+                            compose(bindToLifecycleCompletable()).
+                            subscribe(() -> {
+                                Logger.debug("FileManagerActivityBase: AppInitHelper finished");
+                                startAction(savedInstanceState);
+                                rereadCurrentLocation();
+                            }, err -> {
+                                Logger.debug("FileManagerActivityBase: AppInitHelper failed: " + err.getMessage());
+                                if (!(err instanceof CancellationException))
+                                    Logger.showAndLog(getApplicationContext(), err);
+                            });
+                });
+            } catch (Throwable e) {
+                Logger.log(e);
+                runOnUiThread(() -> {
+                    _initFinished = true;
+                    Logger.debug("FileManagerActivityBase: _initFinished set to true (on exception)");
+                });
+            }
+        }).start();
 
 	}
 
