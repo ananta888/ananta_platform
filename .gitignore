@@ -25,3 +25,4 @@ replay_pid*
 /app/.gradle/
 /.gradle/
 /app/.cxx/
+/.idea/
