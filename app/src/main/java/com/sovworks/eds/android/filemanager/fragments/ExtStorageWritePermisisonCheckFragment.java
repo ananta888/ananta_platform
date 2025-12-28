@@ -24,7 +24,7 @@ public class ExtStorageWritePermisisonCheckFragment extends Fragment
 
     public static Completable getObservable(AppCompatActivity activity)
     {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || (
+        if (Build.VERSION.SDK_INT >= 33 || Build.VERSION.SDK_INT < Build.VERSION_CODES.M || (
                 ContextCompat.checkSelfPermission(
                         activity,
                         Manifest.permission.READ_EXTERNAL_STORAGE

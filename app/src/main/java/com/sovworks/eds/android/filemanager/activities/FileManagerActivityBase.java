@@ -360,7 +360,7 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
         Logger.debug("FileManagerActivityBase: onCreate start");
         SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
         splashScreen.setKeepOnScreenCondition(() -> {
-            boolean shouldKeep = !_initFinished && !GlobalConfig.isDebug();
+            boolean shouldKeep = !_initFinished;
             if (!shouldKeep) {
                 Logger.debug("FileManagerActivityBase: dismissing splash screen");
             }
@@ -391,17 +391,24 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
 
         Logger.debug("FileManagerActivityBase: starting AppInitHelper");
         
-        // Fail-safe: dismiss splash screen after 5 seconds anyway
+        // Fail-safe: dismiss splash screen after 2 seconds anyway
         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
             if (!_initFinished) {
                 Logger.debug("FileManagerActivityBase: init timeout reached, forcing splash screen dismissal");
                 _initFinished = true;
             }
-        }, 5000);
+        }, 2000);
 
         AppInitHelper.
                 createObservable(this).
                 compose(bindToLifecycleCompletable()).
+                doOnSubscribe(subscription -> {
+                    // Once we start the init sequence, we can dismiss the splash screen
+                    // so that any potential dialogs (password, permissions) are visible.
+                    new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                        _initFinished = true;
+                    }, 500); // Give it a short moment of splash
+                }).
                 subscribe(() -> {
                     Logger.debug("FileManagerActivityBase: AppInitHelper finished");
                     _initFinished = true;
