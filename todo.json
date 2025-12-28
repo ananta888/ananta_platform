@@ -1,0 +1,84 @@
+{
+  "project": "Ananta Platform (WebRTC & Secure Exchange)",
+  "version": "1.0.0-draft",
+  "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform für sichere Kommunikation und Dateiaustausch.",
+  "tasks": [
+    {
+      "id": "CORE-001",
+      "title": "Asymmetrische Kryptographie implementieren",
+      "description": "Integration von Ed25519 oder RSA zur Erzeugung von Public/Private Key Paaren für Nutzeridentitäten.",
+      "status": "todo",
+      "priority": "high",
+      "assignee": "Junie"
+    },
+    {
+      "id": "CORE-002",
+      "title": "Public Key Archiv (Dezentral)",
+      "description": "Entwicklung eines lokalen Speichers für fremde Public Keys mit Metadaten (Name, Zeitstempel).",
+      "status": "todo",
+      "priority": "high",
+      "assignee": "Junie"
+    },
+    {
+      "id": "CORE-003",
+      "title": "Vertrauens-Ranking System",
+      "description": "Funktion zum Zuweisen und Speichern von Vertrauenswerten (1-5 Sterne) für Public Keys im Archiv.",
+      "status": "todo",
+      "priority": "medium",
+      "assignee": "Junie"
+    },
+    {
+      "id": "CORE-004",
+      "title": "Export/Import von Trust-Netzwerken",
+      "description": "Möglichkeit schaffen, signierte Listen von bekannten Public Keys inkl. Bewertung an andere Peers zu senden.",
+      "status": "todo",
+      "priority": "medium",
+      "assignee": "Junie"
+    },
+    {
+      "id": "NET-001",
+      "title": "WebRTC Basis-Integration",
+      "description": "Einbindung einer WebRTC Library (z.B. Google WebRTC oder webrtc-android) für P2P Datenkanäle.",
+      "status": "todo",
+      "priority": "high",
+      "assignee": "Junie"
+    },
+    {
+      "id": "NET-002",
+      "title": "QR-Code Kopplungs-Logik",
+      "description": "Erzeugung eines QR-Codes mit Verbindungsmetadaten (Ice Server, Peer ID, Public Key) und Scanner-Funktion.",
+      "status": "todo",
+      "priority": "high",
+      "assignee": "Junie"
+    },
+    {
+      "id": "NET-003",
+      "title": "Internet/WLAN Discovery",
+      "description": "Peer Discovery Mechanismus über WebRTC Signaling (Stun/Turn) und lokale MDNS/UDP Broadcasts im WLAN.",
+      "status": "todo",
+      "priority": "medium",
+      "assignee": "Junie"
+    },
+    {
+      "id": "UI-001",
+      "title": "Peer-Management UI",
+      "description": "Jetpack Compose Screens zur Anzeige von verbundenen Peers, deren Status und Vertrauensranking.",
+      "status": "todo",
+      "priority": "medium",
+      "assignee": "Junie"
+    },
+    {
+      "id": "UI-002",
+      "title": "Sicherer Messenger / Dateitransfer UI",
+      "description": "Interface für Echtzeit-Chat und Fortschrittsanzeige bei P2P Dateiübertragungen.",
+      "status": "todo",
+      "priority": "medium",
+      "assignee": "Junie"
+    }
+  ],
+  "architecture_goals": [
+    "Vollständige Dezentralität (kein zentraler Server außer Signaling/STUN)",
+    "Ende-zu-Ende Verschlüsselung für alle Transfers",
+    "Offline-First Ansatz für das Trust-Ranking"
+  ]
+}
