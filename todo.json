@@ -4,38 +4,6 @@
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform für sichere Kommunikation und Dateiaustausch.",
   "tasks": [
     {
-      "id": "TASK-002",
-      "category": "Security",
-      "title": "Perfect Forward Secrecy (PFS) für Private Chats",
-      "description": "Integration des Double Ratchet Algorithmus oder eines ähnlichen Protokolls zur Sicherstellung von PFS.",
-      "status": "planned",
-      "priority": "high"
-    },
-    {
-      "id": "TASK-003",
-      "category": "Trust",
-      "title": "QR-Code Trust Verifizierung",
-      "description": "Möglichkeit zum Scannen von QR-Codes für den direkten Austausch und die Verifizierung von Public Keys (In-Person Trust).",
-      "status": "planned",
-      "priority": "medium"
-    },
-    {
-      "id": "TASK-004",
-      "category": "Messaging",
-      "title": "Offline-Messaging via Trusted Relays",
-      "description": "Protokoll zur Zwischenspeicherung von verschlüsselten Nachrichten auf vertrauenswürdigen Peers (Trust-Level > X).",
-      "status": "planned",
-      "priority": "medium"
-    },
-    {
-      "id": "TASK-005",
-      "category": "File Exchange",
-      "title": "Erweiterte dezentrale Suche",
-      "description": "Integration von Trust-Rankings in die Suchergebnisse und Implementierung von Suchfiltern (Dateityp, Größe).",
-      "status": "planned",
-      "priority": "medium"
-    },
-    {
       "id": "TASK-006",
       "category": "UI/UX",
       "title": "Web-of-Trust Visualisierung",

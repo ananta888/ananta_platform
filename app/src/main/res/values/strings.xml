@@ -112,6 +112,9 @@
     <string name="file_search">File Search</string>
     <string name="search_hint">Enter search term...</string>
     <string name="no_results_found">No results found</string>
+    <string name="filter_file_types">File types (e.g. pdf,jpg)</string>
+    <string name="min_size_kb">Min size (KB)</string>
+    <string name="max_size_kb">Max size (KB)</string>
     <string name="searching">Searching...</string>
 	<string name="version_history">Version history</string>
     <string name="log_terminal">Log-Terminal</string>

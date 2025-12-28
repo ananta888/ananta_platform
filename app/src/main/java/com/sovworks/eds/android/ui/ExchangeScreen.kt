@@ -11,6 +11,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -18,17 +20,28 @@ import com.sovworks.eds.android.network.SearchManager
 import com.sovworks.eds.android.network.SearchResponse
 import com.sovworks.eds.android.network.SharedFile
 
+data class SearchResultItem(
+    val peerId: String,
+    val file: SharedFile,
+    val trustRank: Double?
+)
+
 class ExchangeViewModel : ViewModel() {
     var query by mutableStateOf("")
     var minTrustLevel by mutableStateOf(0.0)
-    var results = mutableStateListOf<Pair<String, SharedFile>>()
+    var fileTypesInput by mutableStateOf("")
+    var minSizeKbInput by mutableStateOf("")
+    var maxSizeKbInput by mutableStateOf("")
+    var results = mutableStateListOf<SearchResultItem>()
     var isSearching by mutableStateOf(false)
 
     private var searchManager: SearchManager? = null
 
     private val searchListener: (SearchResponse) -> Unit = { response ->
         isSearching = false
-        results.addAll(response.results.map { response.peerId to it })
+        val trustRank = response.trustRank
+        results.addAll(response.results.map { SearchResultItem(response.peerId, it, trustRank) })
+        results.sortByDescending { it.trustRank ?: 0.0 }
     }
 
     fun init(manager: SearchManager) {
@@ -42,7 +55,12 @@ class ExchangeViewModel : ViewModel() {
         if (query.isNotBlank()) {
             results.clear()
             isSearching = true
-            searchManager?.search(query)
+            searchManager?.search(
+                query = query,
+                fileTypes = parseFileTypes(fileTypesInput),
+                minSizeBytes = parseSizeKb(minSizeKbInput),
+                maxSizeBytes = parseSizeKb(maxSizeKbInput)
+            )
         }
     }
 
@@ -53,6 +71,18 @@ class ExchangeViewModel : ViewModel() {
 
     fun downloadFile(peerId: String, fileName: String) {
         searchManager?.requestFile(peerId, fileName)
+    }
+
+    private fun parseFileTypes(input: String): List<String> {
+        return input.split(",")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+    }
+
+    private fun parseSizeKb(input: String): Long? {
+        val value = input.trim().toLongOrNull() ?: return null
+        if (value <= 0) return null
+        return value * 1024L
     }
 
     override fun onCleared() {
@@ -91,6 +121,34 @@ fun ExchangeScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        OutlinedTextField(
+            value = viewModel.fileTypesInput,
+            onValueChange = { viewModel.fileTypesInput = it },
+            label = { Text("Dateitypen (z.B. pdf,jpg)") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            OutlinedTextField(
+                value = viewModel.minSizeKbInput,
+                onValueChange = { viewModel.minSizeKbInput = it },
+                label = { Text("Min. Groesse (KB)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = viewModel.maxSizeKbInput,
+                onValueChange = { viewModel.maxSizeKbInput = it },
+                label = { Text("Max. Groesse (KB)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         Text("Minimales Trust Level: ${"%.1f".format(viewModel.minTrustLevel)}")
         Slider(
             value = viewModel.minTrustLevel.toFloat(),
@@ -108,12 +166,15 @@ fun ExchangeScreen(
         LazyColumn(
             modifier = Modifier.weight(1f)
         ) {
-            items(viewModel.results) { (peerId, file) ->
+            items(viewModel.results) { item ->
+                val trustDisplay = item.trustRank?.let { " | Trust: ${"%.2f".format(it)}" } ?: ""
                 ListItem(
-                    headlineContent = { Text(file.name) },
-                    supportingContent = { Text("Peer: ${peerId.take(8)}... | Größe: ${file.size} Bytes") },
+                    headlineContent = { Text(item.file.name) },
+                    supportingContent = {
+                        Text("Peer: ${item.peerId.take(8)}... | Groesse: ${item.file.size} Bytes$trustDisplay")
+                    },
                     trailingContent = {
-                        IconButton(onClick = { viewModel.downloadFile(peerId, file.name) }) {
+                        IconButton(onClick = { viewModel.downloadFile(item.peerId, item.file.name) }) {
                             Icon(Icons.Default.Download, contentDescription = "Download")
                         }
                     }

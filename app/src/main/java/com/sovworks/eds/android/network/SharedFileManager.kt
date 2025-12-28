@@ -51,13 +51,37 @@ class SharedFileManager(private val context: Context) {
             .apply()
     }
 
-    fun searchFiles(query: String): List<SharedFile> {
-        return sharedFiles.filter { it.contains(query, ignoreCase = true) }
-            .map { path ->
-                val name = path.substringAfterLast('/')
-                val size = java.io.File(path).length()
-                SharedFile(name = name, size = size, hash = fileHashes[path])
-            }
+    fun searchFiles(
+        query: String,
+        fileTypes: List<String> = emptyList(),
+        minSizeBytes: Long? = null,
+        maxSizeBytes: Long? = null
+    ): List<SharedFile> {
+        val normalizedTypes = normalizeFileTypes(fileTypes)
+        return sharedFiles.filter { path ->
+            path.contains(query, ignoreCase = true)
+        }.mapNotNull { path ->
+            val name = path.substringAfterLast('/')
+            val size = File(path).length()
+            if (!matchesFileType(name, normalizedTypes)) return@mapNotNull null
+            if (minSizeBytes != null && size < minSizeBytes) return@mapNotNull null
+            if (maxSizeBytes != null && size > maxSizeBytes) return@mapNotNull null
+            SharedFile(name = name, size = size, hash = fileHashes[path])
+        }
+    }
+
+    private fun normalizeFileTypes(fileTypes: List<String>): Set<String> {
+        return fileTypes.mapNotNull { entry ->
+            val trimmed = entry.trim().lowercase().removePrefix(".")
+            trimmed.takeIf { it.isNotEmpty() }
+        }.toSet()
+    }
+
+    private fun matchesFileType(fileName: String, fileTypes: Set<String>): Boolean {
+        if (fileTypes.isEmpty()) return true
+        val extension = fileName.substringAfterLast('.', "")
+        if (extension.isEmpty()) return false
+        return fileTypes.contains(extension.lowercase())
     }
 
     fun getFilePath(fileName: String): String? {

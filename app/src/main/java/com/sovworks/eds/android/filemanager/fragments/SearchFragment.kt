@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
+import android.widget.EditText
 import android.widget.ListView
 import android.widget.ProgressBar
 import android.widget.SearchView
@@ -17,6 +18,11 @@ import com.sovworks.eds.android.network.SearchResponse
 import com.sovworks.eds.android.network.SharedFile
 
 class SearchFragment : Fragment() {
+    private data class SearchResultItem(
+        val peerId: String,
+        val file: SharedFile,
+        val trustRank: Double?
+    )
 
     private lateinit var searchView: SearchView
     private lateinit var resultsList: ListView
@@ -24,8 +30,11 @@ class SearchFragment : Fragment() {
     private lateinit var noResultsText: TextView
     private lateinit var trustSeekBar: SeekBar
     private lateinit var trustValueText: TextView
+    private lateinit var fileTypeFilter: EditText
+    private lateinit var minSizeFilter: EditText
+    private lateinit var maxSizeFilter: EditText
     private lateinit var adapter: SearchResultsAdapter
-    private val results = mutableListOf<Pair<String, SharedFile>>()
+    private val results = mutableListOf<SearchResultItem>()
 
     private val searchListener: (SearchResponse) -> Unit = { response ->
         activity?.runOnUiThread {
@@ -45,6 +54,9 @@ class SearchFragment : Fragment() {
         noResultsText = view.findViewById(R.id.no_results_text)
         trustSeekBar = view.findViewById(R.id.trust_filter_seekbar)
         trustValueText = view.findViewById(R.id.trust_value_text)
+        fileTypeFilter = view.findViewById(R.id.file_type_filter)
+        minSizeFilter = view.findViewById(R.id.min_size_filter)
+        maxSizeFilter = view.findViewById(R.id.max_size_filter)
 
         adapter = SearchResultsAdapter(results)
         resultsList.adapter = adapter
@@ -88,13 +100,36 @@ class SearchFragment : Fragment() {
         adapter.notifyDataSetChanged()
         progress.visibility = View.VISIBLE
         noResultsText.visibility = View.GONE
-        SearchManager.getInstance(requireContext()).search(query)
+        val fileTypes = parseFileTypes(fileTypeFilter.text.toString())
+        val minSizeBytes = parseSizeKb(minSizeFilter.text.toString())
+        val maxSizeBytes = parseSizeKb(maxSizeFilter.text.toString())
+        SearchManager.getInstance(requireContext()).search(
+            query = query,
+            fileTypes = fileTypes,
+            minSizeBytes = minSizeBytes,
+            maxSizeBytes = maxSizeBytes
+        )
+    }
+
+    private fun parseFileTypes(input: String): List<String> {
+        return input.split(",")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+    }
+
+    private fun parseSizeKb(input: String): Long? {
+        val value = input.trim().toLongOrNull() ?: return null
+        if (value <= 0) return null
+        return value * 1024L
     }
 
     private fun handleSearchResponse(response: SearchResponse) {
         progress.visibility = View.GONE
-        val newResults = response.results.map { response.peerId to it }
+        val newResults = response.results.map {
+            SearchResultItem(response.peerId, it, response.trustRank)
+        }
         results.addAll(newResults)
+        results.sortByDescending { it.trustRank ?: 0.0 }
         adapter.notifyDataSetChanged()
         if (results.isEmpty()) {
             noResultsText.visibility = View.VISIBLE
@@ -103,7 +138,7 @@ class SearchFragment : Fragment() {
         }
     }
 
-    inner class SearchResultsAdapter(private val items: List<Pair<String, SharedFile>>) : BaseAdapter() {
+    private inner class SearchResultsAdapter(private val items: List<SearchResultItem>) : BaseAdapter() {
 
         override fun getCount(): Int = items.size
         override fun getItem(position: Int): Any = items[position]
@@ -117,12 +152,13 @@ class SearchFragment : Fragment() {
             val peerInfo: TextView = view.findViewById(R.id.peer_info)
             val downloadButton: View = view.findViewById(R.id.download_button)
             
-            val (peerId, file) = items[position]
-            fileName.text = file.name
-            peerInfo.text = "Peer: ${peerId.take(8)}... | Size: ${file.size} bytes"
+            val item = items[position]
+            val trustDisplay = item.trustRank?.let { " | Trust: ${"%.2f".format(it)}" } ?: ""
+            fileName.text = item.file.name
+            peerInfo.text = "Peer: ${item.peerId.take(8)}... | Size: ${item.file.size} bytes$trustDisplay"
 
             downloadButton.setOnClickListener {
-                SearchManager.getInstance(requireContext()).requestFile(peerId, file.name)
+                SearchManager.getInstance(requireContext()).requestFile(item.peerId, item.file.name)
             }
             
             return view

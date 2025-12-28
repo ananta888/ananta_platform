@@ -33,13 +33,21 @@ class SearchManager private constructor(private val context: Context) {
         this.minTrustLevel = level
     }
 
-    fun search(query: String) {
+    fun search(
+        query: String,
+        fileTypes: List<String> = emptyList(),
+        minSizeBytes: Long? = null,
+        maxSizeBytes: Long? = null
+    ) {
         val identity = IdentityManager.loadIdentity(context) ?: return
         val request = SearchRequest(
             requestId = UUID.randomUUID().toString(),
             query = query,
             senderId = identity.getFingerprint(),
-            minTrustLevel = this.minTrustLevel
+            minTrustLevel = this.minTrustLevel,
+            fileTypes = normalizeFileTypes(fileTypes),
+            minSizeBytes = minSizeBytes,
+            maxSizeBytes = maxSizeBytes
         )
         processedRequests.add(request.requestId)
         
@@ -80,7 +88,12 @@ class SearchManager private constructor(private val context: Context) {
         requestSourceMap[request.requestId] = peerId
 
         // 1. Lokal suchen
-        val results = SharedFileManager.getInstance(context).searchFiles(request.query)
+        val results = SharedFileManager.getInstance(context).searchFiles(
+            request.query,
+            request.fileTypes,
+            request.minSizeBytes,
+            request.maxSizeBytes
+        )
         if (results.isNotEmpty()) {
             val identity = IdentityManager.loadIdentity(context)
             val myFingerprint = identity?.getFingerprint() ?: "unknown"
@@ -122,8 +135,15 @@ class SearchManager private constructor(private val context: Context) {
             // Wir sind (wahrscheinlich) der Bestimmungsort
             val trustRank = TrustNetworkManager.calculateTrustRank(context, response.peerId)
             if (trustRank < this.minTrustLevel) return
-            searchListeners.forEach { it(response) }
+            searchListeners.forEach { it(response.copy(trustRank = trustRank)) }
         }
+    }
+
+    private fun normalizeFileTypes(fileTypes: List<String>): List<String> {
+        return fileTypes.mapNotNull { entry ->
+            val trimmed = entry.trim().lowercase().removePrefix(".")
+            trimmed.takeIf { it.isNotEmpty() }
+        }.distinct()
     }
 
     companion object {
