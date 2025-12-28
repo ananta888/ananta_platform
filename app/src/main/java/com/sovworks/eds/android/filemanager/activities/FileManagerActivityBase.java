@@ -26,6 +26,7 @@ import com.sovworks.eds.android.activities.VersionHistory;
 import com.sovworks.eds.android.dialogs.AskOverwriteDialog;
 import com.sovworks.eds.android.filemanager.FileManagerFragment;
 import com.sovworks.eds.android.filemanager.fragments.FileListComposeFragment;
+import com.sovworks.eds.android.filemanager.fragments.FileListViewFragmentBase;
 import com.sovworks.eds.android.filemanager.fragments.FileListDataFragment;
 import com.sovworks.eds.android.filemanager.fragments.FilePropertiesFragment;
 import com.sovworks.eds.android.filemanager.fragments.PreviewFragment;

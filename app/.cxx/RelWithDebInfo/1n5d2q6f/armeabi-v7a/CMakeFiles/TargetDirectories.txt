@@ -1,0 +1,14 @@
+C:/Users/stuib/AndroidStudioProjects/ananta_platform/app/.cxx/RelWithDebInfo/1n5d2q6f/armeabi-v7a/CMakeFiles/edsxts.dir
+C:/Users/stuib/AndroidStudioProjects/ananta_platform/app/.cxx/RelWithDebInfo/1n5d2q6f/armeabi-v7a/CMakeFiles/edsaes.dir
+C:/Users/stuib/AndroidStudioProjects/ananta_platform/app/.cxx/RelWithDebInfo/1n5d2q6f/armeabi-v7a/CMakeFiles/edsserpent.dir
+C:/Users/stuib/AndroidStudioProjects/ananta_platform/app/.cxx/RelWithDebInfo/1n5d2q6f/armeabi-v7a/CMakeFiles/edstwofish.dir
+C:/Users/stuib/AndroidStudioProjects/ananta_platform/app/.cxx/RelWithDebInfo/1n5d2q6f/armeabi-v7a/CMakeFiles/edsripemd160.dir
+C:/Users/stuib/AndroidStudioProjects/ananta_platform/app/.cxx/RelWithDebInfo/1n5d2q6f/armeabi-v7a/CMakeFiles/edswhirlpool.dir
+C:/Users/stuib/AndroidStudioProjects/ananta_platform/app/.cxx/RelWithDebInfo/1n5d2q6f/armeabi-v7a/CMakeFiles/fdraio.dir
+C:/Users/stuib/AndroidStudioProjects/ananta_platform/app/.cxx/RelWithDebInfo/1n5d2q6f/armeabi-v7a/CMakeFiles/localxts.dir
+C:/Users/stuib/AndroidStudioProjects/ananta_platform/app/.cxx/RelWithDebInfo/1n5d2q6f/armeabi-v7a/CMakeFiles/edsctr.dir
+C:/Users/stuib/AndroidStudioProjects/ananta_platform/app/.cxx/RelWithDebInfo/1n5d2q6f/armeabi-v7a/CMakeFiles/edscbc.dir
+C:/Users/stuib/AndroidStudioProjects/ananta_platform/app/.cxx/RelWithDebInfo/1n5d2q6f/armeabi-v7a/CMakeFiles/edscfb.dir
+C:/Users/stuib/AndroidStudioProjects/ananta_platform/app/.cxx/RelWithDebInfo/1n5d2q6f/armeabi-v7a/CMakeFiles/edsgost.dir
+C:/Users/stuib/AndroidStudioProjects/ananta_platform/app/.cxx/RelWithDebInfo/1n5d2q6f/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/stuib/AndroidStudioProjects/ananta_platform/app/.cxx/RelWithDebInfo/1n5d2q6f/armeabi-v7a/CMakeFiles/rebuild_cache.dir

@@ -39,7 +39,7 @@ public class DrawerSelectContentProviderMenuItem extends DrawerMenuItemBase
             i.setType("*/*");
             i.addCategory(Intent.CATEGORY_OPENABLE);
 
-            FileListViewFragment f = ((FileManagerActivityBase)activity).getFileListViewFragment();
+            FileListViewFragment f = (FileListViewFragment) ((FileManagerActivityBase)activity).getFileListViewFragment();
             if(f!=null)
                 f.startActivityForResult(i, FileListViewFragment.REQUEST_CODE_SELECT_FROM_CONTENT_PROVIDER);
         }

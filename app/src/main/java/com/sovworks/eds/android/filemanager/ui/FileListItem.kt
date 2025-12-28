@@ -1,6 +1,7 @@
 package com.sovworks.eds.android.filemanager.ui
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
@@ -14,6 +15,7 @@ import com.sovworks.eds.android.filemanager.records.BrowserRecord
 import java.text.SimpleDateFormat
 import java.util.*
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FileListItem(
     record: BrowserRecord,
@@ -25,7 +27,10 @@ fun FileListItem(
     
     ListItem(
         modifier = Modifier
-            .clickable(onClick = onItemClick)
+            .combinedClickable(
+                onClick = onItemClick,
+                onLongClick = onItemLongClick
+            )
             .padding(horizontal = 8.dp),
         headlineContent = {
             Text(text = record.name)

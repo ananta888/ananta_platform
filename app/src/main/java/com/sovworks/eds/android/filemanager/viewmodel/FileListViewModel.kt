@@ -14,6 +14,7 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Maybe
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -68,11 +69,14 @@ class FileListViewModel : ViewModel() {
             .flatMapObservable { settings: DirectorySettings ->
                 ReadDir.createObservable(context, location, emptyList(), settings, false)
                     .subscribeOn(Schedulers.io())
+                    .buffer(200, TimeUnit.MILLISECONDS)
                     .observeOn(AndroidSchedulers.mainThread())
             }
             .subscribe(
-                { record: BrowserRecord ->
-                    _state.update { it.copy(items = it.items + record) }
+                { records: List<BrowserRecord> ->
+                    if (records.isNotEmpty()) {
+                        _state.update { it.copy(items = it.items + records) }
+                    }
                 },
                 { error: Throwable ->
                     Logger.log(error)
@@ -130,6 +134,10 @@ class FileListViewModel : ViewModel() {
         val crumbs = mutableListOf<Location>()
         try {
             var currentPath = location.getCurrentPath()
+            if (currentPath?.isFile() == true) {
+                currentPath = currentPath.getParentPath()
+            }
+            
             while (currentPath != null) {
                 val loc = location.copy()
                 loc.setCurrentPath(currentPath)

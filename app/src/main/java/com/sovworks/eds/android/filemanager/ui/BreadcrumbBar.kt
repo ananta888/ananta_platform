@@ -1,9 +1,10 @@
 package com.sovworks.eds.android.filemanager.ui
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
@@ -25,14 +26,24 @@ fun BreadcrumbBar(
             LazyRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                items(breadcrumbs) { location ->
-                    TextButton(onClick = { onBreadcrumbClick(location) }) {
+                itemsIndexed(breadcrumbs) { index, location ->
+                    TextButton(
+                        onClick = { onBreadcrumbClick(location) },
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)
+                    ) {
                         Text(
-                            text = location.title ?: "Root",
+                            text = location.title?.takeIf { it.isNotEmpty() } ?: "/",
                             style = MaterialTheme.typography.labelLarge
                         )
                     }
-                    Text("/", modifier = Modifier.padding(horizontal = 4.dp))
+                    if (index < breadcrumbs.size - 1) {
+                        Text(
+                            text = ">",
+                            style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier.padding(horizontal = 2.dp),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                        )
+                    }
                 }
             }
         },
