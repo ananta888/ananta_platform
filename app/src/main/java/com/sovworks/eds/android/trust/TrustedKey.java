@@ -11,17 +11,23 @@ public class TrustedKey implements Serializable {
 
     private String publicKey;
     private String fingerprint;
+    private String name;
     private TrustStatus status;
+    private int trustLevel; // 1-5 Sterne
     private List<String> reasons;
     private long addedTimestamp;
+    private long lastSeenTimestamp;
     private long expiresTimestamp;
 
-    public TrustedKey(String publicKey, String fingerprint) {
+    public TrustedKey(String publicKey, String fingerprint, String name) {
         this.publicKey = publicKey;
         this.fingerprint = fingerprint;
+        this.name = name;
         this.status = TrustStatus.PENDING;
+        this.trustLevel = 0;
         this.reasons = new ArrayList<>();
         this.addedTimestamp = System.currentTimeMillis();
+        this.lastSeenTimestamp = this.addedTimestamp;
     }
 
     public String getPublicKey() {
@@ -32,12 +38,28 @@ public class TrustedKey implements Serializable {
         return fingerprint;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public TrustStatus getStatus() {
         return status;
     }
 
     public void setStatus(TrustStatus status) {
         this.status = status;
+    }
+
+    public int getTrustLevel() {
+        return trustLevel;
+    }
+
+    public void setTrustLevel(int trustLevel) {
+        this.trustLevel = trustLevel;
     }
 
     public List<String> getReasons() {
@@ -52,6 +74,14 @@ public class TrustedKey implements Serializable {
 
     public long getAddedTimestamp() {
         return addedTimestamp;
+    }
+
+    public long getLastSeenTimestamp() {
+        return lastSeenTimestamp;
+    }
+
+    public void setLastSeenTimestamp(long lastSeenTimestamp) {
+        this.lastSeenTimestamp = lastSeenTimestamp;
     }
 
     public long getExpiresTimestamp() {

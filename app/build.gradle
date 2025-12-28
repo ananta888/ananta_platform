@@ -177,6 +177,7 @@ dependencies {
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'org.bouncycastle:bcprov-jdk18on:1.78.1'
     testImplementation 'junit:junit:4.13.2'
+    implementation "io.getstream:stream-webrtc-android:1.2.1"
 }
 
 
