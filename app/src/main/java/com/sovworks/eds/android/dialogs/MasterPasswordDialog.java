@@ -17,6 +17,8 @@ import com.sovworks.eds.settings.Settings;
 import androidx.appcompat.app.AppCompatActivity;
 
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
 import io.reactivex.rxjava3.subjects.Subject;
 
@@ -29,22 +31,33 @@ public class MasterPasswordDialog extends PasswordDialog
 
     public static Single<Boolean> getObservable(AppCompatActivity activity)
     {
-        UserSettings s = UserSettings.getSettings(activity);
-        long curTime = SystemClock.elapsedRealtime();
-        long lastActTime = EdsApplication.getLastActivityTime();
-        if(curTime - lastActTime > GlobalConfig.CLEAR_MASTER_PASS_INACTIVITY_TIMEOUT)
-        {
-            Logger.debug("Clearing settings protection key");
-            EdsApplication.clearMasterPassword();
-            s.clearSettingsProtectionKey();
-        }
-        EdsApplication.updateLastActivityTime();
-        try
-        {
-            s.getSettingsProtectionKey();
-        }
-        catch(Settings.InvalidSettingsPassword e)
-        {
+        return Single.fromCallable(() -> {
+            UserSettings s = UserSettings.getSettings(activity);
+            long curTime = SystemClock.elapsedRealtime();
+            long lastActTime = EdsApplication.getLastActivityTime();
+            if(curTime - lastActTime > GlobalConfig.CLEAR_MASTER_PASS_INACTIVITY_TIMEOUT)
+            {
+                Logger.debug("Clearing settings protection key");
+                EdsApplication.clearMasterPassword();
+                s.clearSettingsProtectionKey();
+            }
+            EdsApplication.updateLastActivityTime();
+            try
+            {
+                s.getSettingsProtectionKey();
+                return true;
+            }
+            catch(Settings.InvalidSettingsPassword e)
+            {
+                return false;
+            }
+        })
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .flatMap(isKeySet -> {
+            if (isKeySet)
+                return Single.just(true);
+
             FragmentManager fm = activity.getSupportFragmentManager();
             MasterPasswordDialog mpd = (MasterPasswordDialog) fm.findFragmentByTag(TAG);
             if(mpd == null)
@@ -62,8 +75,7 @@ public class MasterPasswordDialog extends PasswordDialog
             return mpd.
                     _passwordCheckSubject.
                     firstOrError();
-        }
-        return Single.just(true);
+        });
     }
 
     public static boolean checkSettingsKey(Context context)

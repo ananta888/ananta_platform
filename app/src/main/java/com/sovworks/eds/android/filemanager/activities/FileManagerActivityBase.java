@@ -359,23 +359,16 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
 	{
         Logger.debug("FileManagerActivityBase: onCreate start");
         SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
-        splashScreen.setKeepOnScreenCondition(() -> {
-            boolean shouldKeep = !_initFinished;
-            if (!shouldKeep) {
-                Logger.debug("FileManagerActivityBase: dismissing splash screen");
-            }
-            return shouldKeep;
-        });
+        splashScreen.setKeepOnScreenCondition(() -> !_initFinished);
 
 	    if(GlobalConfig.isTest())
 	        TEST_INIT_OBSERVABLE.onNext(false);
         Util.setTheme(this);
 	    super.onCreate(savedInstanceState);
-        
-        Logger.debug("FileManagerActivityBase: setting app content");
-        com.sovworks.eds.android.ui.ComposeIntegrationKt.setAppContent(this);
 
-        Logger.debug("fm start intent: " + getIntent());
+        // Dismiss splash screen quickly so that dialogs are visible
+        _initFinished = true;
+        
         _settings = UserSettings.getSettings(this);
         if(_settings.isFlagSecureEnabled())
             CompatHelper.setWindowFlagSecure(this);
@@ -389,34 +382,21 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
         CompatHelper.registerReceiver(this, _locationChangedReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED), false);
         CompatHelper.registerReceiver(this, _locationAddedOrRemovedReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED), false);
 
-        Logger.debug("FileManagerActivityBase: starting AppInitHelper");
-        
-        // Fail-safe: dismiss splash screen after 1 second anyway
-        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-            if (!_initFinished) {
-                Logger.debug("FileManagerActivityBase: init timeout reached, forcing splash screen dismissal");
-                _initFinished = true;
-            }
-        }, 1000);
+        Logger.debug("FileManagerActivityBase: posting init tasks");
 
-        // Verzögere den Start, damit die Activity zeichnen kann und der Splash-Screen erscheint
         new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+            Logger.debug("FileManagerActivityBase: setting app content");
+            com.sovworks.eds.android.ui.ComposeIntegrationKt.setAppContent(this);
+
             AppInitHelper.
                     createObservable(this).
                     compose(bindToLifecycleCompletable()).
-                    doOnSubscribe(subscription -> {
-                        // Once we start the init sequence, we can dismiss the splash screen
-                        // so that any potential dialogs (password, permissions) are visible.
-                        _initFinished = true;
-                    }).
                     subscribe(() -> {
                         Logger.debug("FileManagerActivityBase: AppInitHelper finished");
-                        _initFinished = true;
                         startAction(savedInstanceState);
                         rereadCurrentLocation();
                     }, err -> {
                         Logger.debug("FileManagerActivityBase: AppInitHelper failed: " + err.getMessage());
-                        _initFinished = true;
                         if (!(err instanceof CancellationException))
                             Logger.showAndLog(getApplicationContext(), err);
                     });

@@ -94,11 +94,6 @@ public class EdsApplicationBase extends MultiDexApplication
 	{
 		super.onCreate();
         Logger.debug("EdsApplicationBase: onCreate start");
-		try {
-			PRNGFixes.apply();
-		} catch (Throwable e) {
-			Logger.log(e);
-		}
 
 		SystemConfig.setInstance(new com.sovworks.eds.android.settings.SystemConfig(getApplicationContext()));
 
@@ -117,7 +112,7 @@ public class EdsApplicationBase extends MultiDexApplication
 		}
         Logger.debug("EdsApplicationBase: initializing with settings");
 		init(us);
-		Logger.debug("Android sdk version is " + Build.VERSION.SDK_INT);
+		Logger.debug("EdsApplicationBase: onCreate end. Android sdk version is " + Build.VERSION.SDK_INT);
 	}
 
 	public synchronized static SecureBuffer getMasterPassword()
