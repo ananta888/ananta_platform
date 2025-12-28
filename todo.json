@@ -4,51 +4,27 @@
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform für sichere Kommunikation und Dateiaustausch.",
   "tasks": [
     {
-      "id": "SEC-003",
-      "title": "Decentralized Key Distribution & Verification",
-      "description": "Implementierung eines Mechanismus zur Verbreitung von Key Rotation Zertifikaten im Trust-Netzwerk. Ermöglicht Peer-to-Peer Updates von Trust-Informationen.",
+      "id": "SEC-005",
+      "title": "DataChannel Perfect Forward Secrecy",
+      "description": "Integration von Noise Protocol Framework oder Double Ratchet für PFS auf den WebRTC DataChannels.",
       "status": "todo",
       "priority": "high",
       "assignee": "Junie"
     },
     {
-      "id": "COM-001",
-      "title": "WebRTC PeerConnection Lifecycle Manager",
-      "description": "Entwicklung einer zentralen Komponente zur Verwaltung von PeerConnections, Handling von Ice-Kandidaten und automatischem Reconnect.",
-      "status": "todo",
-      "priority": "high",
-      "assignee": "Junie"
-    },
-    {
-      "id": "COM-002",
-      "title": "DataChannel Multiplexing (Chat & File)",
-      "description": "Implementierung von dedizierten DataChannels für Textnachrichten und binäre Dateitransfers. Inklusive Flow Control für große Dateien.",
+      "id": "NET-001",
+      "title": "Local Network Peer Discovery (mDNS)",
+      "description": "Implementierung von NSD (Network Service Discovery) zum automatischen Finden von Peers im selben WLAN ohne Signalling-Server.",
       "status": "todo",
       "priority": "medium",
       "assignee": "Junie"
     },
     {
-      "id": "UI-001",
-      "title": "Reactive Chat UI Integration",
-      "description": "Anbindung des ChatViewModels an den PeerConnectionManager. Nachrichten sollen in Echtzeit gesendet und empfangen werden.",
+      "id": "UI-002",
+      "title": "File Transfer Progress Dashboard",
+      "description": "Zentrale Ansicht zur Überwachung aller ein- und ausgehenden Dateitransfers inklusive Pausieren/Fortsetzen.",
       "status": "todo",
-      "priority": "medium",
-      "assignee": "Junie"
-    },
-    {
-      "id": "FS-001",
-      "title": "Direct-to-Vault File Receiver",
-      "description": "Integration der File-Transfer Logik mit dem EDS-Dateisystem. Empfangene Dateien sollen direkt in einen gemounteten verschlüsselten Container geschrieben werden.",
-      "status": "todo",
-      "priority": "high",
-      "assignee": "Junie"
-    },
-    {
-      "id": "SEC-004",
-      "title": "QR-Code Discovery & Trust-Handshake",
-      "description": "Entwicklung eines UI-Flows zum Scannen von Peer-IDs und gleichzeitigem Austausch von Trust-Zertifikaten (Out-of-band Verifikation).",
-      "status": "todo",
-      "priority": "medium",
+      "priority": "low",
       "assignee": "Junie"
     }
   ],

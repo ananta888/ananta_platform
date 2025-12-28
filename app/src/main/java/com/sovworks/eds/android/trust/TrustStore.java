@@ -63,6 +63,19 @@ public class TrustStore {
         save();
     }
 
+    public synchronized void updateKeyAfterRotation(String oldFingerprint, String newPublicKey) {
+        TrustedKey key = keys.remove(oldFingerprint);
+        if (key != null) {
+            // In dieser Implementierung ist der Fingerprint der Public Key
+            TrustedKey newKey = new TrustedKey(newPublicKey, newPublicKey, key.getName());
+            newKey.setStatus(key.getStatus());
+            newKey.setTrustLevel(key.getTrustLevel());
+            // Kopiere weitere Attribute falls nötig
+            keys.put(newKey.getFingerprint(), newKey);
+            save();
+        }
+    }
+
     public synchronized TrustedKey getKey(String fingerprint) {
         return keys.get(fingerprint);
     }

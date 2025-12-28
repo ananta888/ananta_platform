@@ -5,7 +5,20 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.journeyapps.barcodescanner.BarcodeEncoder
 
+import com.sovworks.eds.android.identity.Identity
+import com.sovworks.eds.android.identity.IdentityManager
+
 object PairingManager {
+
+    fun createMyMetadata(identity: Identity): ConnectionMetadata {
+        return ConnectionMetadata(
+            peerId = identity.id,
+            publicKeyBase64 = identity.publicKeyBase64,
+            iceServers = listOf(
+                ConnectionMetadata.IceServerConfig(listOf("stun:stun.l.google.com:19302"))
+            )
+        )
+    }
 
     fun generateQrCode(metadata: ConnectionMetadata, size: Int = 512): Bitmap? {
         val json = metadata.toJson()

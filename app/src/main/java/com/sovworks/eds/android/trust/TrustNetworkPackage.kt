@@ -6,5 +6,6 @@ import com.sovworks.eds.android.identity.IdentityManager
 data class TrustNetworkPackage(
     val issuerPublicKeyBase64: String,
     val trustedKeys: List<TrustedKey>,
+    val rotations: List<KeyRotationCertificate> = emptyList(),
     val signatureBase64: String
 )

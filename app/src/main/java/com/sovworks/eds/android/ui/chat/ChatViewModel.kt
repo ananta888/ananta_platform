@@ -1,13 +1,27 @@
 package com.sovworks.eds.android.ui.chat
 
 import androidx.lifecycle.ViewModel
+import com.sovworks.eds.android.network.DataChannelListener
+import com.sovworks.eds.android.network.PeerConnectionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.*
 
-class ChatViewModel : ViewModel() {
+class ChatViewModel(
+    private val peerConnectionManager: PeerConnectionManager,
+    private val targetPeerId: String
+) : ViewModel(), DataChannelListener {
     private val _messages = MutableStateFlow<List<ChatMessage>>(emptyList())
     val messages: StateFlow<List<ChatMessage>> = _messages
+
+    init {
+        peerConnectionManager.getMultiplexer().addListener(this)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        peerConnectionManager.getMultiplexer().removeListener(this)
+    }
 
     fun sendMessage(text: String) {
         val msg = ChatMessage(
@@ -17,6 +31,17 @@ class ChatViewModel : ViewModel() {
             isMine = true
         )
         _messages.value += msg
+        peerConnectionManager.getMultiplexer().sendMessage(targetPeerId, text)
+    }
+
+    override fun onMessageReceived(peerId: String, message: String) {
+        if (peerId == targetPeerId) {
+            receiveMessage(peerId, message)
+        }
+    }
+
+    override fun onBinaryReceived(peerId: String, data: ByteArray) {
+        // Handled by File Receiver
     }
 
     fun receiveMessage(senderId: String, text: String) {
