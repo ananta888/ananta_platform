@@ -331,7 +331,7 @@ public class FileListDataFragment extends BaseFragment
         Context context = activity.getApplicationContext();
         boolean showRootFolder = activity.getIntent().
                 getBooleanExtra(
-                        FileManagerActivity.EXTRA_ALLOW_SELECT_ROOT_FOLDER,
+                        FileManagerActivityBase.EXTRA_ALLOW_SELECT_ROOT_FOLDER,
                         activity.isSelectAction() && activity.allowFolderSelect()
                 );
         LoadLocationInfo startInfo = new LoadLocationInfo();
