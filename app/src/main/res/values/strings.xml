@@ -3,6 +3,7 @@
     <string name="add_container">Add existing container</string>
 	<string name="eds" translatable="false"><xliff:g id="program_name">EDS</xliff:g></string>
     <string name="ok">OK</string>
+    <string name="cancel">Abbrechen</string>
 	<string name="enter_password">Enter password:</string>
 	<string name="select">Select</string>
 	<string name="enter_new_folder_name">Enter new folder name</string>
@@ -279,4 +280,17 @@
     <string name="no_trusted_keys">No trusted keys found</string>
     <string name="add_key_qr">Scan QR Code</string>
     <string name="enter_passphrase">Enter passphrase</string>
+    <string name="two_factor_auth">Zweistufige Verifizierung</string>
+    <string name="enter_2fa_code">Bitte 6-stelligen Code eingeben:</string>
+    <string name="invalid_2fa_code">Ungültiger 2FA-Code</string>
+    <string name="error_accessing_2fa">Fehler beim Zugriff auf 2FA-Daten</string>
+    <string name="two_factor_auth_summary">Zusätzliche Sicherheit beim Öffnen des Tresors</string>
+    <string name="two_factor_auth_secret_label">2FA Secret (für Authenticator App):</string>
+    <string name="export_identity_backup">Identität exportieren</string>
+    <string name="import_identity_backup">Identität importieren</string>
+    <string name="backup_password">Backup Passwort</string>
+    <string name="enter_backup_password">Passwort für das Identitäts-Backup eingeben:</string>
+    <string name="identity_backup_exported">Identität erfolgreich in Zwischenablage exportiert</string>
+    <string name="identity_backup_imported">Identität erfolgreich importiert</string>
+    <string name="identity_backup_failed">Export/Import der Identität fehlgeschlagen</string>
 </resources>

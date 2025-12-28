@@ -4,26 +4,18 @@
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform f\u00fcr sichere Kommunikation und Dateiaustausch.",
   "tasks": [
     {
-      "id": 21,
-      "title": "WebRTC Signal-Server Redundanz",
-      "description": "Unterst\u00fctzung f\u00fcr mehrere Signaling-Server zur Erh\u00f6hung der Ausfallsicherheit.",
+      "id": 24,
+      "title": "Push-Benachrichtigungen f\u00fcr Signaling",
+      "description": "Integration von Firebase Cloud Messaging f\u00fcr zuverl\u00e4ssigere Signalisierung im Hintergrund.",
       "priority": "medium",
       "status": "todo",
       "category": "Network"
     },
     {
-      "id": 22,
-      "title": "Zweistufige Verifizierung",
-      "description": "Optionale 2FA f\u00fcr den Zugriff auf den verschl\u00fcsselten Tresor.",
-      "priority": "high",
-      "status": "todo",
-      "category": "Security"
-    },
-    {
-      "id": 23,
-      "title": "Backup & Wiederherstellung",
-      "description": "Export und Import von verschl\u00fcsselten Identit\u00e4ts-Backups.",
-      "priority": "medium",
+      "id": 25,
+      "title": "Automatisches Trust-Ranking",
+      "description": "Implementierung eines Algorithmus zur automatischen Bewertung der Vertrauensw\u00fcrdigkeit von Peers basierend auf Interaktionen.",
+      "priority": "low",
       "status": "todo",
       "category": "Identity"
     }

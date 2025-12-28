@@ -24,7 +24,7 @@ object WebRtcService {
             peerConnectionManager = PeerConnectionManager(context, client, myId)
             
             // Initial state: assume foreground for now, but usually follow app state
-            if (client is HttpSignalingClient) {
+            if (client is HttpSignalingClient || client is MultiSignalingClient) {
                 startPolling(client)
             }
         }
@@ -35,8 +35,8 @@ object WebRtcService {
         synchronized(lock) {
             SignalingWorker.stopWork(context)
             val client = signalingClient
-            if (client is HttpSignalingClient && pollJob == null) {
-                startPolling(client)
+            if ((client is HttpSignalingClient || client is MultiSignalingClient) && pollJob == null) {
+                startPolling(client!!)
             }
         }
     }
@@ -74,11 +74,15 @@ object WebRtcService {
         peerConnectionManager = null
     }
 
-    private fun startPolling(client: HttpSignalingClient) {
+    private fun startPolling(client: SignalingClient) {
         serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
         pollJob = serviceScope?.launch {
             while (isActive) {
-                client.pollMessages()
+                if (client is HttpSignalingClient) {
+                    client.pollMessages()
+                } else if (client is MultiSignalingClient) {
+                    client.pollMessages()
+                }
                 delay(POLL_INTERVAL_SECONDS * 1000)
             }
         }
@@ -89,23 +93,22 @@ object WebRtcService {
         settings: UserSettings,
         myId: String
     ): SignalingClient? {
-        return when (settings.getSignalingMode()) {
-            UserSettingsCommon.SIGNALING_MODE_HTTP -> {
-                val url = settings.getSignalingServerUrl()
-                if (url.isBlank()) {
-                    return null
+        val mode = settings.getSignalingMode()
+        val urls = settings.getSignalingServerUrls()
+        
+        if (mode == UserSettingsCommon.SIGNALING_MODE_HTTP || mode == UserSettingsCommon.SIGNALING_MODE_WEBSOCKET) {
+            if (urls.isEmpty()) return null
+            val clients = urls.map { url ->
+                if (mode == UserSettingsCommon.SIGNALING_MODE_HTTP) {
+                    HttpSignalingClient(url, myId)
+                } else {
+                    WebSocketSignalingClient(url, myId)
                 }
-                HttpSignalingClient(url, myId)
             }
-            UserSettingsCommon.SIGNALING_MODE_WEBSOCKET -> {
-                val url = settings.getSignalingServerUrl()
-                if (url.isBlank()) {
-                    return null
-                }
-                WebSocketSignalingClient(url, myId)
-            }
-            else -> LocalSignalingClient(context, myId)
+            return MultiSignalingClient(clients)
         }
+        
+        return LocalSignalingClient(context, myId)
     }
 
     private fun resolvePeerId(context: Context, settings: UserSettings): String {

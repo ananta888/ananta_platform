@@ -11,6 +11,7 @@ import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import org.bouncycastle.crypto.signers.Ed25519Signer
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import com.sovworks.eds.android.security.SecurityUtils
+import com.sovworks.eds.crypto.SimpleCrypto
 import java.io.File
 import java.security.SecureRandom
 import java.security.Security
@@ -141,5 +142,22 @@ object IdentityManager {
 
     fun getPrivateKeyBytes(privateKey: Ed25519PrivateKeyParameters): ByteArray {
         return privateKey.encoded
+    }
+
+    fun exportIdentity(context: Context, password: ByteArray): String? {
+        val identity = loadIdentity(context) ?: return null
+        val json = gson.toJson(identity)
+        return SimpleCrypto.encryptWithPassword(password, json.toByteArray())
+    }
+
+    fun importIdentity(context: Context, backup: String, password: ByteArray): Boolean {
+        return try {
+            val decrypted = SimpleCrypto.decryptWithPassword(password, backup)
+            val identity = gson.fromJson(String(decrypted), Identity::class.java)
+            saveIdentity(context, identity)
+            true
+        } catch (e: Exception) {
+            false
+        }
     }
 }

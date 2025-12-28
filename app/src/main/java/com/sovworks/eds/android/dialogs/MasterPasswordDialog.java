@@ -153,14 +153,36 @@ public class MasterPasswordDialog extends PasswordDialog
         EdsApplication.setMasterPassword(new SecureBuffer(getPassword()));
         if(checkSettingsKey(getActivity()))
         {
-            Bundle args = getArguments();
-            if(args!=null && args.getBoolean(ARG_IS_OBSERVABLE))
-                _passwordCheckSubject.onNext(true);
-            else
-                super.onPasswordEntered();
+            UserSettings settings = UserSettings.getSettings(getActivity());
+            if (settings.is2FAEnabled()) {
+                TwoFactorAuthDialog dialog = new TwoFactorAuthDialog();
+                dialog.setListener(new TwoFactorAuthDialog.TwoFactorAuthListener() {
+                    @Override
+                    public void on2FASuccess() {
+                        dialog.dismiss();
+                        completeLogin();
+                    }
+
+                    @Override
+                    public void on2FACancel() {
+                        EdsApplication.clearMasterPassword();
+                    }
+                });
+                dialog.show(getParentFragmentManager(), "2fa_dialog");
+            } else {
+                completeLogin();
+            }
         }
         else
             onPasswordNotEntered();
+    }
+
+    private void completeLogin() {
+        Bundle args = getArguments();
+        if(args!=null && args.getBoolean(ARG_IS_OBSERVABLE))
+            _passwordCheckSubject.onNext(true);
+        else
+            super.onPasswordEntered();
     }
 
     @Override

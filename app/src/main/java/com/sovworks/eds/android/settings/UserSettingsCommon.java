@@ -54,6 +54,8 @@ public abstract class UserSettingsCommon implements SettingsCommon
         public static final String SIGNALING_MODE = "signaling_mode";
         public static final String SIGNALING_SERVER_URL = "signaling_server_url";
         public static final String SIGNALING_PEER_ID = "signaling_peer_id";
+        public static final String TWO_FACTOR_AUTH_ENABLED = "two_factor_auth_enabled";
+        public static final String TWO_FACTOR_AUTH_SECRET = "two_factor_auth_secret";
         public static final String SIGNALING_MODE_LOCAL = "local";
         public static final String SIGNALING_MODE_HTTP = "http";
         public static final String SIGNALING_MODE_WEBSOCKET = "websocket";
@@ -434,6 +436,33 @@ public abstract class UserSettingsCommon implements SettingsCommon
         public String getSignalingServerUrl()
         {
                 return _prefs.getString(SIGNALING_SERVER_URL, "");
+        }
+
+        public List<String> getSignalingServerUrls()
+        {
+                String url = getSignalingServerUrl();
+                if (url.isEmpty()) return java.util.Collections.emptyList();
+                return java.util.Arrays.asList(url.split(";"));
+        }
+
+        public boolean is2FAEnabled()
+        {
+                return _prefs.getBoolean(TWO_FACTOR_AUTH_ENABLED, false);
+        }
+
+        public void set2FAEnabled(boolean enabled)
+        {
+                _prefs.edit().putBoolean(TWO_FACTOR_AUTH_ENABLED, enabled).commit();
+        }
+
+        public String get2FASecret() throws InvalidSettingsPassword
+        {
+                return getProtectedString(TWO_FACTOR_AUTH_SECRET);
+        }
+
+        public void set2FASecret(String secret) throws InvalidSettingsPassword
+        {
+                setProtectedField(TWO_FACTOR_AUTH_SECRET, secret);
         }
 
 	public synchronized void saveSettingsProtectionKey() throws InvalidSettingsPassword

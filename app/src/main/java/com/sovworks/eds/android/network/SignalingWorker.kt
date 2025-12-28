@@ -6,7 +6,7 @@ import androidx.work.WorkerParameters
 import androidx.work.ListenableWorker.Result
 import androidx.work.Constraints
 import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import androidx.work.ExistingPeriodicWorkPolicy
 import com.sovworks.eds.android.identity.IdentityManager
@@ -26,14 +26,15 @@ class SignalingWorker(
             return Result.success()
         }
 
-        val url = settings.getSignalingServerUrl()
-        if (url.isBlank()) return Result.failure()
+        val urls = settings.getSignalingServerUrls()
+        if (urls.isEmpty()) return Result.failure()
 
         val myId = resolvePeerId(applicationContext, settings)
-        val client = HttpSignalingClient(url, myId)
+        val clients = urls.map { HttpSignalingClient(it, myId) }
+        val multiClient = MultiSignalingClient(clients)
         
         return try {
-            client.pollMessages()
+            multiClient.pollMessages()
             Result.success()
         } catch (e: Exception) {
             Result.retry()
@@ -61,7 +62,7 @@ class SignalingWorker(
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build()
 
-            val workRequest = PeriodicWorkRequestBuilder<SignalingWorker>(15, TimeUnit.MINUTES)
+            val workRequest = PeriodicWorkRequest.Builder(SignalingWorker::class.java, 15, TimeUnit.MINUTES)
                 .setConstraints(constraints)
                 .build()
 

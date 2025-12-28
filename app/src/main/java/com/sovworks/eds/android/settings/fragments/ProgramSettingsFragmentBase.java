@@ -24,7 +24,9 @@ import com.sovworks.eds.android.settings.UserSettings;
 import com.sovworks.eds.android.settings.program.ExtFileManagerPropertyEditor;
 import com.sovworks.eds.android.settings.program.InstallExFatModulePropertyEditor;
 import com.sovworks.eds.android.network.WebRtcService;
+import com.sovworks.eds.android.identity.IdentityManager;
 import com.sovworks.eds.crypto.SecureBuffer;
+import com.sovworks.eds.crypto.TwoFactorAuth;
 import com.sovworks.eds.fs.util.PathUtil;
 import com.sovworks.eds.locations.Location;
 import com.sovworks.eds.locations.LocationsManager;
@@ -159,6 +161,36 @@ public abstract class ProgramSettingsFragmentBase extends PropertiesFragmentBase
                 MasterPasswordDialog mpd = new MasterPasswordDialog();
                 mpd.setArguments(args);
                 mpd.show(getParentFragmentManager(), MasterPasswordDialog.TAG);
+            }
+        }));
+        commonPropertiesIds.add(getPropertiesView().addProperty(new SwitchPropertyEditor(this, R.string.two_factor_auth, R.string.two_factor_auth_summary)
+        {
+            @Override
+            protected boolean loadValue()
+            {
+                return _settings.is2FAEnabled();
+            }
+
+            @Override
+            protected void saveValue(boolean value)
+            {
+                _settings.set2FAEnabled(value);
+                if (value) {
+                    try {
+                        if (_settings.get2FASecret() == null || _settings.get2FASecret().isEmpty()) {
+                            String secret = TwoFactorAuth.generateSecret();
+                            _settings.set2FASecret(secret);
+                            // Show secret to user
+                            android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getActivity());
+                            builder.setTitle(R.string.two_factor_auth)
+                                   .setMessage(getString(R.string.two_factor_auth_secret_label) + "\n\n" + secret)
+                                   .setPositiveButton(R.string.ok, null)
+                                   .show();
+                        }
+                    } catch (Settings.InvalidSettingsPassword e) {
+                        Logger.log(e);
+                    }
+                }
             }
         }));
         commonPropertiesIds.add(getPropertiesView().addProperty(new SwitchPropertyEditor(this, R.string.show_previews, 0)
@@ -479,6 +511,67 @@ public abstract class ProgramSettingsFragmentBase extends PropertiesFragmentBase
             }
         }));
         commonPropertiesIds.add(getPropertiesView().addProperty(new InstallExFatModulePropertyEditor(this)));
+        commonPropertiesIds.add(getPropertiesView().addProperty(new ButtonPropertyEditor(this, R.string.export_identity_backup, 0, R.string.export_identity_backup)
+        {
+            @Override
+            protected void onButtonClick()
+            {
+                showBackupPasswordDialog(true);
+            }
+        }));
+        commonPropertiesIds.add(getPropertiesView().addProperty(new ButtonPropertyEditor(this, R.string.import_identity_backup, 0, R.string.import_identity_backup)
+        {
+            @Override
+            protected void onButtonClick()
+            {
+                showBackupPasswordDialog(false);
+            }
+        }));
+    }
+
+    private void showBackupPasswordDialog(final boolean export) {
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getActivity());
+        builder.setTitle(export ? R.string.export_identity_backup : R.string.import_identity_backup);
+        final android.widget.EditText input = new android.widget.EditText(getActivity());
+        input.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        input.setHint(R.string.backup_password);
+        builder.setView(input);
+        builder.setPositiveButton(R.string.ok, (dialog, which) -> {
+            String password = input.getText().toString();
+            if (export) {
+                String backup = IdentityManager.INSTANCE.exportIdentity(getActivity(), password.getBytes());
+                if (backup != null) {
+                    android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getActivity().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                    android.content.ClipData clip = android.content.ClipData.newPlainText("Ananta Identity Backup", backup);
+                    clipboard.setPrimaryClip(clip);
+                    android.widget.Toast.makeText(getActivity(), R.string.identity_backup_exported, android.widget.Toast.LENGTH_LONG).show();
+                } else {
+                    android.widget.Toast.makeText(getActivity(), R.string.identity_backup_failed, android.widget.Toast.LENGTH_LONG).show();
+                }
+            } else {
+                showImportBackupDialog(password);
+            }
+        });
+        builder.setNegativeButton(R.string.cancel, null);
+        builder.show();
+    }
+
+    private void showImportBackupDialog(final String password) {
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getActivity());
+        builder.setTitle(R.string.import_identity_backup);
+        final android.widget.EditText input = new android.widget.EditText(getActivity());
+        input.setHint("Backup String hier einfügen");
+        builder.setView(input);
+        builder.setPositiveButton(R.string.ok, (dialog, which) -> {
+            String backup = input.getText().toString();
+            if (IdentityManager.INSTANCE.importIdentity(getActivity(), backup, password.getBytes())) {
+                android.widget.Toast.makeText(getActivity(), R.string.identity_backup_imported, android.widget.Toast.LENGTH_LONG).show();
+            } else {
+                android.widget.Toast.makeText(getActivity(), R.string.identity_backup_failed, android.widget.Toast.LENGTH_LONG).show();
+            }
+        });
+        builder.setNegativeButton(R.string.cancel, null);
+        builder.show();
     }
 
     protected void enableProperties(Iterable<Integer> propIds, boolean enable)
