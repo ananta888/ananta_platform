@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import com.sovworks.eds.android.security.SecurityUtils
 import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 
-@Database(entities = [ChatMessageEntity::class, FileTransferEntity::class, ChatGroupEntity::class, OfflineMessageEntity::class], version = 4)
+@Database(entities = [ChatMessageEntity::class, FileTransferEntity::class, ChatGroupEntity::class, OfflineMessageEntity::class], version = 4, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun chatDao(): ChatDao
     abstract fun fileTransferDao(): FileTransferDao
