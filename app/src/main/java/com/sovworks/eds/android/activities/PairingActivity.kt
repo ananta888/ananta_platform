@@ -16,10 +16,12 @@ import com.journeyapps.barcodescanner.ScanOptions
 
 import com.sovworks.eds.android.identity.IdentityManager
 import com.sovworks.eds.android.network.PairingManager
+import com.sovworks.eds.android.network.WebRtcService
 import com.sovworks.eds.android.trust.TrustStore
 import com.sovworks.eds.android.trust.TrustedKey
 import com.sovworks.eds.android.navigation.Screen
 import com.sovworks.eds.android.ui.setSettingsContent
+import android.app.AlertDialog
 
 class PairingActivity : ComponentActivity() {
     private val barcodeLauncher = registerForActivityResult(ScanContract()) { result ->
@@ -59,7 +61,19 @@ class PairingActivity : ComponentActivity() {
             trustedKey.addReason("Verified via QR Code")
             trustStore.addKey(trustedKey)
             Toast.makeText(this, "Peer trusted: ${metadata.peerId}", Toast.LENGTH_LONG).show()
-            finish()
+            AlertDialog.Builder(this)
+                .setTitle("Connect now?")
+                .setMessage("Pairing saved. You can connect now or later.")
+                .setPositiveButton("Connect") { _, _ ->
+                    WebRtcService.getPeerConnectionManager()?.initiateConnection(metadata.peerId)
+                    Toast.makeText(this, "Connecting to ${metadata.peerId}", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+                .setNegativeButton("Later") { _, _ ->
+                    finish()
+                }
+                .setCancelable(true)
+                .show()
         } else {
             Toast.makeText(this, "Invalid QR Code", Toast.LENGTH_LONG).show()
         }

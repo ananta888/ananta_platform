@@ -85,6 +85,13 @@ fun PairingScreen(onStartScanner: () -> Unit, onOpenIdentitySync: (() -> Unit)? 
             )
         } ?: Text("QR Code unavailable until an identity exists")
 
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "This QR code shares your peer ID and public key for trust. It does not connect automatically.",
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(horizontal = 12.dp)
+        )
+
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(onClick = onStartScanner) {
