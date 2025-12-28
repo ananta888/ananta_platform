@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.sovworks.eds.android.R;
+import com.sovworks.eds.android.filemanager.activities.FileManagerActivityBase;
 import com.sovworks.eds.android.filemanager.fragments.FileListViewFragment;
 
 public class DrawerSelectContentProviderMenuItem extends DrawerMenuItemBase
@@ -27,19 +28,21 @@ public class DrawerSelectContentProviderMenuItem extends DrawerMenuItemBase
     public void onClick(View view, int position)
     {
         super.onClick(view, position);
-        Intent i;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT)
-            i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        else
-            i = new Intent(Intent.ACTION_GET_CONTENT);
-        i.setType("*/*");
-        i.addCategory(Intent.CATEGORY_OPENABLE);
-        //if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 && !getDrawerController().getMainActivity().isSingleSelectionMode())
-        //    i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        androidx.appcompat.app.AppCompatActivity activity = getDrawerController().getMainActivity();
+        if (activity instanceof FileManagerActivityBase)
+        {
+            Intent i;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT)
+                i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            else
+                i = new Intent(Intent.ACTION_GET_CONTENT);
+            i.setType("*/*");
+            i.addCategory(Intent.CATEGORY_OPENABLE);
 
-        FileListViewFragment f = getDrawerController().getMainActivity().getFileListViewFragment();
-        if(f!=null)
-            f.startActivityForResult(i, FileListViewFragment.REQUEST_CODE_SELECT_FROM_CONTENT_PROVIDER);
+            FileListViewFragment f = ((FileManagerActivityBase)activity).getFileListViewFragment();
+            if(f!=null)
+                f.startActivityForResult(i, FileListViewFragment.REQUEST_CODE_SELECT_FROM_CONTENT_PROVIDER);
+        }
     }
 
     @Override

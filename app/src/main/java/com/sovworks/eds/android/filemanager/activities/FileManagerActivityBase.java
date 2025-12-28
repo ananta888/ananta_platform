@@ -708,7 +708,7 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
         if(savedState == null)
         {
             if(getIntent().getData() == null)
-                _drawer.showContainers();
+                getDrawerController().showContainers();
             showPromoDialogIfNeeded();
         }
     }

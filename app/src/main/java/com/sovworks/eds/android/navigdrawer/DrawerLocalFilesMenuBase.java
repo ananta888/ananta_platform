@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.sovworks.eds.android.filemanager.activities.FileManagerActivityBase;
+
 public abstract class DrawerLocalFilesMenuBase extends DrawerSubMenuBase
 {
     @Override
@@ -27,21 +29,22 @@ public abstract class DrawerLocalFilesMenuBase extends DrawerSubMenuBase
     {
         super(drawerController);
         Intent i = getDrawerController().getMainActivity().getIntent();
-        _allowDeviceLocations = i.getBooleanExtra(FileManagerActivity.EXTRA_ALLOW_BROWSE_DEVICE, true);
+        _allowDeviceLocations = i.getBooleanExtra(FileManagerActivityBase.EXTRA_ALLOW_BROWSE_DEVICE, true);
         _allowDocumentTree = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
-                && i.getBooleanExtra(FileManagerActivity.EXTRA_ALLOW_BROWSE_DOCUMENT_PROVIDERS, true);
+                && i.getBooleanExtra(FileManagerActivityBase.EXTRA_ALLOW_BROWSE_DOCUMENT_PROVIDERS, true);
     }
 
     @Override
     protected Collection<DrawerMenuItemBase> getSubItems()
     {
         ArrayList<DrawerMenuItemBase> res = new ArrayList<>();
-        FileManagerActivity act = getDrawerController().getMainActivity();
+        androidx.appcompat.app.AppCompatActivity act = getDrawerController().getMainActivity();
         Intent i = act.getIntent();
         for(Location loc: LocationsManager.getLocationsManager(act).getLoadedLocations(true))
             addLocationMenuItem(res, loc);
 
-        if(act.isSelectAction() && i.getBooleanExtra(FileManagerActivity.EXTRA_ALLOW_SELECT_FROM_CONTENT_PROVIDERS, false))
+        boolean isSelectAction = (act instanceof DrawerControllerBase.Host) && ((DrawerControllerBase.Host)act).isSelectAction();
+        if(isSelectAction && i.getBooleanExtra(FileManagerActivityBase.EXTRA_ALLOW_SELECT_FROM_CONTENT_PROVIDERS, false))
             res.add(new DrawerSelectContentProviderMenuItem(getDrawerController()));
 
         if(_allowDocumentTree)
