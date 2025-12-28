@@ -1,0 +1,153 @@
+@startuml AnantaArchitecture
+left to right direction
+skinparam componentStyle rectangle
+skinparam wrapWidth 200
+skinparam maxMessageSize 200
+
+actor User
+actor "Peer Device" as Peer
+rectangle "Android App (EDS Lite / Ananta)" as App {
+  package "UI" {
+    [Compose Screens]
+    [Legacy Fragments]
+    [Navigation]
+  }
+
+  package "Identity & Trust" {
+    [IdentityManager]
+    [TrustStore]
+    [TrustNetworkManager]
+    [TrustRankingManager]
+  }
+
+  package "P2P Networking" {
+    [WebRtcService]
+    [PeerConnectionManager]
+    [DataChannelMultiplexer]
+    [SecureDataChannel]
+    [PfsSession]
+    [HttpSignalingClient]
+  }
+
+  package "Messaging & Exchange" {
+    [MessengerRepository]
+    [SearchManager]
+    [OfflineMessageManager]
+    [RelayManager]
+    [SharedFileManager]
+  }
+
+  package "Storage & Files" {
+    [FileManager]
+    [ContainerManager]
+    [VeraCrypt/LUKS/TrueCrypt]
+    [EncFS/FS Layer]
+  }
+
+  package "Persistence" {
+    [Room Database]
+    [SharedPreferences]
+    [App Files]
+  }
+}
+
+cloud "Signaling Server" as Signaling
+cloud "STUN/TURN" as STUN
+
+User --> [Compose Screens]
+User --> [Legacy Fragments]
+[Compose Screens] --> [Navigation]
+
+[Compose Screens] --> [MessengerRepository]
+[Compose Screens] --> [SearchManager]
+[Compose Screens] --> [TrustStore]
+[Legacy Fragments] --> [FileManager]
+
+[IdentityManager] --> [App Files]
+[TrustStore] --> [App Files]
+[SharedFileManager] --> [SharedPreferences]
+[OfflineMessageManager] --> [Room Database]
+
+[MessengerRepository] --> [DataChannelMultiplexer]
+[SearchManager] --> [DataChannelMultiplexer]
+[RelayManager] --> [DataChannelMultiplexer]
+[OfflineMessageManager] --> [DataChannelMultiplexer]
+
+[DataChannelMultiplexer] --> [SecureDataChannel]
+[SecureDataChannel] --> [PfsSession]
+[PeerConnectionManager] --> [DataChannelMultiplexer]
+[WebRtcService] --> [PeerConnectionManager]
+
+[PeerConnectionManager] ..> [HttpSignalingClient]
+[HttpSignalingClient] ..> Signaling
+[PeerConnectionManager] ..> STUN
+
+[FileManager] --> [EncFS/FS Layer]
+[EncFS/FS Layer] --> [VeraCrypt/LUKS/TrueCrypt]
+[ContainerManager] --> [VeraCrypt/LUKS/TrueCrypt]
+
+Peer --> Signaling
+Peer --> STUN
+Peer --> [DataChannelMultiplexer]
+@enduml
+
+@startuml TrustAndPairing
+autonumber
+actor User
+participant "PairingActivity" as Pairing
+participant "PairingManager" as PairMgr
+participant "TrustStore" as Trust
+participant "IdentityManager" as Identity
+participant "PeerConnectionManager" as PCM
+participant "DataChannelMultiplexer" as Mux
+
+User -> Pairing : Scan QR
+Pairing -> PairMgr : parseQrCodeResult()
+PairMgr --> Pairing : metadata
+Pairing -> Trust : add TrustedKey(status=TRUSTED, level=5)
+Pairing -> Identity : loadIdentity()
+Identity --> Pairing : local identity
+Pairing -> PCM : start connection
+PCM -> Mux : create channels
+Mux -> Mux : SecureDataChannel + PfsSession
+@enduml
+
+@startuml SearchAndExchange
+autonumber
+participant "Exchange UI" as UI
+participant "SearchManager" as Search
+participant "SharedFileManager" as Shared
+participant "DataChannelMultiplexer" as Mux
+participant "TrustNetworkManager" as Trust
+participant "Peer" as Peer
+
+UI -> Search : search(query, filters)
+Search -> Mux : broadcast discovery message
+Mux -> Peer : send search request
+Peer -> Shared : searchFiles(query, filters)
+Shared --> Peer : results
+Peer -> Mux : send response
+Mux -> Search : deliver response
+Search -> Trust : calculateTrustRank(peerId)
+Search -> UI : results + trustRank
+UI -> Search : requestFile(peerId, fileName)
+@enduml
+
+@startuml OfflineMessaging
+autonumber
+participant "Messenger" as Msg
+participant "OfflineMessageManager" as Offline
+participant "Room DB" as DB
+participant "DataChannelMultiplexer" as Mux
+participant "RelayManager" as Relay
+
+Msg -> Offline : storeMessage(recipientId, payload)
+Offline -> Mux : send offline store
+Mux -> Relay : relay channel
+Relay -> Offline : storeRelayMessage (if trusted)
+Offline -> DB : insert message
+Msg -> Offline : requestMessages(peerId)
+Offline -> Mux : send retrieve
+Mux -> Offline : deliver bundle
+Offline -> Msg : notify listeners
+@enduml

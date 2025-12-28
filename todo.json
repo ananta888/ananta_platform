@@ -2,7 +2,40 @@
   "project": "Ananta Platform (WebRTC & Secure Exchange)",
   "version": "1.0.0-draft",
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform für sichere Kommunikation und Dateiaustausch.",
-  "tasks": [],
+  "tasks": [
+    {
+      "id": "TASK-007",
+      "category": "Networking",
+      "title": "Add error handling for HTTP signaling failures",
+      "description": "Handle onFailure callbacks for sendPayload, pollMessages, and registerFcmToken in HttpSignalingClient (log, retry, or surface UI state).",
+      "status": "planned",
+      "priority": "medium"
+    },
+    {
+      "id": "TASK-008",
+      "category": "Architecture",
+      "title": "Remove FileListDataFragment dependency on FileManagerActivity",
+      "description": "Decouple BrowserRecord host activity assignment from FileManagerActivity in FileListDataFragment (TODO markers in onActivityCreated/onDetach).",
+      "status": "planned",
+      "priority": "low"
+    },
+    {
+      "id": "TASK-009",
+      "category": "Messaging",
+      "title": "Implement OfflineMessageManager listener wiring",
+      "description": "Implement notifyMessageListeners and connect offline message bundles to the chat workflow.",
+      "status": "planned",
+      "priority": "medium"
+    },
+    {
+      "id": "TASK-010",
+      "category": "Messaging",
+      "title": "Define post-delivery handling for offline messages",
+      "description": "Decide whether to delete or mark stored messages after bundle delivery and implement in OfflineMessageManager.",
+      "status": "planned",
+      "priority": "low"
+    }
+  ],
   "architecture_goals": [
     "Vollständige Dezentralität (kein zentraler Server außer Signaling/STUN)",
     "Ende-zu-Ende Verschlüsselung für alle Transfers",
