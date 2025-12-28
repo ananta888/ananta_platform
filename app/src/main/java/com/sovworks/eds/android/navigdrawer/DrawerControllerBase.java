@@ -110,12 +110,12 @@ public abstract class DrawerControllerBase
         return false;
     }
 
-    void closeDrawer()
+    public void closeDrawer()
     {
         _drawerLayout.closeDrawer(_drawerListView);
     }
 
-    private void openDrawer()
+    public void openDrawer()
     {
         _drawerLayout.openDrawer(_drawerListView);
     }

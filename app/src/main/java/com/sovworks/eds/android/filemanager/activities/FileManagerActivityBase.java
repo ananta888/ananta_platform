@@ -25,8 +25,8 @@ import com.sovworks.eds.android.R;
 import com.sovworks.eds.android.activities.VersionHistory;
 import com.sovworks.eds.android.dialogs.AskOverwriteDialog;
 import com.sovworks.eds.android.filemanager.FileManagerFragment;
+import com.sovworks.eds.android.filemanager.fragments.FileListComposeFragment;
 import com.sovworks.eds.android.filemanager.fragments.FileListDataFragment;
-import com.sovworks.eds.android.filemanager.fragments.FileListViewFragment;
 import com.sovworks.eds.android.filemanager.fragments.FilePropertiesFragment;
 import com.sovworks.eds.android.filemanager.fragments.PreviewFragment;
 import com.sovworks.eds.android.filemanager.records.BrowserRecord;
@@ -261,9 +261,11 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
     {
         Logger.debug(TAG + ": goTo");
         closeIntegratedViewer();
-        FileListViewFragment f = getFileListViewFragment();
-        if(f!=null)
-            f.goTo(location, scrollPosition, true);
+        Fragment f = getFileListViewFragment();
+        if(f instanceof FileListComposeFragment)
+            ((FileListComposeFragment)f).setLocation(location);
+        else if(f instanceof FileListViewFragmentBase)
+            ((FileListViewFragmentBase)f).goTo(location, scrollPosition, true);
     }
 
     public void goTo(Path path)
@@ -279,9 +281,11 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
 
     public void rereadCurrentLocation()
     {
-        FileListViewFragment f = getFileListViewFragment();
-        if(f!=null)
-            f.rereadCurrentLocation();
+        Fragment f = getFileListViewFragment();
+        if(f instanceof FileListComposeFragment)
+            ((FileListComposeFragment)f).setLocation(getLocation());
+        else if(f instanceof FileListViewFragmentBase)
+            ((FileListViewFragmentBase)f).rereadCurrentLocation();
     }
 
 	public boolean isWideScreenLayout()
@@ -491,9 +495,9 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
         return f != null && f.isAdded() ? f : null;
     }
 
-    public FileListViewFragment getFileListViewFragment()
+    public Fragment getFileListViewFragment()
     {
-        FileListViewFragment f = (FileListViewFragment) getSupportFragmentManager().findFragmentByTag(FileListViewFragment.TAG);
+        Fragment f = getSupportFragmentManager().findFragmentByTag(LIST_VIEW_FRAGMENT_TAG);
         return f != null && f.isAdded() ? f : null;
     }
 
@@ -745,6 +749,8 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
         setIntent(new Intent());
     }
 
+    public static final String LIST_VIEW_FRAGMENT_TAG = "list_view_fragment";
+
     protected void addFileListFragments()
     {
         FragmentManager fm = getSupportFragmentManager();
@@ -752,7 +758,7 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
         {
             FragmentTransaction trans = getSupportFragmentManager().beginTransaction();
             trans.add(FileListDataFragment.newInstance(), FileListDataFragment.TAG);
-            trans.add(R.id.fragment1, FileListViewFragment.newInstance(), FileListViewFragment.TAG);
+            trans.add(R.id.fragment1, FileListComposeFragment.newInstance(), LIST_VIEW_FRAGMENT_TAG);
             trans.commit();
         }
     }
