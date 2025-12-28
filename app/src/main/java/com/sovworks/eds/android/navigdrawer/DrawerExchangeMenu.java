@@ -23,6 +23,7 @@ public class DrawerExchangeMenu extends DrawerSubMenuBase
     protected Collection<DrawerMenuItemBase> getSubItems()
     {
         ArrayList<DrawerMenuItemBase> res = new ArrayList<>();
+        res.add(new DrawerSearchMenuItem(getDrawerController()));
         res.add(new DrawerSimpleMenuItem(getDrawerController(), R.string.start_exchange, R.drawable.ic_menu_share));
         res.add(new DrawerSimpleMenuItem(getDrawerController(), R.string.device_pairing, R.drawable.ic_menu_fullscreen, PairingActivity.class));
         res.add(new DrawerSimpleMenuItem(getDrawerController(), R.string.identity_sync, R.drawable.ic_menu_copy, IdentitySyncActivity.class));

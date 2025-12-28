@@ -790,7 +790,7 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
         }
     }
 
-    protected void showSecondaryFragment(Fragment f, String tag)
+    public void showSecondaryFragment(Fragment f, String tag)
 	{
         FragmentTransaction trans = getSupportFragmentManager().beginTransaction();
         trans.replace(R.id.fragment2, f, tag);

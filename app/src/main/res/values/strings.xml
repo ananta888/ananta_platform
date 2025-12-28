@@ -109,6 +109,10 @@
 	<string name="rotate_right">Rotate right</string>
 	<string name="encryption_algorithm">Encryption algorithm</string>
 	<string name="hash_algorithm">Hash algorithm</string>
+    <string name="file_search">File Search</string>
+    <string name="search_hint">Enter search term...</string>
+    <string name="no_results_found">No results found</string>
+    <string name="searching">Searching...</string>
 	<string name="version_history">Version history</string>
     <string name="log_terminal">Log-Terminal</string>
     <string name="copy_logs">Logs kopieren</string>

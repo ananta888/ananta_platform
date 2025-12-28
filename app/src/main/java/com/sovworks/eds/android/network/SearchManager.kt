@@ -22,6 +22,10 @@ class SearchManager private constructor(private val context: Context) {
         searchListeners.add(listener)
     }
 
+    fun removeSearchListener(listener: (SearchResponse) -> Unit) {
+        searchListeners.remove(listener)
+    }
+
     fun search(query: String) {
         val identity = IdentityManager.loadIdentity(context) ?: return
         val request = SearchRequest(
