@@ -4,22 +4,6 @@
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform f\u00fcr sichere Kommunikation und Dateiaustausch.",
   "tasks": [
     {
-      "id": 5,
-      "title": "Jetpack Compose Messenger UI",
-      "description": "Erstellung einer modernen Chat-Oberfl\u00e4che f\u00fcr den E2EE-Austausch von Textnachrichten und Statusmeldungen.",
-      "priority": "medium",
-      "status": "todo",
-      "category": "UI"
-    },
-    {
-      "id": 6,
-      "title": "Dateitransfer-Manager & Dashboard",
-      "description": "Implementierung eines Managers f\u00fcr Dateitransfers, der Unterbrechungen handhabt und den Fortschritt in einem Dashboard anzeigt.",
-      "priority": "medium",
-      "status": "todo",
-      "category": "Feature"
-    },
-    {
       "id": 7,
       "title": "Akku-Optimierung des Hintergrund-Services",
       "description": "Anpassung des WebRtcService an Android Power-Management (Doze Mode), Verwendung von WorkManager f\u00fcr periodische Aufgaben.",
@@ -36,28 +20,28 @@
       "category": "Security"
     },
     {
-      "id": 9,
-      "title": "Fehlerbehebung: ICE-Kandidaten-Management",
-      "description": "Fix von sporadischen Verbindungsfehlern durch verbessertes Caching und Re-Gathering von ICE-Kandidaten bei Netzwerkwechseln.",
-      "priority": "high",
-      "status": "todo",
-      "category": "Bugfix"
-    },
-    {
       "id": 10,
       "title": "Unit Tests f\u00fcr WebSocketSignalingClient",
-      "description": "Erstellung von Unit Tests zur Verifizierung der WebSocket-Verbindung, Nachrichtenübermittlung und Reconnect-Logik.",
+      "description": "Erstellung von Unit Tests zur Verifizierung der WebSocket-Verbindung, Nachrichten\u00fcbermittlung und Reconnect-Logik.",
       "priority": "medium",
       "status": "todo",
       "category": "Testing"
     },
     {
-      "id": 11,
-      "title": "Integration von WebRTC-Statistiken",
-      "description": "Erfassung und Anzeige von Verbindungsstatistiken (Latenz, Paketverlust, Bitrate) im Dashboard.",
-      "priority": "low",
+      "id": 12,
+      "title": "Implementierung eines Trust-Rank-Algorithmus",
+      "description": "Entwicklung eines dezentralen Algorithmus zur Berechnung der Vertrauensw\u00fcrdigkeit von Peers basierend auf dem Trust-Network.",
+      "priority": "medium",
       "status": "todo",
-      "category": "Performance"
+      "category": "Trust Network"
+    },
+    {
+      "id": 13,
+      "title": "QR-Code Peer-Discovery",
+      "description": "Hinzuf\u00fcgen einer QR-Code-Scan-Funktion zum schnellen Austausch von Peer-IDs und Einleitung verschl\u00fcsselter Verbindungen.",
+      "priority": "medium",
+      "status": "todo",
+      "category": "UX"
     }
   ],
   "architecture_goals": [

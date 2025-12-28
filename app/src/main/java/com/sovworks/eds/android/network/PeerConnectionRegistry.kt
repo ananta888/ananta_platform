@@ -27,12 +27,16 @@ object PeerConnectionRegistry {
     fun updateStatus(peerId: String, status: String) {
         synchronized(lock) {
             val existing = peers[peerId]
-            val updated = PeerInfo(
-                peerId = peerId,
-                endpoint = existing?.endpoint,
-                status = status
-            )
+            val updated = existing?.copy(status = status) ?: PeerInfo(peerId, null, status)
             peers[peerId] = updated
+            publish()
+        }
+    }
+
+    fun updateStats(peerId: String, stats: PeerStats) {
+        synchronized(lock) {
+            val existing = peers[peerId] ?: return
+            peers[peerId] = existing.copy(stats = stats)
             publish()
         }
     }
@@ -48,9 +52,16 @@ object PeerConnectionRegistry {
         _state.value = peers.values.sortedBy { it.peerId }
     }
 
+    data class PeerStats(
+        val latencyMs: Long,
+        val packetLoss: Double,
+        val bitrateKbps: Double
+    )
+
     data class PeerInfo(
         val peerId: String,
         val endpoint: String?,
-        val status: String
+        val status: String,
+        val stats: PeerStats? = null
     )
 }

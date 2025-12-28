@@ -1,5 +1,8 @@
 package com.sovworks.eds.android.transfer
 
+import android.content.Context
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -8,9 +11,48 @@ import kotlinx.coroutines.flow.asStateFlow
 
 object FileTransferManager {
     private val lock = Any()
+    private var context: Context? = null
+    private val gson = Gson()
+    private const val PREFS_NAME = "file_transfers"
+    private const val KEY_TRANSFERS = "transfers_list"
+
     private val transfers = ConcurrentHashMap<String, FileTransferEntry>()
     private val _state = MutableStateFlow<List<FileTransferEntry>>(emptyList())
     val state: StateFlow<List<FileTransferEntry>> = _state.asStateFlow()
+
+    fun initialize(context: Context) {
+        this.context = context.applicationContext
+        loadTransfers()
+    }
+
+    private fun loadTransfers() {
+        val prefs = context?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) ?: return
+        val json = prefs.getString(KEY_TRANSFERS, null)
+        if (json != null) {
+            try {
+                val type = object : TypeToken<List<FileTransferEntry>>() {}.type
+                val list: List<FileTransferEntry> = gson.fromJson(json, type)
+                list.forEach { 
+                    // Reset transient status if needed
+                    val entry = if (it.status == FileTransferStatus.IN_PROGRESS) {
+                        it.copy(status = FileTransferStatus.PAUSED)
+                    } else {
+                        it
+                    }
+                    transfers[entry.id] = entry 
+                }
+                publish()
+            } catch (e: Exception) {
+                // Ignore
+            }
+        }
+    }
+
+    private fun saveTransfers() {
+        val prefs = context?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) ?: return
+        val json = gson.toJson(transfers.values.toList())
+        prefs.edit().putString(KEY_TRANSFERS, json).apply()
+    }
 
     fun startIncomingTransfer(peerId: String, fileName: String, totalBytes: Long?): String {
         return startTransfer(peerId, fileName, totalBytes, TransferDirection.INCOMING)
@@ -81,6 +123,7 @@ object FileTransferManager {
         )
         synchronized(lock) {
             transfers[id] = entry
+            saveTransfers()
             publish()
         }
         return id
@@ -93,6 +136,7 @@ object FileTransferManager {
         synchronized(lock) {
             val current = transfers[transferId] ?: return
             transfers[transferId] = update(current)
+            saveTransfers()
             publish()
         }
     }

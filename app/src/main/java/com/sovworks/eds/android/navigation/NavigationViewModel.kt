@@ -21,6 +21,7 @@ sealed class Screen(val title: String) {
     object DebugLog : Screen("Debug Log")
     object FileTransfers : Screen("File Transfers")
     object PeerConnections : Screen("Peer Connections")
+    data class Messenger(val peerId: String? = null) : Screen("Messenger")
 }
 
 class NavigationViewModel : ViewModel() {

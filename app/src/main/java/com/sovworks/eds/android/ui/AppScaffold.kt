@@ -16,6 +16,7 @@ import com.sovworks.eds.android.filemanager.ui.BreadcrumbBar
 import com.sovworks.eds.android.filemanager.viewmodel.FileListEvent
 import com.sovworks.eds.android.ui.transfers.FileTransferDashboardScreen
 import com.sovworks.eds.android.ui.peer.PeerConnectionsScreen
+import com.sovworks.eds.android.ui.messenger.MessengerScreen
 import kotlinx.coroutines.launch
 
 @Composable
@@ -82,6 +83,7 @@ fun AppScaffold(
                     is Screen.DebugLog -> DebugLogScreen()
                     is Screen.FileTransfers -> FileTransferDashboardScreen()
                     is Screen.PeerConnections -> PeerConnectionsScreen()
+                    is Screen.Messenger -> MessengerScreen(peerId = (currentScreen as Screen.Messenger).peerId)
                 }
             }
         }

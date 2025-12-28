@@ -21,11 +21,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.sovworks.eds.android.navigation.NavigationViewModel
+import com.sovworks.eds.android.navigation.Screen
 import com.sovworks.eds.android.network.PeerConnectionRegistry
 
 @Composable
 fun PeerConnectionsScreen(
-    viewModel: PeerConnectionsViewModel = viewModel()
+    viewModel: PeerConnectionsViewModel = viewModel(),
+    navigationViewModel: NavigationViewModel = viewModel()
 ) {
     val peers by viewModel.peers.collectAsState()
 
@@ -42,7 +45,8 @@ fun PeerConnectionsScreen(
             PeerConnectionCard(
                 peer = peer,
                 onConnect = { viewModel.connect(peer.peerId) },
-                onDisconnect = { viewModel.disconnect(peer.peerId) }
+                onDisconnect = { viewModel.disconnect(peer.peerId) },
+                onChat = { navigationViewModel.navigateTo(Screen.Messenger(peer.peerId)) }
             )
         }
     }
@@ -64,7 +68,8 @@ private fun EmptyPeersState() {
 private fun PeerConnectionCard(
     peer: PeerConnectionRegistry.PeerInfo,
     onConnect: () -> Unit,
-    onDisconnect: () -> Unit
+    onDisconnect: () -> Unit,
+    onChat: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -74,6 +79,14 @@ private fun PeerConnectionCard(
             Text(text = peer.peerId, style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = "Status: ${peer.status}", style = MaterialTheme.typography.bodySmall)
+            peer.stats?.let { stats ->
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Latency: ${stats.latencyMs}ms • Loss: ${stats.packetLoss.toInt()} • Bitrate: ${stats.bitrateKbps.toInt()}kbps",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            }
             peer.endpoint?.let {
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(text = "Endpoint: $it", style = MaterialTheme.typography.bodySmall)
@@ -83,11 +96,19 @@ private fun PeerConnectionCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                TextButton(onClick = onConnect) {
-                    Text("Connect")
+                Row {
+                    TextButton(onClick = onConnect) {
+                        Text("Connect")
+                    }
+                    TextButton(onClick = onDisconnect) {
+                        Text("Disconnect")
+                    }
                 }
-                TextButton(onClick = onDisconnect) {
-                    Text("Disconnect")
+                TextButton(
+                    onClick = onChat,
+                    enabled = peer.status == "connected"
+                ) {
+                    Text("Chat")
                 }
             }
         }

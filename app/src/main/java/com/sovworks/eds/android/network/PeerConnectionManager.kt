@@ -23,7 +23,56 @@ class PeerConnectionManager(
 
     private val managerScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val peerConnections = ConcurrentHashMap<String, PeerConnection>()
+    private val pendingIceCandidates = ConcurrentHashMap<String, MutableList<IceCandidate>>()
     private var listener: PeerConnectionListener? = null
+    private var statsJob: Job? = null
+
+    init {
+        startStatsPolling()
+    }
+
+    private fun startStatsPolling() {
+        statsJob = managerScope.launch {
+            while (isActive) {
+                delay(3000)
+                peerConnections.forEach { (peerId, pc) ->
+                    pc.getStats { report ->
+                        processStats(peerId, report)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun processStats(peerId: String, report: RTCStatsReport) {
+        var latency = 0L
+        var packetLoss = 0.0
+        var bitrate = 0.0
+
+        for (stats in report.statsMap.values) {
+            when (stats.type) {
+                "candidate-pair" -> {
+                    if (stats.members["state"] == "succeeded") {
+                        val rtt = stats.members["currentRoundTripTime"] as? Double ?: 0.0
+                        latency = (rtt * 1000).toLong()
+                    }
+                }
+                "inbound-rtp" -> {
+                    packetLoss = (stats.members["packetsLost"] as? Int ?: 0).toDouble()
+                }
+                "data-channel" -> {
+                    val received = (stats.members["bytesReceived"] as? Long ?: 0L).toDouble()
+                    bitrate = received * 8 / 1024 // Sehr vereinfacht: Total KBits
+                }
+            }
+        }
+
+        PeerConnectionRegistry.updateStats(
+            peerId,
+            PeerConnectionRegistry.PeerStats(latency, packetLoss, bitrate)
+        )
+    }
+
     private val iceServers = listOf(
         PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer()
     )
@@ -138,6 +187,7 @@ class PeerConnectionManager(
         pc.setRemoteDescription(object : SdpObserver {
             override fun onCreateSuccess(p0: SessionDescription?) {}
             override fun onSetSuccess() {
+                drainIceCandidates(peerId, pc)
                 val constraints = MediaConstraints()
                 pc.createAnswer(object : SdpObserver {
                     override fun onCreateSuccess(answerSdp: SessionDescription?) {
@@ -166,7 +216,9 @@ class PeerConnectionManager(
         val pc = peerConnections[peerId] ?: return
         pc.setRemoteDescription(object : SdpObserver {
             override fun onCreateSuccess(p0: SessionDescription?) {}
-            override fun onSetSuccess() {}
+            override fun onSetSuccess() {
+                drainIceCandidates(peerId, pc)
+            }
             override fun onCreateFailure(p0: String?) {}
             override fun onSetFailure(p0: String?) {}
         }, sdp)
@@ -183,8 +235,18 @@ class PeerConnectionManager(
     }
 
     override fun onIceCandidateReceived(peerId: String, candidate: IceCandidate) {
-        val pc = peerConnections[peerId] ?: return
-        pc.addIceCandidate(candidate)
+        val pc = peerConnections[peerId]
+        if (pc != null && pc.remoteDescription != null) {
+            pc.addIceCandidate(candidate)
+        } else {
+            pendingIceCandidates.getOrPut(peerId) { mutableListOf() }.add(candidate)
+        }
+    }
+
+    private fun drainIceCandidates(peerId: String, pc: PeerConnection) {
+        pendingIceCandidates.remove(peerId)?.forEach {
+            pc.addIceCandidate(it)
+        }
     }
 
     fun closeConnection(peerId: String) {

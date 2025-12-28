@@ -12,6 +12,8 @@ import android.widget.Toast;
 
 import com.sovworks.eds.android.helpers.ExtendedFileInfoLoader;
 import com.sovworks.eds.android.network.WebRtcService;
+import com.sovworks.eds.android.transfer.FileTransferManager;
+import com.sovworks.eds.android.ui.messenger.MessengerRepository;
 import com.sovworks.eds.android.providers.MainContentProvider;
 import com.sovworks.eds.android.settings.UserSettings;
 import com.sovworks.eds.crypto.SecureBuffer;
@@ -183,6 +185,8 @@ public class EdsApplicationBase extends MultiDexApplication
                         Toast.makeText(this, Logger.getExceptionMessage(this, e), Toast.LENGTH_LONG).show();
                 }
                 WebRtcService.initialize(getApplicationContext(), settings);
+                MessengerRepository.INSTANCE.initialize();
+                FileTransferManager.INSTANCE.initialize(getApplicationContext());
         }
 
 	private static SecureBuffer _masterPass;
