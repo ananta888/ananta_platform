@@ -369,13 +369,11 @@ public class FileListDataFragment extends BaseFragment
                     loadLocationInfo.folder = cpi;
                     return loadLocationInfo;
                 }).
-                observeOn(AndroidSchedulers.mainThread()).
                 doOnSuccess(loadLocationInfo -> {
                     _directorySettings = loadLocationInfo.folderSettings;
                     Logger.debug(TAG + ": _locationLoading.onNext loading");
                     _locationLoading.onNext(loadLocationInfo);
                 }).
-                observeOn(Schedulers.io()).
                 flatMapObservable(loadLocationInfo -> ReadDir.createObservable(
                     context,
                     loadLocationInfo.location,
@@ -394,7 +392,6 @@ public class FileListDataFragment extends BaseFragment
         _readLocationObserver = observable.
                 compose(bindToLifecycle()).
                 subscribeOn(Schedulers.io()).
-                observeOn(AndroidSchedulers.mainThread()).
                 doFinally(() -> sendFinishedLoading(location)).
                 subscribe(loadedRecord -> {
                             addRecordToList(loadedRecord);

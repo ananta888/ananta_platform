@@ -11,6 +11,7 @@ import android.widget.FrameLayout;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import androidx.appcompat.widget.Toolbar;
 import com.sovworks.eds.android.R;
 import com.sovworks.eds.android.navigdrawer.DrawerController;
 import com.sovworks.eds.android.navigdrawer.DrawerControllerBase;
@@ -24,6 +25,9 @@ public abstract class DrawerActivityBase extends AppCompatActivity implements Dr
     {
         super.onCreate(savedInstanceState);
         super.setContentView(R.layout.drawer_activity_base);
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         _drawerController = createDrawerController();
         _drawerController.init(savedStateFromBundle(savedInstanceState));

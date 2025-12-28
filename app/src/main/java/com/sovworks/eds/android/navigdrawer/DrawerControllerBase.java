@@ -37,11 +37,13 @@ public abstract class DrawerControllerBase
     {
         _drawerLayout = _activity.findViewById(R.id.drawer_layout);
         _drawerListView = _activity.findViewById(R.id.left_drawer);
+        androidx.appcompat.widget.Toolbar toolbar = _activity.findViewById(R.id.toolbar);
 
         //noinspection deprecation
         _drawerToggle = new ActionBarDrawerToggle(
                 _activity,                  /* host Activity */
                 _drawerLayout,         /* DrawerLayout object */
+                toolbar,
                 R.string.drawer_open,  /* "open drawer" description */
                 R.string.drawer_close  /* "close drawer" description */
         );
