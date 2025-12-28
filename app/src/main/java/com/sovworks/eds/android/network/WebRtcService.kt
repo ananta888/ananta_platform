@@ -22,8 +22,33 @@ object WebRtcService {
             val client = createSignalingClient(context, settings, myId) ?: return
             signalingClient = client
             peerConnectionManager = PeerConnectionManager(context, client, myId)
+            
+            // Initial state: assume foreground for now, but usually follow app state
             if (client is HttpSignalingClient) {
                 startPolling(client)
+            }
+        }
+    }
+
+    @JvmStatic
+    fun onAppForeground(context: Context) {
+        synchronized(lock) {
+            SignalingWorker.stopWork(context)
+            val client = signalingClient
+            if (client is HttpSignalingClient && pollJob == null) {
+                startPolling(client)
+            }
+        }
+    }
+
+    @JvmStatic
+    fun onAppBackground(context: Context) {
+        synchronized(lock) {
+            pollJob?.cancel()
+            pollJob = null
+            val settings = UserSettings.getSettings(context)
+            if (settings.getSignalingMode() == UserSettingsCommon.SIGNALING_MODE_HTTP) {
+                SignalingWorker.enqueuePeriodicWork(context)
             }
         }
     }

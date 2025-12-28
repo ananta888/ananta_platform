@@ -1,6 +1,10 @@
 package com.sovworks.eds.android;
 
+import android.app.Activity;
 import android.app.NotificationManager;
+import android.os.Bundle;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -98,6 +102,23 @@ public class EdsApplicationBase extends MultiDexApplication
 	{
 		super.onCreate();
         Logger.debug("EdsApplicationBase: onCreate start");
+
+        registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
+            private int activityCount = 0;
+            @Override public void onActivityStarted(@NonNull Activity activity) {
+                if (activityCount == 0) WebRtcService.onAppForeground(getApplicationContext());
+                activityCount++;
+            }
+            @Override public void onActivityStopped(@NonNull Activity activity) {
+                activityCount--;
+                if (activityCount == 0) WebRtcService.onAppBackground(getApplicationContext());
+            }
+            @Override public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle savedInstanceState) {}
+            @Override public void onActivityResumed(@NonNull Activity activity) {}
+            @Override public void onActivityPaused(@NonNull Activity activity) {}
+            @Override public void onActivitySaveInstanceState(@NonNull Activity activity, @NonNull Bundle outState) {}
+            @Override public void onActivityDestroyed(@NonNull Activity activity) {}
+        });
 
 		SystemConfig.setInstance(new com.sovworks.eds.android.settings.SystemConfig(getApplicationContext()));
 

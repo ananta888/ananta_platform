@@ -4,44 +4,28 @@
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform f\u00fcr sichere Kommunikation und Dateiaustausch.",
   "tasks": [
     {
-      "id": 7,
-      "title": "Akku-Optimierung des Hintergrund-Services",
-      "description": "Anpassung des WebRtcService an Android Power-Management (Doze Mode), Verwendung von WorkManager f\u00fcr periodische Aufgaben.",
-      "priority": "low",
+      "id": 14,
+      "title": "Implementierung von Gruppen-Chats",
+      "description": "Erweiterung des Messenger-Moduls um Gruppen-Funktionalit\u00e4t basierend auf dem Trust-Network.",
+      "priority": "medium",
+      "status": "todo",
+      "category": "Messaging"
+    },
+    {
+      "id": 15,
+      "title": "Dateitransfer-Optimierung",
+      "description": "Einf\u00fchrung von Chunking und Checksums f\u00fcr robustere \u00dcbertragungen gro\u00dfer Dateien.",
+      "priority": "medium",
       "status": "todo",
       "category": "Performance"
     },
     {
-      "id": 8,
-      "title": "Integration von Perfect Forward Secrecy",
-      "description": "Erweiterung des SecureDataChannel um ein Double-Ratchet-\u00e4hnliches Protokoll f\u00fcr verbesserte Sicherheit der Sitzungsschl\u00fcssel.",
-      "priority": "high",
+      "id": 16,
+      "title": "Multi-Device Identit\u00e4ts-Sync",
+      "description": "Synchronisation der Identit\u00e4t und des Trust-Networks zwischen mehreren Ger\u00e4ten eines Nutzers.",
+      "priority": "low",
       "status": "todo",
       "category": "Security"
-    },
-    {
-      "id": 10,
-      "title": "Unit Tests f\u00fcr WebSocketSignalingClient",
-      "description": "Erstellung von Unit Tests zur Verifizierung der WebSocket-Verbindung, Nachrichten\u00fcbermittlung und Reconnect-Logik.",
-      "priority": "medium",
-      "status": "todo",
-      "category": "Testing"
-    },
-    {
-      "id": 12,
-      "title": "Implementierung eines Trust-Rank-Algorithmus",
-      "description": "Entwicklung eines dezentralen Algorithmus zur Berechnung der Vertrauensw\u00fcrdigkeit von Peers basierend auf dem Trust-Network.",
-      "priority": "medium",
-      "status": "todo",
-      "category": "Trust Network"
-    },
-    {
-      "id": 13,
-      "title": "QR-Code Peer-Discovery",
-      "description": "Hinzuf\u00fcgen einer QR-Code-Scan-Funktion zum schnellen Austausch von Peer-IDs und Einleitung verschl\u00fcsselter Verbindungen.",
-      "priority": "medium",
-      "status": "todo",
-      "category": "UX"
     }
   ],
   "architecture_goals": [

@@ -58,14 +58,61 @@ object TrustNetworkManager {
 
             // 4. Keys importieren
             for (key in networkPackage.trustedKeys) {
-                val existing = trustStore.getKey(key.getFingerprint())
+                var existing = trustStore.getKey(key.getFingerprint())
                 if (existing == null) {
-                    trustStore.addKey(key)
+                    existing = key
+                    trustStore.addKey(existing)
                 }
+                // Empfehlung hinzufügen
+                existing.addRecommendation(TrustRecommendation(
+                    recommenderFingerprint = networkPackage.issuerPublicKeyBase64,
+                    trustLevel = key.trustLevel
+                ))
             }
+            trustStore.save()
             return true
         }
         
         return false
+    }
+
+    /**
+     * Berechnet den Trust-Rank eines Peers basierend auf direktem Vertrauen und Empfehlungen im Netzwerk.
+     * Algorithmus: Score = DirectTrust + Sum(RecommenderScore * RecommendationLevel / 5.0)
+     */
+    fun calculateTrustRank(context: Context, fingerprint: String, maxDepth: Int = 2): Double {
+        val trustStore = TrustStore.getInstance(context)
+        val cache = mutableMapOf<String, Double>()
+        return calculateTrustRankRecursive(trustStore, fingerprint, maxDepth, cache, mutableSetOf())
+    }
+
+    private fun calculateTrustRankRecursive(
+        trustStore: TrustStore,
+        fingerprint: String,
+        depth: Int,
+        cache: MutableMap<String, Double>,
+        visited: MutableSet<String>
+    ): Double {
+        if (depth < 0 || fingerprint in visited) return 0.0
+        if (cache.containsKey(fingerprint)) return cache[fingerprint]!!
+
+        val key = trustStore.getKey(fingerprint) ?: return 0.0
+        visited.add(fingerprint)
+        
+        // Basis: Unser direktes Vertrauen (0-5)
+        var score = key.trustLevel.toDouble()
+        
+        // Empfehlungen von anderen einbeziehen
+        for (rec in key.getRecommendations()) {
+            // Nur Recommender einbeziehen, denen wir selbst einen gewissen Trust-Score zuschreiben
+            val recommenderScore = calculateTrustRankRecursive(trustStore, rec.recommenderFingerprint, depth - 1, cache, visited.toMutableSet())
+            if (recommenderScore > 0) {
+                // Gewichtete Empfehlung
+                score += (recommenderScore * (rec.trustLevel.toDouble() / 5.0))
+            }
+        }
+
+        cache[fingerprint] = score
+        return score
     }
 }

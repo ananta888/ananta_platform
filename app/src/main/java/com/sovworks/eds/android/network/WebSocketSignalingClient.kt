@@ -9,16 +9,16 @@ import java.util.concurrent.TimeUnit
 
 class WebSocketSignalingClient(
     private val serverUrl: String,
-    private val myId: String
-) : SignalingClient, WebSocketListener() {
-    private val client = OkHttpClient.Builder()
+    private val myId: String,
+    private val client: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(0, TimeUnit.SECONDS) // WebSocket needs no timeout
-        .build()
+        .build(),
+    private val clientScope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+) : SignalingClient, WebSocketListener() {
     private val gson = Gson()
     private var listener: SignalingListener? = null
     private var webSocket: WebSocket? = null
-    private val clientScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     init {
         connect()

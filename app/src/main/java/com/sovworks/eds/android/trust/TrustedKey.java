@@ -18,6 +18,7 @@ public class TrustedKey implements Serializable {
     private long addedTimestamp;
     private long lastSeenTimestamp;
     private long expiresTimestamp;
+    private List<TrustRecommendation> recommendations;
 
     public TrustedKey(String publicKey, String fingerprint, String name) {
         this.publicKey = publicKey;
@@ -26,8 +27,25 @@ public class TrustedKey implements Serializable {
         this.status = TrustStatus.PENDING;
         this.trustLevel = 0;
         this.reasons = new ArrayList<>();
+        this.recommendations = new ArrayList<>();
         this.addedTimestamp = System.currentTimeMillis();
         this.lastSeenTimestamp = this.addedTimestamp;
+    }
+
+    public List<TrustRecommendation> getRecommendations() {
+        if (recommendations == null) recommendations = new ArrayList<>();
+        return recommendations;
+    }
+
+    public void addRecommendation(TrustRecommendation rec) {
+        if (recommendations == null) recommendations = new ArrayList<>();
+        for (int i = 0; i < recommendations.size(); i++) {
+            if (recommendations.get(i).getRecommenderFingerprint().equals(rec.getRecommenderFingerprint())) {
+                recommendations.set(i, rec);
+                return;
+            }
+        }
+        recommendations.add(rec);
     }
 
     public String getPublicKey() {
