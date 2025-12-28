@@ -19,6 +19,7 @@ abstract class AppDatabase : RoomDatabase() {
         private var INSTANCE: AppDatabase? = null
 
         fun getDatabase(context: Context): AppDatabase {
+            System.loadLibrary("sqlcipher")
             return INSTANCE ?: synchronized(this) {
                 val passphrase = SecurityUtils.getDatabasePassphrase(context)
                 val factory = SupportOpenHelperFactory(passphrase)

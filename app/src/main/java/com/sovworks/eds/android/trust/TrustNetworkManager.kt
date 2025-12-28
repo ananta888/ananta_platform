@@ -118,7 +118,7 @@ object TrustNetworkManager {
         }
 
         // Automatisches Trust-Ranking basierend auf Interaktionen
-        score += TrustRankingManager.calculateInteractionScore(key)
+        score += TrustRankingManager.calculateInteractionScore(key, includeRecommendations = false)
         
         // Empfehlungen von anderen einbeziehen
         for (rec in key.getRecommendations()) {

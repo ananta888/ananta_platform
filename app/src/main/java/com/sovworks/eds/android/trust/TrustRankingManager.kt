@@ -33,7 +33,7 @@ object TrustRankingManager {
      * Berechnet einen Bonus/Malus-Score basierend auf Interaktionen und Empfehlungen.
      * Bereich: -5.0 bis +5.0
      */
-    fun calculateInteractionScore(key: TrustedKey): Double {
+    fun calculateInteractionScore(key: TrustedKey, includeRecommendations: Boolean = true): Double {
         var score = 0.0
         
         // 1. Gewichtete Interaktionen
@@ -61,11 +61,13 @@ object TrustRankingManager {
         }
 
         // 3. Empfehlungen einbeziehen
-        val recs = key.recommendations
-        if (recs != null && recs.isNotEmpty()) {
-            val avgRecTrust = recs.map { it.trustLevel }.average()
-            // Empfehlungen geben bis zu 2.0 Punkte Bonus
-            score += (avgRecTrust / 5.0) * 2.0
+        if (includeRecommendations) {
+            val recs = key.recommendations
+            if (recs != null && recs.isNotEmpty()) {
+                val avgRecTrust = recs.map { it.trustLevel }.average()
+                // Empfehlungen geben bis zu 2.0 Punkte Bonus
+                score += (avgRecTrust / 5.0) * 2.0
+            }
         }
         
         return score.coerceIn(-5.0, 5.0)
