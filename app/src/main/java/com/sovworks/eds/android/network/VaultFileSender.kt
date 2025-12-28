@@ -4,6 +4,7 @@ import com.sovworks.eds.android.transfer.FileTransferManager
 import com.sovworks.eds.fs.File
 import kotlinx.coroutines.*
 import java.io.InputStream
+import java.security.MessageDigest
 
 class VaultFileSender(
     private val multiplexer: DataChannelMultiplexer
@@ -37,8 +38,10 @@ class VaultFileSender(
         val transferId = FileTransferManager.startOutgoingTransfer(peerId, fileName, totalBytes)
         try {
             sendStart(peerId, fileName, totalBytes)
-            streamFile(peerId, transferId, input)
-            multiplexer.sendMessage(peerId, FILE_END)
+            val digest = MessageDigest.getInstance("SHA-256")
+            streamFile(peerId, transferId, input, digest)
+            val checksum = digest.digest().joinToString("") { "%02x".format(it) }
+            multiplexer.sendMessage(peerId, "$FILE_END_PREFIX$checksum")
             FileTransferManager.markCompleted(transferId)
         } catch (e: Exception) {
             FileTransferManager.markFailed(transferId)
@@ -54,7 +57,7 @@ class VaultFileSender(
         multiplexer.sendMessage(peerId, payload)
     }
 
-    private suspend fun streamFile(peerId: String, transferId: String, input: InputStream) {
+    private suspend fun streamFile(peerId: String, transferId: String, input: InputStream, digest: MessageDigest) {
         val buffer = ByteArray(CHUNK_SIZE)
         while (true) {
             val read = withContext(Dispatchers.IO) { input.read(buffer) }
@@ -65,6 +68,7 @@ class VaultFileSender(
                 delay(PAUSE_POLL_MS)
             }
             val payload = if (read == buffer.size) buffer else buffer.copyOf(read)
+            digest.update(payload)
             val sent = multiplexer.sendFileData(peerId, payload)
             if (!sent) {
                 throw Exception("Data channel lost during transfer")
@@ -78,6 +82,6 @@ class VaultFileSender(
         private const val SEND_RETRY_MS = 50L
         private const val PAUSE_POLL_MS = 200L
         private const val FILE_START_PREFIX = "FILE_START:"
-        private const val FILE_END = "FILE_END"
+        private const val FILE_END_PREFIX = "FILE_END:"
     }
 }

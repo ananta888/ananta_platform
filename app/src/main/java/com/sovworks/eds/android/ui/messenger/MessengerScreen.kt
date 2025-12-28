@@ -15,11 +15,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun MessengerScreen(
-    peerId: String?,
+    peerId: String? = null,
+    groupId: String? = null,
     viewModel: MessengerViewModel = viewModel()
 ) {
-    LaunchedEffect(peerId) {
-        viewModel.setPeerId(peerId)
+    LaunchedEffect(peerId, groupId) {
+        if (groupId != null) {
+            viewModel.setChat(groupId, isGroupChat = true)
+        } else {
+            viewModel.setChat(peerId, isGroupChat = false)
+        }
     }
 
     val messages by viewModel.messages.collectAsState()
@@ -34,8 +39,13 @@ fun MessengerScreen(
                     .padding(16.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
+                val headerText = when {
+                    groupId != null -> "Group: $groupId"
+                    peerId != null -> "Chat with $peerId"
+                    else -> "Messenger"
+                }
                 Text(
-                    text = "Chat with ${peerId ?: "Unknown"}",
+                    text = headerText,
                     style = MaterialTheme.typography.titleLarge
                 )
             }

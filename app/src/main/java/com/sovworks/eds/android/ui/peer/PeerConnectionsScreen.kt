@@ -31,23 +31,75 @@ fun PeerConnectionsScreen(
     navigationViewModel: NavigationViewModel = viewModel()
 ) {
     val peers by viewModel.peers.collectAsState()
-
-    if (peers.isEmpty()) {
-        EmptyPeersState()
-        return
-    }
+    val groups by viewModel.groups.collectAsState()
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(peers, key = { it.peerId }) { peer ->
-            PeerConnectionCard(
-                peer = peer,
-                onConnect = { viewModel.connect(peer.peerId) },
-                onDisconnect = { viewModel.disconnect(peer.peerId) },
-                onChat = { navigationViewModel.navigateTo(Screen.Messenger(peer.peerId)) }
-            )
+        if (peers.isNotEmpty()) {
+            item {
+                Text(text = "Peers", style = MaterialTheme.typography.titleLarge)
+            }
+            items(peers, key = { it.peerId }) { peer ->
+                PeerConnectionCard(
+                    peer = peer,
+                    onConnect = { viewModel.connect(peer.peerId) },
+                    onDisconnect = { viewModel.disconnect(peer.peerId) },
+                    onChat = { navigationViewModel.navigateTo(Screen.Messenger(peerId = peer.peerId)) }
+                )
+            }
+        }
+
+        if (groups.isNotEmpty()) {
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(text = "Groups", style = MaterialTheme.typography.titleLarge)
+            }
+            items(groups.values.toList(), key = { it.id }) { group ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(text = group.name, style = MaterialTheme.typography.titleMedium)
+                            Text(text = "${group.memberIds.size} members", style = MaterialTheme.typography.bodySmall)
+                        }
+                        TextButton(onClick = { 
+                            navigationViewModel.navigateTo(Screen.Messenger(groupId = group.id))
+                        }) {
+                            Text("Chat")
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            TextButton(
+                onClick = {
+                    val connectedPeerIds = peers.filter { it.status == "connected" }.map { it.peerId }.toSet()
+                    if (connectedPeerIds.isNotEmpty()) {
+                        viewModel.createGroup("New Group", connectedPeerIds)
+                    }
+                },
+                enabled = peers.any { it.status == "connected" },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Create Group with Connected Peers")
+            }
+        }
+
+        if (peers.isEmpty() && groups.isEmpty()) {
+            item {
+                EmptyPeersState()
+            }
         }
     }
 }

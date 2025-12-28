@@ -83,7 +83,10 @@ fun AppScaffold(
                     is Screen.DebugLog -> DebugLogScreen()
                     is Screen.FileTransfers -> FileTransferDashboardScreen()
                     is Screen.PeerConnections -> PeerConnectionsScreen()
-                    is Screen.Messenger -> MessengerScreen(peerId = (currentScreen as Screen.Messenger).peerId)
+                    is Screen.Messenger -> {
+                        val screen = currentScreen as Screen.Messenger
+                        MessengerScreen(peerId = screen.peerId, groupId = screen.groupId)
+                    }
                 }
             }
         }

@@ -4,25 +4,17 @@
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform f\u00fcr sichere Kommunikation und Dateiaustausch.",
   "tasks": [
     {
-      "id": 14,
-      "title": "Implementierung von Gruppen-Chats",
-      "description": "Erweiterung des Messenger-Moduls um Gruppen-Funktionalit\u00e4t basierend auf dem Trust-Network.",
+      "id": 17,
+      "title": "Chat-Historie Persistenz",
+      "description": "Speichern von Nachrichten in einer lokalen verschl\u00fcsselten Datenbank.",
       "priority": "medium",
       "status": "todo",
       "category": "Messaging"
     },
     {
-      "id": 15,
-      "title": "Dateitransfer-Optimierung",
-      "description": "Einf\u00fchrung von Chunking und Checksums f\u00fcr robustere \u00dcbertragungen gro\u00dfer Dateien.",
-      "priority": "medium",
-      "status": "todo",
-      "category": "Performance"
-    },
-    {
-      "id": 16,
-      "title": "Multi-Device Identit\u00e4ts-Sync",
-      "description": "Synchronisation der Identit\u00e4t und des Trust-Networks zwischen mehreren Ger\u00e4ten eines Nutzers.",
+      "id": 18,
+      "title": "UI f\u00fcr Identit\u00e4ts-Sync",
+      "description": "Erstellung einer Benutzeroberfl\u00e4che f\u00fcr den Export/Import der Identit\u00e4t via QR-Code.",
       "priority": "low",
       "status": "todo",
       "category": "Security"

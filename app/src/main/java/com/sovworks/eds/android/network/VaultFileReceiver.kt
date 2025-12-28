@@ -6,6 +6,7 @@ import com.sovworks.eds.locations.LocationsManager
 import com.sovworks.eds.android.locations.EncFsLocation
 import com.sovworks.eds.android.transfer.FileTransferManager
 import java.io.OutputStream
+import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 
 class VaultFileReceiver(
@@ -20,7 +21,8 @@ class VaultFileReceiver(
         val file: File,
         val outputStream: OutputStream,
         var bytesReceived: Long,
-        val totalBytes: Long?
+        val totalBytes: Long?,
+        val digest: MessageDigest
     )
 
     override fun onMessageReceived(peerId: String, message: String) {
@@ -30,8 +32,9 @@ class VaultFileReceiver(
             val fileName = parts.getOrNull(0) ?: return
             val totalBytes = parts.getOrNull(1)?.toLongOrNull()
             startNewTransfer(peerId, fileName, totalBytes)
-        } else if (message == "FILE_END") {
-            finishTransfer(peerId)
+        } else if (message.startsWith("FILE_END:")) {
+            val checksum = message.substringAfter("FILE_END:")
+            finishTransfer(peerId, checksum)
         }
     }
 
@@ -52,7 +55,8 @@ class VaultFileReceiver(
                     file = newFile,
                     outputStream = outputStream,
                     bytesReceived = 0,
-                    totalBytes = totalBytes
+                    totalBytes = totalBytes,
+                    digest = MessageDigest.getInstance("SHA-256")
                 )
             } catch (e: Exception) {
                 // Error handling
@@ -67,6 +71,7 @@ class VaultFileReceiver(
             }
             try {
                 session.outputStream.write(data)
+                session.digest.update(data)
                 session.bytesReceived += data.size
                 FileTransferManager.updateProgress(session.transferId, data.size.toLong())
             } catch (e: Exception) {
@@ -75,11 +80,16 @@ class VaultFileReceiver(
         }
     }
 
-    private fun finishTransfer(peerId: String) {
+    private fun finishTransfer(peerId: String, expectedChecksum: String) {
         activeTransfers.remove(peerId)?.let { session ->
             try {
                 session.outputStream.close()
-                FileTransferManager.markCompleted(session.transferId)
+                val actualChecksum = session.digest.digest().joinToString("") { "%02x".format(it) }
+                if (actualChecksum == expectedChecksum) {
+                    FileTransferManager.markCompleted(session.transferId)
+                } else {
+                    FileTransferManager.markFailed(session.transferId)
+                }
             } catch (e: Exception) {
                 FileTransferManager.markFailed(session.transferId)
             }
