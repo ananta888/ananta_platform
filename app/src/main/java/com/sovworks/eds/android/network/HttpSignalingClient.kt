@@ -1,5 +1,6 @@
 package com.sovworks.eds.android.network
 
+import android.util.Log
 import com.google.gson.Gson
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
@@ -13,6 +14,9 @@ class HttpSignalingClient(
     private val serverUrl: String,
     private val myId: String
 ) : SignalingClient {
+    companion object {
+        private const val TAG = "HttpSignalingClient"
+    }
     private val client = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(10, TimeUnit.SECONDS)
@@ -57,10 +61,13 @@ class HttpSignalingClient(
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                // TODO: Error handling
+                Log.w(TAG, "Failed to send $type to $peerId", e)
             }
 
             override fun onResponse(call: Call, response: Response) {
+                if (!response.isSuccessful) {
+                    Log.w(TAG, "Send $type failed with HTTP ${response.code}")
+                }
                 response.close()
             }
         })
@@ -73,15 +80,28 @@ class HttpSignalingClient(
             .build()
 
         client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {}
+            override fun onFailure(call: Call, e: IOException) {
+                Log.w(TAG, "Failed to poll messages for $myId", e)
+            }
 
             override fun onResponse(call: Call, response: Response) {
-                val body = response.body?.string() ?: return
-                val messages = gson.fromJson(body, Array<SignalingMessage>::class.java)
-                messages.forEach { msg ->
-                    processMessage(msg)
+                try {
+                    if (!response.isSuccessful) {
+                        Log.w(TAG, "Poll messages failed with HTTP ${response.code}")
+                        return
+                    }
+                    val body = response.body?.string()
+                    if (body.isNullOrEmpty()) {
+                        Log.w(TAG, "Poll messages returned empty body")
+                        return
+                    }
+                    val messages = gson.fromJson(body, Array<SignalingMessage>::class.java)
+                    messages.forEach { msg ->
+                        processMessage(msg)
+                    }
+                } finally {
+                    response.close()
                 }
-                response.close()
             }
         })
     }
@@ -98,8 +118,13 @@ class HttpSignalingClient(
             .build()
 
         client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {}
+            override fun onFailure(call: Call, e: IOException) {
+                Log.w(TAG, "Failed to register FCM token", e)
+            }
             override fun onResponse(call: Call, response: Response) {
+                if (!response.isSuccessful) {
+                    Log.w(TAG, "Register FCM token failed with HTTP ${response.code}")
+                }
                 response.close()
             }
         })

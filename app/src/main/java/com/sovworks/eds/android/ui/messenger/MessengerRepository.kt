@@ -1,6 +1,9 @@
 package com.sovworks.eds.android.ui.messenger
 
 import com.sovworks.eds.android.network.DataChannelListener
+import com.sovworks.eds.android.network.OfflineMessageListener
+import com.sovworks.eds.android.network.OfflineMessageManager
+import com.sovworks.eds.android.network.StoreRequest
 import com.sovworks.eds.android.network.WebRtcService
 import com.sovworks.eds.android.db.AppDatabase
 import com.sovworks.eds.android.db.ChatMessageEntity
@@ -46,10 +49,16 @@ object MessengerRepository : DataChannelListener {
     private var context: Context? = null
     private var database: AppDatabase? = null
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val offlineMessageListener = object : OfflineMessageListener {
+        override fun onOfflineMessageReceived(request: StoreRequest) {
+            processMessage(request.senderId, request.encryptedPayload, request.timestamp)
+        }
+    }
 
     fun initialize(context: Context) {
         this.context = context.applicationContext
         WebRtcService.getPeerConnectionManager()?.getMultiplexer()?.addListener(this)
+        OfflineMessageManager.getInstance(context).addListener(offlineMessageListener)
         
         database = AppDatabase.getDatabase(context)
         
@@ -138,32 +147,10 @@ object MessengerRepository : DataChannelListener {
     }
 
     override fun onMessageReceived(peerId: String, message: String) {
-        if (message.startsWith("TRUST_PACKAGE:")) return 
-
-        if (message.startsWith("GROUP_INVITE:")) {
-            handleGroupInvite(peerId, message)
-            return
-        }
-
-        if (message.startsWith("GROUP_MSG:")) {
-            handleGroupMessage(peerId, message)
-            return
-        }
-
-        if (message.startsWith("GROUP_MSG_E2EE:")) {
-            handleGroupMessageE2EE(peerId, message)
-            return
-        }
-
-        val chatMessage = ChatMessage(
-            senderId = peerId,
-            text = message,
-            isMe = false
-        )
-        addMessage(peerId, chatMessage)
+        processMessage(peerId, message, System.currentTimeMillis())
     }
 
-    private fun handleGroupMessage(peerId: String, payload: String) {
+    private fun handleGroupMessage(peerId: String, payload: String, timestamp: Long) {
         // Format: GROUP_MSG:groupId:actualMessage
         val parts = payload.removePrefix("GROUP_MSG:").split(":", limit = 2)
         if (parts.size < 2) return
@@ -173,13 +160,14 @@ object MessengerRepository : DataChannelListener {
         val chatMessage = ChatMessage(
             senderId = peerId,
             text = text,
+            timestamp = timestamp,
             isMe = false,
             groupId = groupId
         )
         addMessage(groupId, chatMessage)
     }
 
-    private fun handleGroupMessageE2EE(peerId: String, payload: String) {
+    private fun handleGroupMessageE2EE(peerId: String, payload: String, timestamp: Long) {
         // Format: GROUP_MSG_E2EE:groupId:iv:encryptedText
         val parts = payload.removePrefix("GROUP_MSG_E2EE:").split(":", limit = 3)
         if (parts.size < 3) return
@@ -203,6 +191,7 @@ object MessengerRepository : DataChannelListener {
             val chatMessage = ChatMessage(
                 senderId = peerId,
                 text = decryptedText,
+                timestamp = timestamp,
                 isMe = false,
                 groupId = groupId
             )
@@ -210,6 +199,33 @@ object MessengerRepository : DataChannelListener {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    private fun processMessage(peerId: String, message: String, timestamp: Long) {
+        if (message.startsWith("TRUST_PACKAGE:")) return
+
+        if (message.startsWith("GROUP_INVITE:")) {
+            handleGroupInvite(peerId, message)
+            return
+        }
+
+        if (message.startsWith("GROUP_MSG:")) {
+            handleGroupMessage(peerId, message, timestamp)
+            return
+        }
+
+        if (message.startsWith("GROUP_MSG_E2EE:")) {
+            handleGroupMessageE2EE(peerId, message, timestamp)
+            return
+        }
+
+        val chatMessage = ChatMessage(
+            senderId = peerId,
+            text = message,
+            timestamp = timestamp,
+            isMe = false
+        )
+        addMessage(peerId, chatMessage)
     }
 
     override fun onBinaryReceived(peerId: String, data: ByteArray) {

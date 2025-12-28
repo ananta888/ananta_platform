@@ -13,7 +13,7 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 
 import com.sovworks.eds.android.R;
-import com.sovworks.eds.android.filemanager.activities.FileManagerActivity;
+import com.sovworks.eds.android.filemanager.activities.FileManagerActivityBase;
 import com.sovworks.eds.android.filemanager.fragments.FileListViewFragment;
 import com.sovworks.eds.android.helpers.CachedPathInfoBase;
 import com.sovworks.eds.android.helpers.ExtendedFileInfoLoader;
@@ -31,7 +31,7 @@ public abstract class FsBrowserRecord extends CachedPathInfoBase implements Brow
         public int position;
     }
 
-    public static void updateRowView(FileManagerActivity host, Object item)
+    public static void updateRowView(FileManagerActivityBase host, Object item)
     {
         updateRowView((FileListViewFragment) host.getSupportFragmentManager().findFragmentByTag(FileListViewFragment.TAG), item);
     }
@@ -68,7 +68,7 @@ public abstract class FsBrowserRecord extends CachedPathInfoBase implements Brow
         return null;
     }
 
-    public static RowViewInfo getCurrentRowViewInfo(FileManagerActivity host, Object item)
+    public static RowViewInfo getCurrentRowViewInfo(FileManagerActivityBase host, Object item)
     {
         if(host == null)
             return null;
@@ -218,7 +218,7 @@ public abstract class FsBrowserRecord extends CachedPathInfoBase implements Brow
 	}
 	
 	@Override
-	public void setHostActivity(FileManagerActivity host)
+    public void setHostActivity(FileManagerActivityBase host)
 	{
 		_host = host;
 	}
@@ -243,7 +243,7 @@ public abstract class FsBrowserRecord extends CachedPathInfoBase implements Brow
 
 	protected final Context _context;
 	protected String _locationId;
-	protected FileManagerActivity _host;
+        protected FileManagerActivityBase _host;
     protected Drawable _miniIcon;
 
 	protected abstract Drawable getDefaultIcon();

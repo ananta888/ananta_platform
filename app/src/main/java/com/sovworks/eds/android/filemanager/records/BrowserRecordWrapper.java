@@ -3,7 +3,7 @@ package com.sovworks.eds.android.filemanager.records;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.sovworks.eds.android.filemanager.activities.FileManagerActivity;
+import com.sovworks.eds.android.filemanager.activities.FileManagerActivityBase;
 import com.sovworks.eds.android.helpers.ExtendedFileInfoLoader;
 import com.sovworks.eds.fs.Path;
 import com.sovworks.eds.locations.Location;
@@ -58,7 +58,7 @@ public class BrowserRecordWrapper implements BrowserRecord
     }
 
     @Override
-    public void setHostActivity(FileManagerActivity host)
+    public void setHostActivity(FileManagerActivityBase host)
     {
         _host = host;
         _base.setHostActivity(host);
@@ -153,7 +153,7 @@ public class BrowserRecordWrapper implements BrowserRecord
         return _base;
     }
 
-    public FileManagerActivity getHost()
+    public FileManagerActivityBase getHost()
     {
         return _host;
     }
@@ -165,5 +165,5 @@ public class BrowserRecordWrapper implements BrowserRecord
     }
 
     private final BrowserRecord _base;
-    private FileManagerActivity _host;
+    private FileManagerActivityBase _host;
 }

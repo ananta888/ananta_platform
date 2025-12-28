@@ -8,15 +8,25 @@ import com.sovworks.eds.android.identity.IdentityManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.concurrent.CopyOnWriteArrayList
 
 class OfflineMessageManager private constructor(private val context: Context) {
     private val gson = Gson()
     private val db = AppDatabase.getDatabase(context)
     private val scope = CoroutineScope(Dispatchers.IO)
     private var multiplexer: DataChannelMultiplexer? = null
+    private val listeners = CopyOnWriteArrayList<OfflineMessageListener>()
 
     fun setMultiplexer(mux: DataChannelMultiplexer) {
         this.multiplexer = mux
+    }
+
+    fun addListener(listener: OfflineMessageListener) {
+        listeners.add(listener)
+    }
+
+    fun removeListener(listener: OfflineMessageListener) {
+        listeners.remove(listener)
     }
 
     fun onMessageReceived(peerId: String, json: String) {
@@ -55,9 +65,7 @@ class OfflineMessageManager private constructor(private val context: Context) {
                 val bundle = OfflineMessageBundle(storeRequests)
                 val msg = OfflineMessagingMessage("bundle", gson.toJson(bundle))
                 multiplexer?.sendOfflineMessagingMessage(peerId, gson.toJson(msg))
-                
-                // Optional: Nachrichten nach dem Senden löschen oder als gesendet markieren
-                // db.offlineMessageDao().deleteAllForRecipient(request.recipientId)
+                db.offlineMessageDao().deleteAllForRecipient(request.recipientId)
             }
         }
     }
@@ -73,7 +81,13 @@ class OfflineMessageManager private constructor(private val context: Context) {
     }
 
     private fun notifyMessageListeners(request: StoreRequest) {
-        // Implementierung der Benachrichtigung des UI/ChatManagers
+        listeners.forEach { listener ->
+            try {
+                listener.onOfflineMessageReceived(request)
+            } catch (e: Exception) {
+                // Ignore listener failures to avoid dropping other messages.
+            }
+        }
     }
 
     fun requestMessages(peerId: String) {
@@ -109,4 +123,8 @@ class OfflineMessageManager private constructor(private val context: Context) {
             }
         }
     }
+}
+
+interface OfflineMessageListener {
+    fun onOfflineMessageReceived(request: StoreRequest)
 }

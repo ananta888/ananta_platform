@@ -12,7 +12,7 @@ import android.os.Parcelable;
 import com.sovworks.eds.android.Logger;
 import com.sovworks.eds.android.filemanager.DirectorySettings;
 import com.sovworks.eds.android.filemanager.FileListViewAdapter;
-import com.sovworks.eds.android.filemanager.activities.FileManagerActivity;
+import com.sovworks.eds.android.filemanager.activities.FileManagerActivityBase;
 import com.sovworks.eds.android.filemanager.comparators.FileNamesComparator;
 import com.sovworks.eds.android.filemanager.comparators.FileNamesNumericComparator;
 import com.sovworks.eds.android.filemanager.comparators.FileSizesComparator;
@@ -134,7 +134,7 @@ public class FileListDataFragment extends BaseFragment
         {
             if(_fileList!=null)
                 for(BrowserRecord br: _fileList)
-                    br.setHostActivity((FileManagerActivity) getActivity());
+                    br.setHostActivity((FileManagerActivityBase) getActivity());
         }
     }
 
@@ -325,7 +325,7 @@ public class FileListDataFragment extends BaseFragment
         if (_location == null)
             return;
 
-        FileManagerActivity activity = (FileManagerActivity) getActivity();
+        FileManagerActivityBase activity = (FileManagerActivityBase) getActivity();
         if(activity == null)
             return;
         Context context = activity.getApplicationContext();
@@ -457,7 +457,7 @@ public class FileListDataFragment extends BaseFragment
 
     private void addRecordToList(BrowserRecord rec)
     {
-        FileManagerActivity fm = (FileManagerActivity) getActivity();
+        FileManagerActivityBase fm = (FileManagerActivityBase) getActivity();
         rec.setHostActivity(fm);
         synchronized (_filesListSync)
         {
@@ -661,7 +661,7 @@ public class FileListDataFragment extends BaseFragment
 
 	private Location getFallbackLocation()
 	{
-		return FileManagerActivity.getStartLocation(getActivity());
+            return FileManagerActivityBase.getStartLocation(getActivity());
 	}
 
     private Comparator<BrowserRecord> initSorter()

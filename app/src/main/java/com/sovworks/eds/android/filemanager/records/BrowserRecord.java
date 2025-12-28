@@ -3,7 +3,7 @@ package com.sovworks.eds.android.filemanager.records;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.sovworks.eds.android.filemanager.activities.FileManagerActivity;
+import com.sovworks.eds.android.filemanager.activities.FileManagerActivityBase;
 import com.sovworks.eds.android.helpers.CachedPathInfo;
 import com.sovworks.eds.android.helpers.ExtendedFileInfoLoader;
 import com.sovworks.eds.fs.Path;
@@ -20,7 +20,7 @@ public interface BrowserRecord extends CachedPathInfo
     boolean allowSelect();
     boolean isSelected();
     void setSelected(boolean val);
-	void setHostActivity(FileManagerActivity host);
+    void setHostActivity(FileManagerActivityBase host);
     int getViewType();
     View createView(int position, ViewGroup parent);
     void updateView(View view, int position);
