@@ -391,35 +391,36 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
 
         Logger.debug("FileManagerActivityBase: starting AppInitHelper");
         
-        // Fail-safe: dismiss splash screen after 2 seconds anyway
+        // Fail-safe: dismiss splash screen after 1 second anyway
         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
             if (!_initFinished) {
                 Logger.debug("FileManagerActivityBase: init timeout reached, forcing splash screen dismissal");
                 _initFinished = true;
             }
-        }, 2000);
+        }, 1000);
 
-        AppInitHelper.
-                createObservable(this).
-                compose(bindToLifecycleCompletable()).
-                doOnSubscribe(subscription -> {
-                    // Once we start the init sequence, we can dismiss the splash screen
-                    // so that any potential dialogs (password, permissions) are visible.
-                    new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+        // Verzögere den Start, damit die Activity zeichnen kann und der Splash-Screen erscheint
+        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+            AppInitHelper.
+                    createObservable(this).
+                    compose(bindToLifecycleCompletable()).
+                    doOnSubscribe(subscription -> {
+                        // Once we start the init sequence, we can dismiss the splash screen
+                        // so that any potential dialogs (password, permissions) are visible.
                         _initFinished = true;
-                    }, 500); // Give it a short moment of splash
-                }).
-                subscribe(() -> {
-                    Logger.debug("FileManagerActivityBase: AppInitHelper finished");
-                    _initFinished = true;
-                    startAction(savedInstanceState);
-                    rereadCurrentLocation();
-                }, err -> {
+                    }).
+                    subscribe(() -> {
+                        Logger.debug("FileManagerActivityBase: AppInitHelper finished");
+                        _initFinished = true;
+                        startAction(savedInstanceState);
+                        rereadCurrentLocation();
+                    }, err -> {
                         Logger.debug("FileManagerActivityBase: AppInitHelper failed: " + err.getMessage());
                         _initFinished = true;
-                        if(!(err instanceof CancellationException))
+                        if (!(err instanceof CancellationException))
                             Logger.showAndLog(getApplicationContext(), err);
-                });
+                    });
+        });
 
 	}
 
