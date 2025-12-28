@@ -97,6 +97,18 @@
             android:name=".activities.VersionHistory"
             android:label="@string/version_history"/>
         <activity
+            android:name=".activities.LogActivity"
+            android:label="@string/log_terminal"
+            android:theme="@style/Theme.EDS"/>
+        <activity
+            android:name=".activities.PairingActivity"
+            android:label="@string/device_pairing"
+            android:theme="@style/Theme.EDS"/>
+        <activity
+            android:name=".activities.PeersActivity"
+            android:label="@string/peers_devices"
+            android:theme="@style/Theme.EDS"/>
+        <activity
             android:name=".settings.activities.ProgramSettingsActivity"
             android:label="@string/settings"
             android:launchMode="singleTop"

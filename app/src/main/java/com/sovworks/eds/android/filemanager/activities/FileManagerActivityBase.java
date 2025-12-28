@@ -358,7 +358,15 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
 	{
         Logger.debug("FileManagerActivityBase: onCreate start");
         SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
-        splashScreen.setKeepOnScreenCondition(() -> !_isInitialized);
+        splashScreen.setKeepOnScreenCondition(() -> {
+            boolean shouldKeep = !_isInitialized;
+            if (shouldKeep) {
+                Logger.debug("SplashScreen: still waiting for initialization...");
+            } else {
+                Logger.debug("SplashScreen: initialization finished, removing splash screen");
+            }
+            return shouldKeep;
+        });
 
 	    if(GlobalConfig.isTest())
 	        TEST_INIT_OBSERVABLE.onNext(false);

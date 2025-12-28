@@ -109,6 +109,17 @@
 	<string name="encryption_algorithm">Encryption algorithm</string>
 	<string name="hash_algorithm">Hash algorithm</string>
 	<string name="version_history">Version history</string>
+    <string name="log_terminal">Log-Terminal</string>
+    <string name="copy_logs">Logs kopieren</string>
+    <string name="share_logs">Logs teilen</string>
+    <string name="clear_logs">Logs löschen</string>
+    <string name="secure_share">Sicherer Austausch</string>
+    <string name="device_pairing">Gerät koppeln (QR)</string>
+    <string name="show_qr">QR anzeigen</string>
+    <string name="peers_devices">Peers / Geräte</string>
+    <string name="trust_chain">Schlüssel &amp; Vertrauen</string>
+    <string name="start_exchange">Austausch starten</string>
+    <string name="diagnostics">Diagnose</string>
 	<string name="containers">Containers</string>
 	<string name="close">Close</string>
 	<string name="target_path">Target path</string>

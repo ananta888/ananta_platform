@@ -8,7 +8,9 @@
         <item name="postSplashScreenTheme">@style/Theme.EDS</item>
     </style>
 
-    <style name="Theme.EDS" parent="Theme.Material3.DayNight">
+    <style name="Theme.EDS" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
         <item name="android:windowBackground">@android:color/white</item>
         <item name="android:actionBarStyle">@style/ActionBar</item>
         <item name="android:buttonStyle">@style/Button</item>
@@ -57,7 +59,9 @@
         <item name="widgetUnlockedAllIcon">@drawable/widget_unlocked_all</item>
         <item name="collapseIcon">@drawable/ic_action_collapse</item>
     </style>
-    <style name="Theme.EDS.Dark" parent="Theme.Material3.Dark">
+    <style name="Theme.EDS.Dark" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
         <item name="android:windowBackground">@android:color/black</item>
         <item name="android:actionBarStyle">@style/ActionBar.Dark</item>
         <item name="android:buttonStyle">@style/Button.Dark</item>

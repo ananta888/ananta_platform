@@ -982,7 +982,7 @@ public abstract class FileListViewFragmentBase extends BaseFragment implements
                 mhi.clearSelection = true;
                 return true;
             case R.id.secure_share:
-                // secureShareFiles();
+                secureShareFiles();
                 mhi.clearSelection = true;
                 return true;
             default:
@@ -1234,6 +1234,11 @@ public abstract class FileListViewFragmentBase extends BaseFragment implements
                         PrepareToSendTask.TAG
                 ).
                 commit();
+    }
+
+    protected void secureShareFiles()
+    {
+        Toast.makeText(getActivity(), getString(R.string.secure_share) + " - Coming soon", Toast.LENGTH_SHORT).show();
     }
 
     private void pasteSentFiles()

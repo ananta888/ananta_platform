@@ -15,10 +15,28 @@ object DebugLogManager {
     private val dateFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())
     private const val MAX_LOGS = 500
 
+    private fun maskSensitiveInfo(message: String): String {
+        var masked = message
+        // Mask potential passwords/keys: look for "password", "passphrase", "key" followed by ":" or "="
+        val patterns = listOf(
+            Regex("(?i)(password|passphrase|key|secret|token)[:=]\\s*[^\\s,;]+"),
+            Regex("(?i)(pwd)[:=]\\s*[^\\s,;]+")
+        )
+        patterns.forEach { regex ->
+            masked = regex.replace(masked) { matchResult ->
+                val label = matchResult.groups[1]?.value ?: ""
+                val separator = if (matchResult.value.contains(":")) ":" else "="
+                "$label$separator********"
+            }
+        }
+        return masked
+    }
+
     @JvmStatic
     fun addLog(level: String, tag: String, message: String) {
+        val maskedMessage = maskSensitiveInfo(message)
         val timestamp = dateFormat.format(Date())
-        val logEntry = "[$timestamp] $level/$tag: $message"
+        val logEntry = "[$timestamp] $level/$tag: $maskedMessage"
         
         _logs.update { currentLogs ->
             val newList = currentLogs + logEntry
