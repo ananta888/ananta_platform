@@ -43,12 +43,10 @@ fun PairingScreen(onStartScanner: () -> Unit) {
         if (pairingCode == null) {
             Text(
                 text = "Create identity to generate a pairing code.",
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 12.dp)
             )
-            return@Column
-        }
-
-        run {
+        } else {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(bottom = 12.dp)
@@ -77,7 +75,7 @@ fun PairingScreen(onStartScanner: () -> Unit) {
                 contentDescription = "My QR Code",
                 modifier = Modifier.size(250.dp)
             )
-        } ?: Text("Failed to generate QR Code")
+        } ?: Text("QR Code unavailable until an identity exists")
 
         Spacer(modifier = Modifier.height(32.dp))
 
