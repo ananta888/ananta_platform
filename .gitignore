@@ -23,6 +23,6 @@
 hs_err_pid*
 replay_pid*
 /app/.gradle/
-/.gradle/
-/app/.cxx/
-/.idea/
+/.gradle/*
+/app/.cxx/*
+/.idea/*
