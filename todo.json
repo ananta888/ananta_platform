@@ -4,28 +4,28 @@
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform f\u00fcr sichere Kommunikation und Dateiaustausch.",
   "tasks": [
     {
-      "id": 33,
-      "title": "Download-Integration für Suchergebnisse",
-      "description": "Ermöglichen des Downloads von Dateien direkt aus der Suchergebnisliste.",
+      "id": 36,
+      "title": "Thumbnail-Vorschau f\u00fcr Medien",
+      "description": "Erzeugung und Versand von kleinen Thumbnails f\u00fcr Bilder und Videos vor dem vollst\u00e4ndigen Download.",
       "priority": "high",
-      "status": "todo",
-      "category": "Exchange"
-    },
-    {
-      "id": 34,
-      "title": "Visualisierung des Trust-Levels",
-      "description": "Anzeige der Trust-Sterne in der Peer-Übersicht und im Chat.",
-      "priority": "medium",
       "status": "todo",
       "category": "UI"
     },
     {
-      "id": 35,
-      "title": "Trust-Store Synchronisation",
-      "description": "Automatischer Abgleich des Trust-Stores zwischen verknüpften Geräten derselben Identität.",
+      "id": 37,
+      "title": "Gruppen-Trust Synchronisation",
+      "description": "Erweiterung der Trust-Synchronisation auf Gruppenmitglieder (indirektes Vertrauen).",
       "priority": "low",
       "status": "todo",
       "category": "Trust"
+    },
+    {
+      "id": 38,
+      "title": "Trust-basierte Suchfilter",
+      "description": "Optionale Filterung der Suchergebnisse nach Mindest-Trust-Level.",
+      "priority": "low",
+      "status": "todo",
+      "category": "Exchange"
     }
   ],
   "architecture_goals": [

@@ -18,6 +18,13 @@ class ChatViewModel(
     private val _messages = MutableStateFlow<List<ChatMessage>>(emptyList())
     val messages: StateFlow<List<ChatMessage>> = _messages
 
+    val peerId: String get() = targetPeerId
+    
+    fun getTrustLevel(): Int {
+        return com.sovworks.eds.android.trust.TrustStore.getInstance(peerConnectionManager.context)
+            .getKey(targetPeerId)?.trustLevel ?: 0
+    }
+
     init {
         peerConnectionManager.getMultiplexer().addListener(this)
     }

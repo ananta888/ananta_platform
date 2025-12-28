@@ -39,6 +39,10 @@ class SearchManager private constructor(private val context: Context) {
         multiplexer?.broadcastDiscoveryMessage(gson.toJson(msg))
     }
 
+    fun requestFile(peerId: String, fileName: String) {
+        multiplexer?.sendFileMessage(peerId, "FILE_REQUEST:$fileName")
+    }
+
     fun onMessageReceived(peerId: String, json: String) {
         try {
             val msg = gson.fromJson(json, DiscoveryMessage::class.java)

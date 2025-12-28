@@ -24,6 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sovworks.eds.android.navigation.NavigationViewModel
 import com.sovworks.eds.android.navigation.Screen
 import com.sovworks.eds.android.network.PeerConnectionRegistry
+import com.sovworks.eds.android.ui.theme.TrustStars
 
 @Composable
 fun PeerConnectionsScreen(
@@ -128,7 +129,14 @@ private fun PeerConnectionCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-            Text(text = peer.peerId, style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                Text(text = peer.peerId, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                TrustStars(level = peer.trustLevel)
+            }
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = "Status: ${peer.status}", style = MaterialTheme.typography.bodySmall)
             peer.stats?.let { stats ->

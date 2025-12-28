@@ -41,6 +41,14 @@ object PeerConnectionRegistry {
         }
     }
 
+    fun updateTrustLevel(peerId: String, level: Int) {
+        synchronized(lock) {
+            val existing = peers[peerId] ?: return
+            peers[peerId] = existing.copy(trustLevel = level)
+            publish()
+        }
+    }
+
     fun removePeer(peerId: String) {
         synchronized(lock) {
             peers.remove(peerId)
@@ -62,6 +70,7 @@ object PeerConnectionRegistry {
         val peerId: String,
         val endpoint: String?,
         val status: String,
-        val stats: PeerStats? = null
+        val stats: PeerStats? = null,
+        val trustLevel: Int = 0
     )
 }

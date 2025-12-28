@@ -15,11 +15,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.sovworks.eds.android.ui.theme.TrustStars
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(viewModel: ChatViewModel) {
     val messages by viewModel.messages.collectAsState()
+    val trustLevel = remember { viewModel.getTrustLevel() }
     var inputText by remember { mutableStateOf("") }
     val context = LocalContext.current
     val filePicker = rememberLauncherForActivityResult(
@@ -33,7 +35,15 @@ fun ChatScreen(viewModel: ChatViewModel) {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Secure Chat") })
+            TopAppBar(
+                title = { 
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Chat with ${viewModel.peerId.take(8)}...")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        TrustStars(level = trustLevel)
+                    }
+                }
+            )
         },
         bottomBar = {
             BottomAppBar {

@@ -145,6 +145,11 @@ class DataChannelMultiplexer(
         channel.sendText(message)
     }
 
+    fun sendFileMessage(peerId: String, message: String) {
+        val channel = fileChannels[peerId] ?: return
+        channel.sendText(message)
+    }
+
     suspend fun sendFileData(peerId: String, data: ByteArray): Boolean {
         val channel = fileChannels[peerId] ?: return false
 

@@ -99,10 +99,15 @@ class SearchFragment : Fragment() {
             
             val fileName: TextView = view.findViewById(R.id.file_name)
             val peerInfo: TextView = view.findViewById(R.id.peer_info)
+            val downloadButton: View = view.findViewById(R.id.download_button)
             
             val (peerId, file) = items[position]
             fileName.text = file.name
             peerInfo.text = "Peer: ${peerId.take(8)}... | Size: ${file.size} bytes"
+
+            downloadButton.setOnClickListener {
+                SearchManager.getInstance(requireContext()).requestFile(peerId, file.name)
+            }
             
             return view
         }

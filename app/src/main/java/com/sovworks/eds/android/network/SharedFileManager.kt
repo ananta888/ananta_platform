@@ -42,6 +42,10 @@ class SharedFileManager(private val context: Context) {
             }
     }
 
+    fun getFilePath(fileName: String): String? {
+        return sharedFiles.find { it.endsWith("/$fileName") || it == fileName }
+    }
+
     companion object {
         @Volatile
         private var instance: SharedFileManager? = null

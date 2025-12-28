@@ -49,4 +49,25 @@ object IdentitySyncManager {
             false
         }
     }
+
+    fun exportTrustSync(context: Context): String {
+        val trustStore = TrustStore.getInstance(context)
+        return gson.toJson(trustStore.getAllKeys().values.toList())
+    }
+
+    fun importTrustSync(context: Context, json: String) {
+        try {
+            val type = object : com.google.gson.reflect.TypeToken<List<TrustedKey>>() {}.type
+            val keys: List<TrustedKey> = gson.fromJson(json, type)
+            val trustStore = TrustStore.getInstance(context)
+            keys.forEach { key ->
+                val existing = trustStore.getKey(key.getFingerprint())
+                if (existing == null || key.getTrustLevel() != existing.trustLevel || key.status != existing.status) {
+                    trustStore.addKey(key)
+                }
+            }
+        } catch (e: Exception) {
+            // Log error
+        }
+    }
 }

@@ -16,7 +16,7 @@ interface PeerConnectionListener {
 }
 
 class PeerConnectionManager(
-    private val context: Context,
+    val context: Context,
     private val signalingClient: SignalingClient,
     private val myId: String
 ) : SignalingListener, DataChannelListener {
@@ -234,6 +234,12 @@ class PeerConnectionManager(
 
     private fun onPeerConnected(peerId: String) {
         val identity = IdentityManager.loadIdentity(context) ?: return
+
+        if (peerId == identity.publicKeyBase64) {
+            val syncJson = com.sovworks.eds.android.identity.IdentitySyncManager.exportTrustSync(context)
+            multiplexer.sendMessage(peerId, "IDENTITY_TRUST_SYNC:$syncJson")
+        }
+
         val trustStore = TrustStore.getInstance(context)
         val trustedKeys = trustStore.allKeys.values.filter { it.status == TrustedKey.TrustStatus.TRUSTED }
         
@@ -278,6 +284,29 @@ class PeerConnectionManager(
                 TrustNetworkManager.verifyAndImportNetwork(context, pkg)
             } catch (e: Exception) {
                 // Ignore malformed trust packages
+            }
+        } else if (message.startsWith("FILE_REQUEST:")) {
+            val fileName = message.substringAfter("FILE_REQUEST:")
+            handleFileRequest(peerId, fileName)
+        } else if (message.startsWith("IDENTITY_TRUST_SYNC:")) {
+            val json = message.removePrefix("IDENTITY_TRUST_SYNC:")
+            com.sovworks.eds.android.identity.IdentitySyncManager.importTrustSync(context, json)
+        }
+    }
+
+    private fun handleFileRequest(peerId: String, fileName: String) {
+        val lm = com.sovworks.eds.locations.LocationsManager.getLocationsManager(context)
+        val location = lm.getLoadedLocations(false).filterIsInstance<com.sovworks.eds.android.locations.EncFsLocation>().firstOrNull { it.isOpen }
+        
+        if (location != null) {
+            try {
+                val currentPath = location.getCurrentPath()
+                val filePath = currentPath.combine(fileName)
+                if (filePath.exists() && filePath.isFile()) {
+                    sendFile(peerId, filePath.getFile())
+                }
+            } catch (e: Exception) {
+                // Ignore errors in file request handling
             }
         }
     }
