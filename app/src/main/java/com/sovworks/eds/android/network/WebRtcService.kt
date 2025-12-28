@@ -111,7 +111,8 @@ object WebRtcService {
         return LocalSignalingClient(context, myId)
     }
 
-    private fun resolvePeerId(context: Context, settings: UserSettings): String {
+    @JvmStatic
+    fun resolvePeerId(context: Context, settings: UserSettings): String {
         val identity = IdentityManager.loadIdentity(context)
         if (identity != null && identity.id.isNotBlank()) {
             return identity.id

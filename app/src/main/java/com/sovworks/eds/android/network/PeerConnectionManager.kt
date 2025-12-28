@@ -71,6 +71,10 @@ class PeerConnectionManager(
             peerId,
             PeerConnectionRegistry.PeerStats(latency, packetLoss, bitrate)
         )
+
+        if (latency > 0) {
+            com.sovworks.eds.android.trust.TrustRankingManager.recordLatency(context, peerId, latency)
+        }
     }
 
     private val iceServers = listOf(

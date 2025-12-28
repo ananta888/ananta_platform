@@ -87,11 +87,14 @@ class VaultFileReceiver(
                 val actualChecksum = session.digest.digest().joinToString("") { "%02x".format(it) }
                 if (actualChecksum == expectedChecksum) {
                     FileTransferManager.markCompleted(session.transferId)
+                    com.sovworks.eds.android.trust.TrustRankingManager.recordSuccessfulTransfer(context, peerId, session.bytesReceived)
                 } else {
                     FileTransferManager.markFailed(session.transferId)
+                    com.sovworks.eds.android.trust.TrustRankingManager.recordFailedTransfer(context, peerId)
                 }
             } catch (e: Exception) {
                 FileTransferManager.markFailed(session.transferId)
+                com.sovworks.eds.android.trust.TrustRankingManager.recordFailedTransfer(context, peerId)
             }
         }
     }

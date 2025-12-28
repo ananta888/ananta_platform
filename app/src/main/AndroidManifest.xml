@@ -123,6 +123,13 @@
             android:windowSoftInputMode="adjustPan"/>
         <service android:name=".service.FileOpsService"/>
         <service android:name=".service.LocationsService"/>
+        <service
+            android:name=".network.FcmSignalingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
         <receiver android:name=".widgets.LocationShortcutWidget"
                   android:label="@string/eds_shortcut"
                   android:exported="true">

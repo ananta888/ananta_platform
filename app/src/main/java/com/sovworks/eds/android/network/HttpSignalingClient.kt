@@ -86,6 +86,25 @@ class HttpSignalingClient(
         })
     }
 
+    fun registerFcmToken(token: String) {
+        val bodyMap = mapOf(
+            "id" to myId,
+            "fcmToken" to token
+        )
+        val body = gson.toJson(bodyMap).toRequestBody(mediaType)
+        val request = Request.Builder()
+            .url("$serverUrl/register-fcm")
+            .post(body)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {}
+            override fun onResponse(call: Call, response: Response) {
+                response.close()
+            }
+        })
+    }
+
     private fun processMessage(msg: SignalingMessage) {
         when (msg.type) {
             "OFFER" -> listener?.onOfferReceived(msg.from, SessionDescription(SessionDescription.Type.OFFER, msg.data))

@@ -20,6 +20,14 @@ public class TrustedKey implements Serializable {
     private long expiresTimestamp;
     private List<TrustRecommendation> recommendations;
 
+    // Interaktionsstatistiken für automatisches Trust-Ranking
+    private int successfulTransfers;
+    private int failedTransfers;
+    private long totalBytesTransferred;
+    private long lastInteractionTimestamp;
+    private double cumulativeLatencyMs;
+    private int latencyMeasurements;
+
     public TrustedKey(String publicKey, String fingerprint, String name) {
         this.publicKey = publicKey;
         this.fingerprint = fingerprint;
@@ -108,5 +116,25 @@ public class TrustedKey implements Serializable {
 
     public void setExpiresTimestamp(long expiresTimestamp) {
         this.expiresTimestamp = expiresTimestamp;
+    }
+
+    public int getSuccessfulTransfers() { return successfulTransfers; }
+    public void incrementSuccessfulTransfers() { this.successfulTransfers++; this.lastInteractionTimestamp = System.currentTimeMillis(); }
+
+    public int getFailedTransfers() { return failedTransfers; }
+    public void incrementFailedTransfers() { this.failedTransfers++; this.lastInteractionTimestamp = System.currentTimeMillis(); }
+
+    public long getTotalBytesTransferred() { return totalBytesTransferred; }
+    public void addBytesTransferred(long bytes) { this.totalBytesTransferred += bytes; this.lastInteractionTimestamp = System.currentTimeMillis(); }
+
+    public long getLastInteractionTimestamp() { return lastInteractionTimestamp; }
+
+    public double getAverageLatencyMs() {
+        return latencyMeasurements > 0 ? cumulativeLatencyMs / latencyMeasurements : 0;
+    }
+    public void addLatencyMeasurement(long latencyMs) {
+        this.cumulativeLatencyMs += latencyMs;
+        this.latencyMeasurements++;
+        this.lastInteractionTimestamp = System.currentTimeMillis();
     }
 }

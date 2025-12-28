@@ -4,20 +4,28 @@
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform f\u00fcr sichere Kommunikation und Dateiaustausch.",
   "tasks": [
     {
-      "id": 24,
-      "title": "Push-Benachrichtigungen f\u00fcr Signaling",
-      "description": "Integration von Firebase Cloud Messaging f\u00fcr zuverl\u00e4ssigere Signalisierung im Hintergrund.",
-      "priority": "medium",
+      "id": 26,
+      "title": "E2E-Verschl\u00fcsselung f\u00fcr Data Channels",
+      "description": "Zus\u00e4tzliche Ende-zu-Ende Verschl\u00fcsselung auf Applikationsebene f\u00fcr alle WebRTC Data Channels basierend auf Peer-Identit\u00e4ten.",
+      "priority": "high",
       "status": "todo",
-      "category": "Network"
+      "category": "Security"
     },
     {
-      "id": 25,
-      "title": "Automatisches Trust-Ranking",
-      "description": "Implementierung eines Algorithmus zur automatischen Bewertung der Vertrauensw\u00fcrdigkeit von Peers basierend auf Interaktionen.",
-      "priority": "low",
+      "id": 27,
+      "title": "Dezentrale Gruppen-Verwaltung",
+      "description": "Implementierung eines Protokolls zur Erstellung und Verwaltung von Gruppen ohne zentralen Server.",
+      "priority": "medium",
       "status": "todo",
       "category": "Identity"
+    },
+    {
+      "id": 28,
+      "title": "Key-Rotation Automatisierung",
+      "description": "Automatische Erneuerung von Ed25519 Identity Keys nach einem festgelegten Zeitraum oder bei Verdacht auf Kompromittierung.",
+      "priority": "low",
+      "status": "todo",
+      "category": "Security"
     }
   ],
   "architecture_goals": [

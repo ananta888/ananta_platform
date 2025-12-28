@@ -101,6 +101,9 @@ object TrustNetworkManager {
         
         // Basis: Unser direktes Vertrauen (0-5)
         var score = key.trustLevel.toDouble()
+
+        // Automatisches Trust-Ranking basierend auf Interaktionen
+        score += TrustRankingManager.calculateInteractionScore(key)
         
         // Empfehlungen von anderen einbeziehen
         for (rec in key.getRecommendations()) {
