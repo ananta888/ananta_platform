@@ -20,11 +20,8 @@ public abstract class SettingsBaseActivity extends DrawerActivityBase
         super.onCreate(savedInstanceState);
         if(UserSettings.getSettings(this).isFlagSecureEnabled())
             CompatHelper.setWindowFlagSecure(this);
-        if(savedInstanceState == null)
-            getSupportFragmentManager().
-                beginTransaction().
-                replace(R.id.content_frame, getSettingsFragment(), SETTINGS_FRAGMENT_TAG).
-                commit();
+        
+        com.sovworks.eds.android.ui.ComposeIntegrationKt.setSettingsContent(this, com.sovworks.eds.android.navigation.Screen.Settings.INSTANCE);
     }
 
     protected abstract Fragment getSettingsFragment();

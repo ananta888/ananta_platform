@@ -41,27 +41,42 @@ fun FileListScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            if (state.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else if (state.error != null) {
-                Text(
-                    text = state.error ?: "Unknown error",
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(state.items) { record ->
-                        FileListItem(
-                            record = record,
-                            isSelected = state.selectedItems.contains(record),
-                            onItemClick = {
-                                viewModel.onEvent(FileListEvent.ItemClicked(record), context)
-                            },
-                            onItemLongClick = {
-                                viewModel.onEvent(FileListEvent.ItemSelected(record), context)
-                            }
-                        )
-                    }
+            FileListContent(
+                state = state,
+                onItemClick = { record ->
+                    viewModel.onEvent(FileListEvent.ItemClicked(record), context)
+                },
+                onItemLongClick = { record ->
+                    viewModel.onEvent(FileListEvent.ItemSelected(record), context)
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun FileListContent(
+    state: com.sovworks.eds.android.filemanager.viewmodel.FileListState,
+    onItemClick: (com.sovworks.eds.android.filemanager.records.BrowserRecord) -> Unit,
+    onItemLongClick: (com.sovworks.eds.android.filemanager.records.BrowserRecord) -> Unit
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (state.isLoading) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        } else if (state.error != null) {
+            Text(
+                text = state.error ?: "Unknown error",
+                modifier = Modifier.align(Alignment.Center)
+            )
+        } else {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(state.items) { record ->
+                    FileListItem(
+                        record = record,
+                        isSelected = state.selectedItems.contains(record),
+                        onItemClick = { onItemClick(record) },
+                        onItemLongClick = { onItemLongClick(record) }
+                    )
                 }
             }
         }

@@ -93,7 +93,11 @@ public class EdsApplicationBase extends MultiDexApplication
     public void onCreate()
 	{
 		super.onCreate();
-		PRNGFixes.apply();
+		try {
+			PRNGFixes.apply();
+		} catch (Throwable e) {
+			Logger.log(e);
+		}
 
 		SystemConfig.setInstance(new com.sovworks.eds.android.settings.SystemConfig(getApplicationContext()));
 
@@ -105,6 +109,7 @@ public class EdsApplicationBase extends MultiDexApplication
 		catch (Throwable e)
 		{
 			e.printStackTrace();
+			Logger.log("Failed to get settings: " + e.getMessage());
 			Toast.makeText(this, Logger.getExceptionMessage(this, e), Toast.LENGTH_LONG).show();
 			return;
 		}

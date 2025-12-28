@@ -352,31 +352,27 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
             showPreviewFragment(contextPath);
 	}
 
+    private boolean _initFinished = false;
+
     @Override
 	public void onCreate(Bundle savedInstanceState)
 	{
-        SplashScreen.installSplashScreen(this);
+        SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
+        splashScreen.setKeepOnScreenCondition(() -> false);
 
 	    if(GlobalConfig.isTest())
 	        TEST_INIT_OBSERVABLE.onNext(false);
         Util.setTheme(this);
 	    super.onCreate(savedInstanceState);
+        
+        com.sovworks.eds.android.ui.ComposeIntegrationKt.setAppContent(this);
+
         Logger.debug("fm start intent: " + getIntent());
         _settings = UserSettings.getSettings(this);
         if(_settings.isFlagSecureEnabled())
             CompatHelper.setWindowFlagSecure(this);
 	    _isLargeScreenLayout = UserSettings.isWideScreenLayout(_settings, this);
-        getLayoutInflater().inflate(R.layout.main_activity, findViewById(R.id.content_frame));
-	    Fragment f = getSupportFragmentManager().findFragmentById(R.id.fragment2);
-	    if(f!=null)
-        {
-            View panel = findViewById(R.id.fragment2);
-            if (panel != null)
-                panel.setVisibility(View.VISIBLE);
-            panel = findViewById(R.id.fragment1);
-            if (panel != null)
-                panel.setVisibility(View.GONE);
-        }
+        
         EdsApplication.getExitObservable()
                 .compose(bindToLifecycle())
                 .subscribe(v -> finish(), err -> Logger.log(err));
@@ -385,14 +381,15 @@ public abstract class FileManagerActivityBase extends DrawerActivityBase impleme
         CompatHelper.registerReceiver(this, _locationChangedReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED), false);
         CompatHelper.registerReceiver(this, _locationAddedOrRemovedReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED), false);
 
-        getDrawerController().init(savedInstanceState);
         AppInitHelper.
                 createObservable(this).
                 compose(bindToLifecycleCompletable()).
                 subscribe(() -> {
+                    _initFinished = true;
                     startAction(savedInstanceState);
-                    addFileListFragments();
+                    rereadCurrentLocation();
                 }, err -> {
+                        _initFinished = true;
                         if(!(err instanceof CancellationException))
                             Logger.showAndLog(getApplicationContext(), err);
                 });

@@ -14,21 +14,39 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.sovworks.eds.locations.Location
 
+import com.sovworks.eds.android.navigation.Screen
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BreadcrumbBar(
-    breadcrumbs: List<Location>,
+    screens: List<Screen>,
+    locations: List<Location>,
     onMenuClick: () -> Unit,
-    onBreadcrumbClick: (Location) -> Unit
+    onScreenClick: (Screen) -> Unit,
+    onLocationClick: (Location) -> Unit
 ) {
     TopAppBar(
         title = {
             LazyRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                itemsIndexed(breadcrumbs) { index, location ->
+                itemsIndexed(screens) { index, screen ->
                     TextButton(
-                        onClick = { onBreadcrumbClick(location) },
+                        onClick = { onScreenClick(screen) },
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = screen.title,
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+                    if (index < screens.size - 1 || locations.isNotEmpty()) {
+                        BreadcrumbSeparator()
+                    }
+                }
+                itemsIndexed(locations) { index, location ->
+                    TextButton(
+                        onClick = { onLocationClick(location) },
                         contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)
                     ) {
                         Text(
@@ -36,13 +54,8 @@ fun BreadcrumbBar(
                             style = MaterialTheme.typography.labelLarge
                         )
                     }
-                    if (index < breadcrumbs.size - 1) {
-                        Text(
-                            text = ">",
-                            style = MaterialTheme.typography.labelMedium,
-                            modifier = Modifier.padding(horizontal = 2.dp),
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
-                        )
+                    if (index < locations.size - 1) {
+                        BreadcrumbSeparator()
                     }
                 }
             }
@@ -57,5 +70,15 @@ fun BreadcrumbBar(
             titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
         )
+    )
+}
+
+@Composable
+fun BreadcrumbSeparator() {
+    Text(
+        text = ">",
+        style = MaterialTheme.typography.labelMedium,
+        modifier = Modifier.padding(horizontal = 2.dp),
+        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
     )
 }

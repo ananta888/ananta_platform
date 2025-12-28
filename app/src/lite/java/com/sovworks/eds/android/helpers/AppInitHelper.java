@@ -22,20 +22,22 @@ public class AppInitHelper extends AppInitHelperBase
     void startInitSequence()
     {
         MasterPasswordDialog.getObservable(_activity).
+                observeOn(io.reactivex.rxjava3.android.schedulers.AndroidSchedulers.mainThread()).
                 flatMapCompletable(isValidPassword ->
                 {
                     if (isValidPassword)
                         return ExtStorageWritePermisisonCheckFragment.getObservable(_activity);
-                    throw new UserException(_activity, R.string.invalid_master_password);
+                    throw new com.sovworks.eds.android.errors.UserException(_activity, R.string.invalid_master_password);
                 }).
-
+                observeOn(io.reactivex.rxjava3.schedulers.Schedulers.io()).
+                andThen(io.reactivex.rxjava3.core.Completable.fromAction(this::convertLegacySettings)).
+                observeOn(io.reactivex.rxjava3.android.schedulers.AndroidSchedulers.mainThread()).
                 compose(((RxLifecycleProvider)_activity).bindToLifecycleCompletable()).
                 subscribe(() -> {
-                    convertLegacySettings();
                     _initFinished.onComplete();
                 }, err ->
                 {
-                    if(!(err instanceof CancellationException))
+                    if(!(err instanceof java.util.concurrent.CancellationException))
                         Logger.log(err);
                     _initFinished.onError(err);
                 });
