@@ -4,28 +4,20 @@
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform f\u00fcr sichere Kommunikation und Dateiaustausch.",
   "tasks": [
     {
-      "id": 26,
-      "title": "E2E-Verschl\u00fcsselung f\u00fcr Data Channels",
-      "description": "Zus\u00e4tzliche Ende-zu-Ende Verschl\u00fcsselung auf Applikationsebene f\u00fcr alle WebRTC Data Channels basierend auf Peer-Identit\u00e4ten.",
-      "priority": "high",
-      "status": "todo",
-      "category": "Security"
-    },
-    {
-      "id": 27,
-      "title": "Dezentrale Gruppen-Verwaltung",
-      "description": "Implementierung eines Protokolls zur Erstellung und Verwaltung von Gruppen ohne zentralen Server.",
+      "id": 29,
+      "title": "Dezentrale Dateisuche",
+      "description": "Protokoll zur Suche von freigegebenen Dateien \u00fcber das Trust-Network ohne Index-Server.",
       "priority": "medium",
       "status": "todo",
-      "category": "Identity"
+      "category": "Discovery"
     },
     {
-      "id": 28,
-      "title": "Key-Rotation Automatisierung",
-      "description": "Automatische Erneuerung von Ed25519 Identity Keys nach einem festgelegten Zeitraum oder bei Verdacht auf Kompromittierung.",
+      "id": 30,
+      "title": "Offline-Messaging via Store-and-Forward",
+      "description": "Implementierung eines Mechanismus zum Zwischenspeichern von verschl\u00fcsselten Nachrichten auf vertrauensw\u00fcrdigen Peers.",
       "priority": "low",
       "status": "todo",
-      "category": "Security"
+      "category": "Network"
     }
   ],
   "architecture_goals": [

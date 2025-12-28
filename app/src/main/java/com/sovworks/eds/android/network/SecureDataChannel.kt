@@ -4,16 +4,20 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.webrtc.DataChannel
+import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
+import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import java.nio.ByteBuffer
 import java.util.ArrayDeque
 
 class SecureDataChannel(
     private val channel: DataChannel,
     isInitiator: Boolean,
+    localIdentityKey: Ed25519PrivateKeyParameters,
+    remoteIdentityKey: Ed25519PublicKeyParameters,
     private val onTextMessage: (String) -> Unit,
     private val onBinaryMessage: (ByteArray) -> Unit
 ) : DataChannel.Observer {
-    private val pfsSession = PfsSession(isInitiator)
+    private val pfsSession = PfsSession(isInitiator, localIdentityKey, remoteIdentityKey)
     private val pendingText = ArrayDeque<String>()
     private val pendingBinary = ArrayDeque<ByteArray>()
     

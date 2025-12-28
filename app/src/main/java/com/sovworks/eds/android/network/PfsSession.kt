@@ -11,10 +11,17 @@ import org.bouncycastle.crypto.agreement.X25519Agreement
 import org.bouncycastle.crypto.digests.SHA256Digest
 import org.bouncycastle.crypto.generators.HKDFBytesGenerator
 import org.bouncycastle.crypto.params.HKDFParameters
+import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
+import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import org.bouncycastle.crypto.params.X25519PrivateKeyParameters
 import org.bouncycastle.crypto.params.X25519PublicKeyParameters
+import org.bouncycastle.crypto.signers.Ed25519Signer
 
-class PfsSession(private val isInitiator: Boolean) {
+class PfsSession(
+    private val isInitiator: Boolean,
+    private val localIdentityKey: Ed25519PrivateKeyParameters,
+    private val remoteIdentityKey: Ed25519PublicKeyParameters
+) {
     private val rng = SecureRandom()
     private var localKey: X25519PrivateKeyParameters? = null
     private var remoteKey: X25519PublicKeyParameters? = null
@@ -36,7 +43,13 @@ class PfsSession(private val isInitiator: Boolean) {
         val pubKey = key.generatePublicKey().encoded
         val dhPubKey = dhLocalKey.generatePublicKey().encoded
         
-        val payload = Base64.encodeToString(pubKey + dhPubKey, Base64.NO_WRAP)
+        val dataToSign = pubKey + dhPubKey
+        val signer = Ed25519Signer()
+        signer.init(true, localIdentityKey)
+        signer.update(dataToSign, 0, dataToSign.size)
+        val signature = signer.generateSignature()
+        
+        val payload = Base64.encodeToString(dataToSign + signature, Base64.NO_WRAP)
         sendControl("${PFS_HELLO_PREFIX}$payload")
         helloSent = true
     }
@@ -45,10 +58,20 @@ class PfsSession(private val isInitiator: Boolean) {
         if (message.startsWith(PFS_HELLO_PREFIX)) {
             val payload = message.removePrefix(PFS_HELLO_PREFIX)
             val decoded = Base64.decode(payload, Base64.NO_WRAP)
-            if (decoded.size < 64) return false
+            if (decoded.size < 64 + 64) return false
             
             val pubKeyBytes = decoded.copyOfRange(0, 32)
             val dhPubKeyBytes = decoded.copyOfRange(32, 64)
+            val signature = decoded.copyOfRange(64, 128)
+            
+            val dataToVerify = decoded.copyOfRange(0, 64)
+            val verifier = Ed25519Signer()
+            verifier.init(false, remoteIdentityKey)
+            verifier.update(dataToVerify, 0, dataToVerify.size)
+            
+            if (!verifier.verifySignature(signature)) {
+                return false
+            }
             
             remoteKey = X25519PublicKeyParameters(pubKeyBytes, 0)
             dhRemoteKey = X25519PublicKeyParameters(dhPubKeyBytes, 0)

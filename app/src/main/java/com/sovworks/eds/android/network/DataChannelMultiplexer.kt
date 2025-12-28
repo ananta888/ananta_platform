@@ -1,6 +1,11 @@
 package com.sovworks.eds.android.network
 
 import kotlinx.coroutines.flow.first
+import android.content.Context
+import android.util.Base64
+import com.sovworks.eds.android.identity.IdentityManager
+import com.sovworks.eds.android.trust.TrustStore
+import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import org.webrtc.DataChannel
 import java.util.concurrent.ConcurrentHashMap
 
@@ -10,7 +15,7 @@ interface DataChannelListener {
 }
 
 class DataChannelMultiplexer(
-    private val peerConnectionManager: PeerConnectionManager
+    private val context: Context
 ) {
     private val chatChannels = ConcurrentHashMap<String, SecureDataChannel>()
     private val fileChannels = ConcurrentHashMap<String, SecureDataChannel>()
@@ -32,9 +37,18 @@ class DataChannelMultiplexer(
     }
 
     private fun setupChatChannel(peerId: String, channel: DataChannel, isInitiator: Boolean) {
+        val localIdentity = IdentityManager.loadIdentity(context) ?: return
+        val localPrivateKey = IdentityManager.getDecryptedPrivateKey(localIdentity) ?: return
+        
+        val trustStore = TrustStore.getInstance(context)
+        val trustedKey = trustStore.getKey(peerId) ?: return
+        val remotePublicKey = Ed25519PublicKeyParameters(Base64.decode(trustedKey.getPublicKey(), Base64.NO_WRAP), 0)
+
         chatChannels[peerId] = SecureDataChannel(
             channel = channel,
             isInitiator = isInitiator,
+            localIdentityKey = localPrivateKey,
+            remoteIdentityKey = remotePublicKey,
             onTextMessage = { message ->
                 listeners.forEach { it.onMessageReceived(peerId, message) }
             },
@@ -43,9 +57,18 @@ class DataChannelMultiplexer(
     }
 
     private fun setupFileChannel(peerId: String, channel: DataChannel, isInitiator: Boolean) {
+        val localIdentity = IdentityManager.loadIdentity(context) ?: return
+        val localPrivateKey = IdentityManager.getDecryptedPrivateKey(localIdentity) ?: return
+        
+        val trustStore = TrustStore.getInstance(context)
+        val trustedKey = trustStore.getKey(peerId) ?: return
+        val remotePublicKey = Ed25519PublicKeyParameters(Base64.decode(trustedKey.getPublicKey(), Base64.NO_WRAP), 0)
+
         fileChannels[peerId] = SecureDataChannel(
             channel = channel,
             isInitiator = isInitiator,
+            localIdentityKey = localPrivateKey,
+            remoteIdentityKey = remotePublicKey,
             onTextMessage = { message ->
                 listeners.forEach { it.onMessageReceived(peerId, message) }
             },

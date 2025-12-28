@@ -1,18 +1,33 @@
 package com.sovworks.eds.android.network
 
+import org.bouncycastle.crypto.generators.Ed25519KeyPairGenerator
+import org.bouncycastle.crypto.params.Ed25519KeyGenerationParameters
+import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
+import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.security.SecureRandom
 import java.util.Arrays
 
 @RunWith(RobolectricTestRunner::class)
 class PfsSessionTest {
 
+    private fun generateIdentityKeys(): Pair<Ed25519PrivateKeyParameters, Ed25519PublicKeyParameters> {
+        val generator = Ed25519KeyPairGenerator()
+        generator.init(Ed25519KeyGenerationParameters(SecureRandom()))
+        val keyPair = generator.generateKeyPair()
+        return (keyPair.private as Ed25519PrivateKeyParameters) to (keyPair.public as Ed25519PublicKeyParameters)
+    }
+
     @Test
     fun testHandshakeAndCommunication() {
-        val alice = PfsSession(isInitiator = true)
-        val bob = PfsSession(isInitiator = false)
+        val (alicePriv, alicePub) = generateIdentityKeys()
+        val (bobPriv, bobPub) = generateIdentityKeys()
+
+        val alice = PfsSession(isInitiator = true, localIdentityKey = alicePriv, remoteIdentityKey = bobPub)
+        val bob = PfsSession(isInitiator = false, localIdentityKey = bobPriv, remoteIdentityKey = alicePub)
 
         var aliceToBobMsg: String? = null
         var bobToAliceMsg: String? = null
@@ -52,8 +67,11 @@ class PfsSessionTest {
 
     @Test
     fun testSequentialMessages() {
-        val alice = PfsSession(isInitiator = true)
-        val bob = PfsSession(isInitiator = false)
+        val (alicePriv, alicePub) = generateIdentityKeys()
+        val (bobPriv, bobPub) = generateIdentityKeys()
+
+        val alice = PfsSession(isInitiator = true, localIdentityKey = alicePriv, remoteIdentityKey = bobPub)
+        val bob = PfsSession(isInitiator = false, localIdentityKey = bobPriv, remoteIdentityKey = alicePub)
 
         alice.ensureHello { msg -> bob.handleControl(msg, { msg2 -> alice.handleControl(msg2, {}) }) }
 
@@ -67,8 +85,11 @@ class PfsSessionTest {
 
     @Test
     fun testDoubleRatchet() {
-        val alice = PfsSession(isInitiator = true)
-        val bob = PfsSession(isInitiator = false)
+        val (alicePriv, alicePub) = generateIdentityKeys()
+        val (bobPriv, bobPub) = generateIdentityKeys()
+
+        val alice = PfsSession(isInitiator = true, localIdentityKey = alicePriv, remoteIdentityKey = bobPub)
+        val bob = PfsSession(isInitiator = false, localIdentityKey = bobPriv, remoteIdentityKey = alicePub)
 
         alice.ensureHello { msg -> bob.handleControl(msg, { msg2 -> alice.handleControl(msg2, {}) }) }
 

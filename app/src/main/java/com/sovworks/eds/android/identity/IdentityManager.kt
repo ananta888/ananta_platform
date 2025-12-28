@@ -51,7 +51,8 @@ object IdentityManager {
             privateKeyBase64 = encryptionResult.data,
             ivBase64 = encryptionResult.iv,
             previousPublicKeyBase64 = currentIdentity.publicKeyBase64,
-            rotationSignatureBase64 = Base64.encodeToString(rotationSignature, Base64.NO_WRAP)
+            rotationSignatureBase64 = Base64.encodeToString(rotationSignature, Base64.NO_WRAP),
+            lastRotationTimestamp = System.currentTimeMillis()
         )
 
         saveIdentity(context, newIdentity)
@@ -102,6 +103,11 @@ object IdentityManager {
         } else {
             null
         }
+    }
+
+    fun shouldRotate(identity: Identity): Boolean {
+        val nextRotation = identity.lastRotationTimestamp + (identity.rotationIntervalDays.toLong() * 24 * 60 * 60 * 1000)
+        return System.currentTimeMillis() > nextRotation
     }
 
     fun generateSeed(): ByteArray {

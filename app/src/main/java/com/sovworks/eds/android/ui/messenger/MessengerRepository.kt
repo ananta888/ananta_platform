@@ -4,14 +4,12 @@ import com.sovworks.eds.android.network.DataChannelListener
 import com.sovworks.eds.android.network.WebRtcService
 import com.sovworks.eds.android.db.AppDatabase
 import com.sovworks.eds.android.db.ChatMessageEntity
+import com.sovworks.eds.android.db.ChatGroupEntity
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 import com.sovworks.eds.android.security.SecurityUtils
@@ -64,6 +62,22 @@ object MessengerRepository : DataChannelListener {
                 _messages.value = mappedMessages
             }
         }
+
+        // Load groups from database
+        scope.launch {
+            database?.groupDao()?.getAllGroups()?.collect { entities ->
+                val mappedGroups = entities.associate { entity ->
+                    val groupKey = entity.groupKeyBase64?.let { SecurityUtils.stringToKey(it) }
+                    entity.id to ChatGroup(
+                        id = entity.id,
+                        name = entity.name,
+                        memberIds = entity.memberIds.split(",").filter { it.isNotEmpty() }.toSet(),
+                        groupKey = groupKey
+                    )
+                }
+                _groups.value = mappedGroups
+            }
+        }
     }
 
     fun createGroup(name: String, memberIds: Set<String>): String {
@@ -71,11 +85,57 @@ object MessengerRepository : DataChannelListener {
         val groupKey = SecurityUtils.generateGroupKey()
         val group = ChatGroup(groupId, name, memberIds, groupKey)
         _groups.update { it + (groupId to group) }
+
+        // Save to database
+        scope.launch {
+            database?.groupDao()?.insertGroup(ChatGroupEntity(
+                id = groupId,
+                name = name,
+                memberIds = memberIds.joinToString(","),
+                groupKeyBase64 = SecurityUtils.keyToString(groupKey)
+            ))
+        }
+
+        // Send invite to all members
+        val invitePayload = "GROUP_INVITE:$groupId:$name:${memberIds.joinToString(",")}:${SecurityUtils.keyToString(groupKey)}"
+        val manager = WebRtcService.getPeerConnectionManager()
+        memberIds.forEach { memberId ->
+            manager?.getMultiplexer()?.sendMessage(memberId, invitePayload)
+        }
+
         return groupId
+    }
+
+    private fun handleGroupInvite(peerId: String, payload: String) {
+        // Format: GROUP_INVITE:groupId:name:memberIds:groupKey
+        val parts = payload.removePrefix("GROUP_INVITE:").split(":", limit = 4)
+        if (parts.size < 4) return
+        val groupId = parts[0]
+        val name = parts[1]
+        val memberIds = parts[2].split(",").toSet()
+        val groupKey = SecurityUtils.stringToKey(parts[3])
+
+        val group = ChatGroup(groupId, name, memberIds, groupKey)
+        _groups.update { it + (groupId to group) }
+
+        // Save to database
+        scope.launch {
+            database?.groupDao()?.insertGroup(ChatGroupEntity(
+                id = groupId,
+                name = name,
+                memberIds = parts[2],
+                groupKeyBase64 = parts[3]
+            ))
+        }
     }
 
     override fun onMessageReceived(peerId: String, message: String) {
         if (message.startsWith("TRUST_PACKAGE:")) return 
+
+        if (message.startsWith("GROUP_INVITE:")) {
+            handleGroupInvite(peerId, message)
+            return
+        }
 
         if (message.startsWith("GROUP_MSG:")) {
             handleGroupMessage(peerId, message)

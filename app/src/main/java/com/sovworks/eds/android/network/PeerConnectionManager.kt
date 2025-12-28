@@ -81,7 +81,7 @@ class PeerConnectionManager(
         PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer()
     )
     
-    private val multiplexer = DataChannelMultiplexer(this)
+    private val multiplexer = DataChannelMultiplexer(context)
     private val vaultFileReceiver = VaultFileReceiver(context)
     private val vaultFileSender = VaultFileSender(multiplexer)
 
@@ -233,7 +233,9 @@ class PeerConnectionManager(
         val trustStore = TrustStore.getInstance(context)
         val trustedKeys = trustStore.allKeys.values.filter { it.status == TrustedKey.TrustStatus.TRUSTED }
         
-        val pkg = TrustNetworkManager.exportTrustNetwork(identity, trustedKeys) ?: return
+        val rotation = identity.getRotationCertificate()
+        val rotations = if (rotation != null) listOf(rotation) else emptyList()
+        val pkg = TrustNetworkManager.exportTrustNetwork(identity, trustedKeys, rotations) ?: return
         val json = Gson().toJson(pkg)
         multiplexer.sendMessage(peerId, "TRUST_PACKAGE:$json")
     }
