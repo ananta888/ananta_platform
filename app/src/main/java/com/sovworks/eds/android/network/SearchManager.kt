@@ -3,6 +3,7 @@ package com.sovworks.eds.android.network
 import android.content.Context
 import com.google.gson.Gson
 import com.sovworks.eds.android.identity.IdentityManager
+import com.sovworks.eds.android.trust.TrustNetworkManager
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -10,6 +11,7 @@ class SearchManager private constructor(private val context: Context) {
     private val gson = Gson()
     private val processedRequests = Collections.synchronizedSet(mutableSetOf<String>())
     private val searchListeners = mutableListOf<(SearchResponse) -> Unit>()
+    private var minTrustLevel: Double = 0.0
     
     // Multiplexer wird später gesetzt oder über eine Methode bezogen um zirkuläre Abhängigkeiten zu vermeiden
     private var multiplexer: DataChannelMultiplexer? = null
@@ -26,12 +28,17 @@ class SearchManager private constructor(private val context: Context) {
         searchListeners.remove(listener)
     }
 
+    fun setMinTrustLevel(level: Double) {
+        this.minTrustLevel = level
+    }
+
     fun search(query: String) {
         val identity = IdentityManager.loadIdentity(context) ?: return
         val request = SearchRequest(
             requestId = UUID.randomUUID().toString(),
             query = query,
-            senderId = identity.getFingerprint()
+            senderId = identity.getFingerprint(),
+            minTrustLevel = this.minTrustLevel
         )
         processedRequests.add(request.requestId)
         
@@ -87,6 +94,9 @@ class SearchManager private constructor(private val context: Context) {
     }
 
     private fun handleSearchResponse(response: SearchResponse) {
+        val trustRank = TrustNetworkManager.calculateTrustRank(context, response.peerId)
+        if (trustRank < this.minTrustLevel) return
+        
         searchListeners.forEach { it(response) }
     }
 

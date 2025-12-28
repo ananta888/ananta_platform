@@ -8,6 +8,7 @@ import android.widget.BaseAdapter
 import android.widget.ListView
 import android.widget.ProgressBar
 import android.widget.SearchView
+import android.widget.SeekBar
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.sovworks.eds.android.R
@@ -21,6 +22,8 @@ class SearchFragment : Fragment() {
     private lateinit var resultsList: ListView
     private lateinit var progress: ProgressBar
     private lateinit var noResultsText: TextView
+    private lateinit var trustSeekBar: SeekBar
+    private lateinit var trustValueText: TextView
     private lateinit var adapter: SearchResultsAdapter
     private val results = mutableListOf<Pair<String, SharedFile>>()
 
@@ -40,9 +43,22 @@ class SearchFragment : Fragment() {
         resultsList = view.findViewById(R.id.search_results_list)
         progress = view.findViewById(R.id.search_progress)
         noResultsText = view.findViewById(R.id.no_results_text)
+        trustSeekBar = view.findViewById(R.id.trust_filter_seekbar)
+        trustValueText = view.findViewById(R.id.trust_value_text)
 
         adapter = SearchResultsAdapter(results)
         resultsList.adapter = adapter
+
+        trustSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val value = progress.toDouble() / 10.0
+                trustValueText.text = value.toString()
+                SearchManager.getInstance(requireContext()).setMinTrustLevel(value)
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
 
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {

@@ -4,28 +4,28 @@
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform f\u00fcr sichere Kommunikation und Dateiaustausch.",
   "tasks": [
     {
-      "id": 36,
-      "title": "Thumbnail-Vorschau f\u00fcr Medien",
-      "description": "Erzeugung und Versand von kleinen Thumbnails f\u00fcr Bilder und Videos vor dem vollst\u00e4ndigen Download.",
-      "priority": "high",
+      "id": 39,
+      "title": "Verbesserte Video-Thumbnails",
+      "description": "Erzeugung von Thumbnails für Videos durch temporäre Entschlüsselung des Streams.",
+      "priority": "low",
       "status": "todo",
       "category": "UI"
     },
     {
-      "id": 37,
-      "title": "Gruppen-Trust Synchronisation",
-      "description": "Erweiterung der Trust-Synchronisation auf Gruppenmitglieder (indirektes Vertrauen).",
-      "priority": "low",
-      "status": "todo",
-      "category": "Trust"
-    },
-    {
-      "id": 38,
-      "title": "Trust-basierte Suchfilter",
-      "description": "Optionale Filterung der Suchergebnisse nach Mindest-Trust-Level.",
+      "id": 40,
+      "title": "Datei-Integritätsprüfung (Hintergrund)",
+      "description": "Periodische Hintergrundprüfung der SHA-256 Hashes für alle in der Exchange-Plattform angebotenen Dateien.",
       "priority": "low",
       "status": "todo",
       "category": "Exchange"
+    },
+    {
+      "id": 41,
+      "title": "Anonyme Relay-Knoten",
+      "description": "Implementierung von Relay-Support für WebRTC-Transfers über vertrauenswürdige Peers (Multi-Hop Transfer).",
+      "priority": "high",
+      "status": "todo",
+      "category": "Network"
     }
   ],
   "architecture_goals": [

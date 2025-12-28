@@ -6,6 +6,12 @@ import com.sovworks.eds.android.db.AppDatabase
 import com.sovworks.eds.android.db.ChatMessageEntity
 import com.sovworks.eds.android.db.ChatGroupEntity
 import android.content.Context
+import com.google.gson.Gson
+import com.sovworks.eds.android.identity.IdentityManager
+import com.sovworks.eds.android.trust.TrustNetworkManager
+import com.sovworks.eds.android.trust.TrustNetworkPackage
+import com.sovworks.eds.android.trust.TrustStore
+import com.sovworks.eds.android.trust.TrustedKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -37,10 +43,12 @@ object MessengerRepository : DataChannelListener {
     private val _groups = MutableStateFlow<Map<String, ChatGroup>>(emptyMap())
     val groups: StateFlow<Map<String, ChatGroup>> = _groups.asStateFlow()
 
+    private var context: Context? = null
     private var database: AppDatabase? = null
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     fun initialize(context: Context) {
+        this.context = context.applicationContext
         WebRtcService.getPeerConnectionManager()?.getMultiplexer()?.addListener(this)
         
         database = AppDatabase.getDatabase(context)
@@ -184,6 +192,14 @@ object MessengerRepository : DataChannelListener {
 
         try {
             val decryptedText = SecurityUtils.decrypt(encryptedText, iv, groupKey)
+            
+            if (decryptedText.startsWith("TRUST_SYNC:")) {
+                val json = decryptedText.substringAfter("TRUST_SYNC:")
+                val networkPackage = Gson().fromJson(json, TrustNetworkPackage::class.java)
+                TrustNetworkManager.verifyAndImportNetwork(context!!, networkPackage)
+                return
+            }
+
             val chatMessage = ChatMessage(
                 senderId = peerId,
                 text = decryptedText,
@@ -234,6 +250,17 @@ object MessengerRepository : DataChannelListener {
             groupId = groupId
         )
         addMessage(groupId, chatMessage)
+    }
+
+    fun shareTrustWithGroup(groupId: String) {
+        val currentContext = context ?: return
+        val identity = IdentityManager.loadIdentity(currentContext) ?: return
+        val trustStore = TrustStore.getInstance(currentContext)
+        val trustedKeys = trustStore.getAllKeys().values.filter { it.status == TrustedKey.TrustStatus.TRUSTED }
+        
+        val networkPackage = TrustNetworkManager.exportTrustNetwork(identity, trustedKeys) ?: return
+        val json = Gson().toJson(networkPackage)
+        sendGroupMessage(groupId, "TRUST_SYNC:$json")
     }
 
     private fun addMessage(chatId: String, message: ChatMessage) {

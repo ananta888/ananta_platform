@@ -14,5 +14,6 @@ data class FileTransferEntity(
     val bytesTransferred: Long,
     val totalBytes: Long?,
     val status: String,
+    val thumbnail: ByteArray?,
     val updatedAt: Long
 )

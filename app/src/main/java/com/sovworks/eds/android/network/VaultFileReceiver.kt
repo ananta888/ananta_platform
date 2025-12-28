@@ -5,6 +5,7 @@ import com.sovworks.eds.fs.File
 import com.sovworks.eds.locations.LocationsManager
 import com.sovworks.eds.android.locations.EncFsLocation
 import com.sovworks.eds.android.transfer.FileTransferManager
+import android.util.Base64
 import java.io.OutputStream
 import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
@@ -28,17 +29,27 @@ class VaultFileReceiver(
     override fun onMessageReceived(peerId: String, message: String) {
         if (message.startsWith("FILE_START:")) {
             val payload = message.substringAfter("FILE_START:")
-            val parts = payload.split('|', limit = 2)
+            val parts = payload.split('|')
             val fileName = parts.getOrNull(0) ?: return
             val totalBytes = parts.getOrNull(1)?.toLongOrNull()
-            startNewTransfer(peerId, fileName, totalBytes)
+            val thumbnailPart = parts.getOrNull(2)
+            val thumbnail = if (thumbnailPart?.startsWith("THUMB:") == true) {
+                try {
+                    Base64.decode(thumbnailPart.substringAfter("THUMB:"), Base64.NO_WRAP)
+                } catch (e: Exception) {
+                    null
+                }
+            } else {
+                null
+            }
+            startNewTransfer(peerId, fileName, totalBytes, thumbnail)
         } else if (message.startsWith("FILE_END:")) {
             val checksum = message.substringAfter("FILE_END:")
             finishTransfer(peerId, checksum)
         }
     }
 
-    private fun startNewTransfer(peerId: String, fileName: String, totalBytes: Long?) {
+    private fun startNewTransfer(peerId: String, fileName: String, totalBytes: Long?, thumbnail: ByteArray?) {
         val lm = LocationsManager.getLocationsManager(context)
         // Finde die erste offene verschlüsselte Location
         val location = lm.getLoadedLocations(false).filterIsInstance<EncFsLocation>().firstOrNull { it.isOpen }
@@ -49,6 +60,9 @@ class VaultFileReceiver(
                 val newFile = parentDir.createFile(fileName)
                 val outputStream = newFile.getOutputStream()
                 val transferId = FileTransferManager.startIncomingTransfer(peerId, fileName, totalBytes)
+                if (thumbnail != null) {
+                    FileTransferManager.setThumbnail(transferId, thumbnail)
+                }
                 activeTransfers[peerId] = FileTransferSession(
                     transferId = transferId,
                     fileName = fileName,

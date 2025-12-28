@@ -45,6 +45,7 @@ object FileTransferManager {
                         bytesTransferred = entity.bytesTransferred,
                         totalBytes = entity.totalBytes,
                         status = FileTransferStatus.valueOf(entity.status),
+                        thumbnail = entity.thumbnail,
                         updatedAt = entity.updatedAt
                     )
                     // Reset transient status if needed
@@ -71,6 +72,7 @@ object FileTransferManager {
                     bytesTransferred = entry.bytesTransferred,
                     totalBytes = entry.totalBytes,
                     status = entry.status.name,
+                    thumbnail = entry.thumbnail,
                     updatedAt = entry.updatedAt
                 )
             )
@@ -127,6 +129,12 @@ object FileTransferManager {
         return transfers[transferId]?.status == FileTransferStatus.PAUSED
     }
 
+    fun setThumbnail(transferId: String, thumbnail: ByteArray) {
+        updateTransfer(transferId) { entry ->
+            entry.copy(thumbnail = thumbnail, updatedAt = System.currentTimeMillis())
+        }
+    }
+
     private fun startTransfer(
         peerId: String,
         fileName: String,
@@ -178,6 +186,7 @@ data class FileTransferEntry(
     val bytesTransferred: Long,
     val totalBytes: Long?,
     val status: FileTransferStatus,
+    val thumbnail: ByteArray? = null,
     val updatedAt: Long
 ) {
     val progress: Float? = totalBytes?.takeIf { it > 0 }?.let {

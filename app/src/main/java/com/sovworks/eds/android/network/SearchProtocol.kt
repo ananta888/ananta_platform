@@ -6,7 +6,8 @@ data class SearchRequest(
     @SerializedName("id") val requestId: String,
     @SerializedName("q") val query: String,
     @SerializedName("ttl") var ttl: Int = 3,
-    @SerializedName("sender") val senderId: String
+    @SerializedName("sender") val senderId: String,
+    @SerializedName("min_trust") val minTrustLevel: Double = 0.0
 )
 
 data class SearchResponse(

@@ -5,6 +5,7 @@ import android.util.Base64
 import com.google.gson.Gson
 import com.sovworks.eds.android.identity.Identity
 import com.sovworks.eds.android.identity.IdentityManager
+import com.sovworks.eds.android.ui.messenger.MessengerRepository
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 
 object TrustNetworkManager {
@@ -38,8 +39,11 @@ object TrustNetworkManager {
     fun verifyAndImportNetwork(context: Context, networkPackage: TrustNetworkPackage): Boolean {
         val trustStore = TrustStore.getInstance(context)
         
-        // 1. Prüfen, ob wir dem Aussteller vertrauen
-        if (!trustStore.isTrusted(networkPackage.issuerPublicKeyBase64)) {
+        // 1. Prüfen, ob wir dem Aussteller vertrauen oder ob er in einer unserer Gruppen ist
+        val isDirectlyTrusted = trustStore.isTrusted(networkPackage.issuerPublicKeyBase64)
+        val isGroupMember = isPeerInAnyGroup(networkPackage.issuerPublicKeyBase64)
+        
+        if (!isDirectlyTrusted && !isGroupMember) {
             return false
         }
 
@@ -86,6 +90,12 @@ object TrustNetworkManager {
         return calculateTrustRankRecursive(trustStore, fingerprint, maxDepth, cache, mutableSetOf())
     }
 
+    fun isPeerInAnyGroup(peerId: String): Boolean {
+        return MessengerRepository.groups.value.values.any { group ->
+            group.memberIds.contains(peerId)
+        }
+    }
+
     private fun calculateTrustRankRecursive(
         trustStore: TrustStore,
         fingerprint: String,
@@ -101,6 +111,11 @@ object TrustNetworkManager {
         
         // Basis: Unser direktes Vertrauen (0-5)
         var score = key.trustLevel.toDouble()
+
+        // Indirektes Vertrauen f\u00fcr Gruppenmitglieder
+        if (score == 0.0 && isPeerInAnyGroup(fingerprint)) {
+            score = 1.0 // Minimales Basis-Vertrauen f\u00fcr Gruppenmitglieder
+        }
 
         // Automatisches Trust-Ranking basierend auf Interaktionen
         score += TrustRankingManager.calculateInteractionScore(key)

@@ -1,10 +1,12 @@
 package com.sovworks.eds.android.network
 
+import com.sovworks.eds.android.helpers.MediaUtils
 import com.sovworks.eds.android.transfer.FileTransferManager
 import com.sovworks.eds.fs.File
 import kotlinx.coroutines.*
 import java.io.InputStream
 import java.security.MessageDigest
+import android.util.Base64
 
 class VaultFileSender(
     private val multiplexer: DataChannelMultiplexer
@@ -23,9 +25,10 @@ class VaultFileSender(
             } catch (e: Exception) {
                 null
             }
+            val thumbnail = MediaUtils.createThumbnail(file)
             try {
                 file.getInputStream().use { input ->
-                    sendStream(peerId, fileName, totalBytes, input)
+                    sendStream(peerId, fileName, totalBytes, input, thumbnail)
                 }
             } catch (e: Exception) {
                 val transferId = FileTransferManager.startOutgoingTransfer(peerId, fileName, totalBytes)
@@ -34,10 +37,11 @@ class VaultFileSender(
         }
     }
 
-    suspend fun sendStream(peerId: String, fileName: String, totalBytes: Long?, input: InputStream) {
+    suspend fun sendStream(peerId: String, fileName: String, totalBytes: Long?, input: InputStream, thumbnail: ByteArray? = null) {
         val transferId = FileTransferManager.startOutgoingTransfer(peerId, fileName, totalBytes)
+        thumbnail?.let { FileTransferManager.setThumbnail(transferId, it) }
         try {
-            sendStart(peerId, fileName, totalBytes)
+            sendStart(peerId, fileName, totalBytes, thumbnail)
             val digest = MessageDigest.getInstance("SHA-256")
             streamFile(peerId, transferId, input, digest)
             val checksum = digest.digest().joinToString("") { "%02x".format(it) }
@@ -48,13 +52,18 @@ class VaultFileSender(
         }
     }
 
-    private fun sendStart(peerId: String, fileName: String, totalBytes: Long?) {
-        val payload = if (totalBytes != null && totalBytes >= 0) {
-            "$FILE_START_PREFIX$fileName|$totalBytes"
+    private fun sendStart(peerId: String, fileName: String, totalBytes: Long?, thumbnail: ByteArray?) {
+        val thumbnailBase64 = thumbnail?.let { Base64.encodeToString(it, Base64.NO_WRAP) }
+        val payload = StringBuilder(FILE_START_PREFIX).append(fileName)
+        if (totalBytes != null && totalBytes >= 0) {
+            payload.append("|").append(totalBytes)
         } else {
-            "$FILE_START_PREFIX$fileName"
+            payload.append("|")
         }
-        multiplexer.sendMessage(peerId, payload)
+        if (thumbnailBase64 != null) {
+            payload.append("|THUMB:").append(thumbnailBase64)
+        }
+        multiplexer.sendMessage(peerId, payload.toString())
     }
 
     private suspend fun streamFile(peerId: String, transferId: String, input: InputStream, digest: MessageDigest) {
