@@ -12,11 +12,13 @@ import com.sovworks.eds.android.filemanager.activities.FileManagerActivity
 import com.sovworks.eds.android.filemanager.ui.FileListScreen
 import com.sovworks.eds.android.filemanager.viewmodel.FileListEvent
 import com.sovworks.eds.android.filemanager.viewmodel.FileListViewModel
+import com.sovworks.eds.android.navigation.NavigationViewModel
 import com.sovworks.eds.locations.Location
 
 class FileListComposeFragment : Fragment(), FileManagerFragment {
 
     private lateinit var viewModel: FileListViewModel
+    private lateinit var navigationViewModel: NavigationViewModel
 
     override fun onBackPressed(): Boolean {
         if (viewModel.state.value.selectionMode) {
@@ -33,7 +35,8 @@ class FileListComposeFragment : Fragment(), FileManagerFragment {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel = ViewModelProvider(this)[FileListViewModel::class.java]
+        viewModel = ViewModelProvider(requireActivity())[FileListViewModel::class.java]
+        navigationViewModel = ViewModelProvider(requireActivity())[NavigationViewModel::class.java]
     }
 
     override fun onCreateView(
@@ -45,6 +48,7 @@ class FileListComposeFragment : Fragment(), FileManagerFragment {
             setContent {
                 FileListScreen(
                     viewModel = viewModel,
+                    navigationViewModel = navigationViewModel,
                     context = requireContext(),
                     onMenuClick = {
                         (activity as? FileManagerActivity)?.drawerController?.openDrawer()

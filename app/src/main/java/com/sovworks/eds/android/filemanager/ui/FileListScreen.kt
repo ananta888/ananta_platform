@@ -16,21 +16,29 @@ import androidx.compose.ui.Modifier
 import android.content.Context
 import com.sovworks.eds.android.filemanager.viewmodel.FileListEvent
 import com.sovworks.eds.android.filemanager.viewmodel.FileListViewModel
+import com.sovworks.eds.android.navigation.NavigationViewModel
+import com.sovworks.eds.android.navigation.Screen
 
 @Composable
 fun FileListScreen(
     viewModel: FileListViewModel,
+    navigationViewModel: NavigationViewModel,
     context: Context,
     onMenuClick: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    val navigationStack by navigationViewModel.navigationStack.collectAsState()
 
     Scaffold(
         topBar = {
             BreadcrumbBar(
-                breadcrumbs = state.breadcrumbs,
+                screens = navigationStack,
+                locations = state.breadcrumbs,
                 onMenuClick = onMenuClick,
-                onBreadcrumbClick = { location ->
+                onScreenClick = { screen ->
+                    navigationViewModel.navigateToRoot(screen)
+                },
+                onLocationClick = { location ->
                     viewModel.onEvent(FileListEvent.LocationChanged(location), context)
                 }
             )

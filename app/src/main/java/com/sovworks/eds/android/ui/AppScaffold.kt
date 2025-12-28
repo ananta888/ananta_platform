@@ -45,7 +45,10 @@ fun AppScaffold(
             topBar = {
                 BreadcrumbBar(
                     screens = navigationStack,
-                    locations = if (currentScreen is Screen.FileList || currentScreen == Screen.LocalFiles) fileListState.breadcrumbs else emptyList(),
+                    locations = if (currentScreen is Screen.FileList || 
+                                    currentScreen == Screen.LocalFiles || 
+                                    currentScreen == Screen.EncryptedContainers || 
+                                    currentScreen == Screen.CloudStorage) fileListState.breadcrumbs else emptyList(),
                     onMenuClick = {
                         scope.launch { drawerState.open() }
                     },
