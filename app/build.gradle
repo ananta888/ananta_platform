@@ -40,19 +40,26 @@ android {
 
     flavorDimensions = ["env", "fullOrLite", "licCheckType", "inet", "fsm"]
 
+    def overrideSignalingUrl = project.findProperty("signalServerUrl")
+    def overrideSignalingMode = project.findProperty("signalMode")
+
     productFlavors {
 
         dev {
             dimension "env"
             // Dev signaling defaults. Can be overridden via -PsignalServerUrl/-PsignalMode
-            buildConfigField "String", "SIGNALING_SERVER_URL", "\"ws://10.0.2.2:8080\""
-            buildConfigField "String", "SIGNALING_MODE", "\"websocket\""
+            def devUrl = overrideSignalingUrl ?: "ws://10.0.2.2:8080"
+            def devMode = overrideSignalingMode ?: "websocket"
+            buildConfigField "String", "SIGNALING_SERVER_URL", "\"${devUrl}\""
+            buildConfigField "String", "SIGNALING_MODE", "\"${devMode}\""
         }
         prod {
             dimension "env"
             // Prod signaling defaults. Can be overridden via -PsignalServerUrl/-PsignalMode
-            buildConfigField "String", "SIGNALING_SERVER_URL", "\"wss://your-domain.example\""
-            buildConfigField "String", "SIGNALING_MODE", "\"websocket\""
+            def prodUrl = overrideSignalingUrl ?: "wss://your-domain.example"
+            def prodMode = overrideSignalingMode ?: "websocket"
+            buildConfigField "String", "SIGNALING_SERVER_URL", "\"${prodUrl}\""
+            buildConfigField "String", "SIGNALING_MODE", "\"${prodMode}\""
         }
 
         lite {
@@ -73,33 +80,6 @@ android {
         }
         nofsml {
             dimension "fsm"
-        }
-    }
-
-    def overrideSignalingUrl = project.findProperty("signalServerUrl")
-    def overrideSignalingMode = project.findProperty("signalMode")
-    if (overrideSignalingUrl || overrideSignalingMode) {
-        applicationVariants.all { variant ->
-            if (overrideSignalingUrl) {
-                variant.buildConfigFields.put(
-                    "SIGNALING_SERVER_URL",
-                    new com.android.build.gradle.internal.dsl.BuildConfigField(
-                        "String",
-                        "\"${overrideSignalingUrl}\"",
-                        "CLI override"
-                    )
-                )
-            }
-            if (overrideSignalingMode) {
-                variant.buildConfigFields.put(
-                    "SIGNALING_MODE",
-                    new com.android.build.gradle.internal.dsl.BuildConfigField(
-                        "String",
-                        "\"${overrideSignalingMode}\"",
-                        "CLI override"
-                    )
-                )
-            }
         }
     }
 
