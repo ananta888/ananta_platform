@@ -4,6 +4,28 @@ const WebSocket = require("ws");
 const PORT = process.env.PORT || 8080;
 
 const server = http.createServer((req, res) => {
+  if (req.url === "/peers") {
+    const peers = Array.from(clientsByPublicKey.values()).map((client) => ({
+      peerId: client.peerId || "",
+      publicKey: client.publicKey || "",
+      visibility: client.visibility || "private",
+    }));
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ peers }, null, 2));
+    return;
+  }
+  if (req.url === "/public-peers") {
+    const peers = Array.from(clientsByPublicKey.values())
+      .filter((client) => client.visibility === "public")
+      .map((client) => ({
+        peerId: client.peerId || "",
+        publicKey: client.publicKey || "",
+        visibility: client.visibility || "public",
+      }));
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ peers }, null, 2));
+    return;
+  }
   res.writeHead(200, { "Content-Type": "text/plain" });
   res.end("Ananta signaling server\n");
 });
@@ -12,12 +34,16 @@ const wss = new WebSocket.Server({ server });
 
 const clientsByPublicKey = new Map();
 
-function broadcastPublicKeys() {
-  const keys = Array.from(clientsByPublicKey.values())
+function broadcastPublicPeers() {
+  const peers = Array.from(clientsByPublicKey.values())
     .filter((client) => client.visibility === "public")
-    .map((client) => client.publicKey);
+    .map((client) => ({
+      peerId: client.peerId || "",
+      publicKey: client.publicKey || "",
+      visibility: client.visibility || "public",
+    }));
   wss.clients.forEach((client) => {
-    safeSend(client, { type: "public_keys", keys });
+    safeSend(client, { type: "public_peers", peers });
   });
 }
 
@@ -67,7 +93,7 @@ wss.on("connection", (ws) => {
         ws.visibility = visibilityMode;
         clientsByPublicKey.set(publicKey, ws);
         safeSend(ws, { type: "registered", peerId, publicKey, visibility: visibilityMode });
-        broadcastPublicKeys();
+        broadcastPublicPeers();
         return;
       }
       case "signal": {
@@ -95,10 +121,14 @@ wss.on("connection", (ws) => {
         return;
       }
       case "list_public": {
-        const keys = Array.from(clientsByPublicKey.values())
+        const peers = Array.from(clientsByPublicKey.values())
           .filter((client) => client.visibility === "public")
-          .map((client) => client.publicKey);
-        safeSend(ws, { type: "public_keys", keys });
+          .map((client) => ({
+            peerId: client.peerId || "",
+            publicKey: client.publicKey || "",
+            visibility: client.visibility || "public",
+          }));
+        safeSend(ws, { type: "public_peers", peers });
         return;
       }
       default: {
@@ -109,12 +139,12 @@ wss.on("connection", (ws) => {
 
   ws.on("close", () => {
     unregisterPeer(ws.publicKey);
-    broadcastPublicKeys();
+    broadcastPublicPeers();
   });
 
   ws.on("error", () => {
     unregisterPeer(ws.publicKey);
-    broadcastPublicKeys();
+    broadcastPublicPeers();
   });
 });
 

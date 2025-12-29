@@ -34,9 +34,11 @@ class WebSocketSignalingClient(
             val request = Request.Builder()
                 .url(requestUrl)
                 .build()
+            SignalingStatusTracker.update(serverUrl, SignalingConnectionStatus.CONNECTING)
             logDebug("Connecting to $serverUrl")
             webSocket = client.newWebSocket(request, this)
         } catch (e: Exception) {
+            SignalingStatusTracker.update(serverUrl, SignalingConnectionStatus.ERROR)
             logWarn("Failed to connect to $serverUrl: ${e.message}", e)
         }
     }
@@ -76,6 +78,7 @@ class WebSocketSignalingClient(
     }
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
+        SignalingStatusTracker.update(serverUrl, SignalingConnectionStatus.CONNECTED)
         logDebug("Connected to $serverUrl")
         val register = mapOf(
             "type" to "register",
@@ -87,15 +90,37 @@ class WebSocketSignalingClient(
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
+        val root = gson.fromJson(text, Map::class.java)
+        val type = root["type"] as? String
+        if (type == "public_peers") {
+            val peers = (root["peers"] as? List<*>)?.mapNotNull { entry ->
+                val map = entry as? Map<*, *> ?: return@mapNotNull null
+                val publicKey = map["publicKey"] as? String ?: return@mapNotNull null
+                val peerId = map["peerId"] as? String
+                PublicPeer(publicKey = publicKey, peerId = peerId)
+            }.orEmpty()
+            PublicPeersDirectory.update(peers)
+            return
+        }
+        if (type == "public_keys") {
+            val peers = (root["keys"] as? List<*>)?.mapNotNull { key ->
+                val publicKey = key as? String ?: return@mapNotNull null
+                PublicPeer(publicKey = publicKey, peerId = null)
+            }.orEmpty()
+            PublicPeersDirectory.update(peers)
+            return
+        }
         val msg = gson.fromJson(text, SignalingMessage::class.java)
         processMessage(msg)
     }
 
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+        SignalingStatusTracker.update(serverUrl, SignalingConnectionStatus.DISCONNECTED)
         webSocket.close(1000, null)
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+        SignalingStatusTracker.update(serverUrl, SignalingConnectionStatus.ERROR)
         logWarn("WebSocket failure for $serverUrl: ${t.message}", t)
         // Simple reconnect logic
         clientScope.launch {
@@ -152,6 +177,7 @@ class WebSocketSignalingClient(
     }
 
     override fun shutdown() {
+        SignalingStatusTracker.update(serverUrl, SignalingConnectionStatus.DISCONNECTED)
         clientScope.cancel()
         webSocket?.close(1000, "Shutdown")
     }
