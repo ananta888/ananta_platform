@@ -10,7 +10,7 @@ const server = http.createServer((req, res) => {
 
 const wss = new WebSocket.Server({ server });
 
-jaconst clientsByPublicKey = new Map();
+const clientsByPublicKey = new Map();
 
 function safeSend(ws, payload) {
   if (ws.readyState === WebSocket.OPEN) {
