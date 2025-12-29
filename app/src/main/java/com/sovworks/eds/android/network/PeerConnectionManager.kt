@@ -25,17 +25,20 @@ class PeerConnectionManager(
     private val tag = "PeerConnectionManager"
 
     private val managerScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-    private val peerConnections = ConcurrentHashMap<String, PeerConnection>()   
+    private val statsScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val peerConnections = ConcurrentHashMap<String, PeerConnection>()
     private val pendingIceCandidates = ConcurrentHashMap<String, MutableList<IceCandidate>>()
+    private val lastConnectAttempt = ConcurrentHashMap<String, Long>()
     private var listener: PeerConnectionListener? = null
     private var statsJob: Job? = null
+    private val connectBackoffMillis = 4000L
 
     init {
         startStatsPolling()
     }
 
     private fun startStatsPolling() {
-        statsJob = managerScope.launch {
+        statsJob = statsScope.launch {
             while (isActive) {
                 delay(3000)
                 peerConnections.forEach { (peerId, pc) ->
@@ -165,6 +168,20 @@ class PeerConnectionManager(
             logDebug("initiateConnection skipped (self) -> $peerId")
             return
         }
+        val currentStatus = PeerConnectionRegistry.state.value
+            .firstOrNull { it.peerId == peerId }
+            ?.status
+        if (currentStatus == "connecting" || currentStatus == "connected") {
+            logDebug("initiateConnection skipped (status=$currentStatus) -> $peerId")
+            return
+        }
+        val now = System.currentTimeMillis()
+        val lastAttempt = lastConnectAttempt[peerId] ?: 0L
+        if (now - lastAttempt < connectBackoffMillis) {
+            logDebug("initiateConnection skipped (backoff) -> $peerId")
+            return
+        }
+        lastConnectAttempt[peerId] = now
         logDebug("initiateConnection -> $peerId")
         ensureTrustedKey(peerId)
         PeerConnectionRegistry.updateStatus(peerId, "connecting")
@@ -314,6 +331,7 @@ class PeerConnectionManager(
 
     fun shutdown() {
         managerScope.cancel()
+        statsScope.cancel()
         peerConnections.values.forEach { it.dispose() }
         peerConnections.clear()
     }

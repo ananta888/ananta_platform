@@ -2,7 +2,9 @@
   "project": "Ananta Platform (WebRTC & Secure Exchange)",
   "version": "1.0.0-draft",
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform für sichere Kommunikation und Dateiaustausch.",
-  "tasks": [],
+  "tasks": [
+    "Collect and analyze ANR/FATAL logs from device to pinpoint actual freeze/crash cause (enable filtered logcat + timestamps)."
+  ],
   "architecture_goals": [
     "Vollständige Dezentralität (kein zentraler Server außer Signaling/STUN)",
     "Ende-zu-Ende Verschlüsselung für alle Transfers",

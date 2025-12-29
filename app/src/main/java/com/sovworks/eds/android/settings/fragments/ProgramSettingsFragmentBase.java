@@ -320,7 +320,7 @@ public abstract class ProgramSettingsFragmentBase extends PropertiesFragmentBase
                     {
                         editSettings().putString(SIGNALING_MODE, value == 1 ? SIGNALING_MODE_HTTP : com.sovworks.eds.android.settings.UserSettingsCommon.SIGNALING_MODE_LOCAL).commit();
                         getPropertiesView().setPropertyState(R.string.signaling_server_url, value == 1);
-                        WebRtcService.initialize(getActivity().getApplicationContext(), _settings);
+                        restartWebRtcService();
                     }
 
                     @Override
@@ -348,7 +348,7 @@ public abstract class ProgramSettingsFragmentBase extends PropertiesFragmentBase
                             editSettings().putString(SIGNALING_SERVER_URL, text.trim()).commit();
                         else
                             editSettings().remove(SIGNALING_SERVER_URL).commit();
-                        WebRtcService.initialize(getActivity().getApplicationContext(), _settings);
+                        restartWebRtcService();
                     }
                 }));
         commonPropertiesIds.add(getPropertiesView().addProperty(new IntPropertyEditor(this, R.string.max_temporary_file_size, R.string.max_temporary_file_size_desc, getTag())
@@ -578,6 +578,13 @@ public abstract class ProgramSettingsFragmentBase extends PropertiesFragmentBase
     {
         getPropertiesView().setPropertiesState(propIds, enable);
         getPropertiesView().loadProperties();
+    }
+
+    private void restartWebRtcService()
+    {
+        final android.content.Context appContext = getActivity().getApplicationContext();
+        new Thread(() -> WebRtcService.initialize(appContext, _settings),
+                "WebRtcServiceInit").start();
     }
 
 }

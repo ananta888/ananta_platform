@@ -290,7 +290,9 @@ fun ConnectionSettingsScreen() {
                     settings.sharedPreferences.edit()
                         .putString(UserSettingsCommon.SIGNALING_PUBLIC_VISIBILITY, value)
                         .apply()
-                    WebRtcService.initialize(context.applicationContext, settings)
+                    scope.launch(Dispatchers.IO) {
+                        WebRtcService.initialize(context.applicationContext, settings)
+                    }
                 }
             )
             SettingToggleItem(
