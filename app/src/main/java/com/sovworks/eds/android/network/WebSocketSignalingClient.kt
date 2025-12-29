@@ -100,6 +100,7 @@ class WebSocketSignalingClient(
                 val peerId = map["peerId"] as? String
                 PublicPeer(publicKey = publicKey, peerId = peerId)
             }.orEmpty()
+            logDebug("Received public_peers: ${peers.size}")
             PublicPeersDirectory.update(peers)
             return
         }
@@ -108,6 +109,7 @@ class WebSocketSignalingClient(
                 val publicKey = key as? String ?: return@mapNotNull null
                 PublicPeer(publicKey = publicKey, peerId = null)
             }.orEmpty()
+            logDebug("Received public_keys: ${peers.size}")
             PublicPeersDirectory.update(peers)
             return
         }

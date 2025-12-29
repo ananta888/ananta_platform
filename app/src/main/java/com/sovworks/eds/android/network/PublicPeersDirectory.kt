@@ -14,6 +14,11 @@ object PublicPeersDirectory {
     val publicPeers: StateFlow<List<PublicPeer>> = _publicPeers.asStateFlow()
 
     fun update(peers: List<PublicPeer>) {
+        try {
+            android.util.Log.d("PublicPeersDirectory", "Public peers updated: ${peers.size}")
+        } catch (_: Throwable) {
+            // Ignore logging failures in JVM unit tests.
+        }
         _publicPeers.value = peers
     }
 }
