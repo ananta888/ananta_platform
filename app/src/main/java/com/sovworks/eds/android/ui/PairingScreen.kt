@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,23 +20,61 @@ import androidx.compose.ui.unit.dp
 import android.widget.Toast
 import com.sovworks.eds.android.identity.IdentityManager
 import com.sovworks.eds.android.network.PairingManager
+import com.sovworks.eds.android.network.PeerConnectionRegistry
 import com.sovworks.eds.android.network.PublicPeersDirectory
 import com.sovworks.eds.android.network.SignalingConnectionStatus
 import com.sovworks.eds.android.network.SignalingStatusTracker
 import com.sovworks.eds.android.network.WebRtcService
+import com.sovworks.eds.android.settings.UserSettings
+import com.sovworks.eds.android.settings.UserSettingsCommon
 import com.sovworks.eds.android.trust.TrustStore
 import com.sovworks.eds.android.trust.TrustedKey
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.channels.awaitClose
 
 @Composable
 fun PairingScreen(onStartScanner: () -> Unit, onOpenIdentitySync: (() -> Unit)? = null) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
     val identity = remember { IdentityManager.loadIdentity(context) }
+    val settings = remember { UserSettings.getSettings(context) }
     val publicPeers by PublicPeersDirectory.publicPeers.collectAsState()
     val signalingStatuses by SignalingStatusTracker.statuses.collectAsState()
+    val peerRegistry by PeerConnectionRegistry.state.collectAsState()
     val myMetadata = remember(identity) { identity?.let { PairingManager.createMyMetadata(it) } }
     val qrBitmap = remember(myMetadata) { myMetadata?.let { PairingManager.generateQrCode(it) } }
     val pairingCode = remember(identity) { identity?.id }
+    val autoConnectEnabled by remember {
+        callbackFlow {
+            val prefs = settings.sharedPreferences
+            val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                if (key == UserSettingsCommon.SIGNALING_AUTO_CONNECT_PUBLIC) {
+                    trySend(
+                        prefs.getBoolean(UserSettingsCommon.SIGNALING_AUTO_CONNECT_PUBLIC, false)
+                    )
+                }
+            }
+            prefs.registerOnSharedPreferenceChangeListener(listener)
+            trySend(
+                prefs.getBoolean(UserSettingsCommon.SIGNALING_AUTO_CONNECT_PUBLIC, false)
+            )
+            awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+        }
+    }.collectAsState(initial = false)
+
+    LaunchedEffect(publicPeers, autoConnectEnabled) {
+        if (!autoConnectEnabled) return@LaunchedEffect
+        val myKey = identity?.publicKeyBase64
+        publicPeers.forEach { peer ->
+            if (peer.publicKey == myKey) return@forEach
+            val existing = peerRegistry.firstOrNull { it.peerId == peer.publicKey }
+            val status = existing?.status ?: ""
+            val shouldConnect = status.isBlank() || status == "closed" || status == "disconnected" || status == "failed"
+            if (shouldConnect) {
+                WebRtcService.getPeerConnectionManager()?.initiateConnection(peer.publicKey)
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -140,6 +179,14 @@ fun PairingScreen(onStartScanner: () -> Unit, onOpenIdentitySync: (() -> Unit)? 
             text = "Public Peers",
             style = MaterialTheme.typography.titleSmall
         )
+        Text(
+            text = if (autoConnectEnabled) "Auto-Connect: On" else "Auto-Connect: Off",
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(top = 4.dp)
+        )
+        TextButton(onClick = { WebRtcService.requestPublicPeers() }) {
+            Text("Refresh")
+        }
         if (publicPeers.isEmpty()) {
             Text(
                 text = "No public peers available",

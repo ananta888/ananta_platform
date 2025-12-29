@@ -87,6 +87,7 @@ class WebSocketSignalingClient(
             "visibility" to visibility
         )
         webSocket.send(gson.toJson(register))
+        requestPublicPeers()
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
@@ -180,6 +181,11 @@ class WebSocketSignalingClient(
         SignalingStatusTracker.update(serverUrl, SignalingConnectionStatus.DISCONNECTED)
         clientScope.cancel()
         webSocket?.close(1000, "Shutdown")
+    }
+
+    fun requestPublicPeers() {
+        val bodyMap = mapOf("type" to "list_public")
+        webSocket?.send(gson.toJson(bodyMap))
     }
 
     private data class SignalingMessage(

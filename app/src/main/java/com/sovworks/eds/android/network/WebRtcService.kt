@@ -64,6 +64,20 @@ object WebRtcService {
     fun getPeerConnectionManager(): PeerConnectionManager? = peerConnectionManager
 
     @JvmStatic
+    fun requestPublicPeers() {
+        val client = signalingClient ?: return
+        if (client is WebSocketSignalingClient) {
+            client.requestPublicPeers()
+        } else if (client is MultiSignalingClient) {
+            client.getClients().forEach { inner ->
+                if (inner is WebSocketSignalingClient) {
+                    inner.requestPublicPeers()
+                }
+            }
+        }
+    }
+
+    @JvmStatic
     fun shutdown() {
         synchronized(lock) {
             shutdownLocked()
