@@ -5,6 +5,7 @@
     <application
         tools:replace="android:label"
         android:label="@string/eds"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@style/Theme.EDS">
         <provider android:authorities="com.sovworks.eds.android.providers.main.lite"
                   android:exported="true"
