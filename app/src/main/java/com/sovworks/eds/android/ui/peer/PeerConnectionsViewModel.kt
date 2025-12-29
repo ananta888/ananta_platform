@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.sovworks.eds.android.network.PeerConnectionRegistry
-import com.sovworks.eds.android.network.PublicPeersDirectory
+import com.sovworks.eds.android.network.PeerDirectory
 import com.sovworks.eds.android.network.WebRtcService
 import com.sovworks.eds.android.trust.TrustStore
 import com.sovworks.eds.android.trust.TrustedKey
@@ -21,9 +21,9 @@ class PeerConnectionsViewModel(application: Application) : AndroidViewModel(appl
 
     val peers: StateFlow<List<PeerConnectionDisplay>> = combine(
         PeerConnectionRegistry.state,
-        PublicPeersDirectory.publicPeers
-    ) { list, publicPeers ->
-        val peerIdMap = publicPeers.associateBy({ it.publicKey }, { it.peerId })
+        PeerDirectory.state
+    ) { list, directory ->
+        val peerIdMap = directory.entries.associateBy({ it.publicKey }, { it.peerIdFromServer })
         list.map { info ->
             val trust = trustStore.getKey(info.peerId)
             val publicPeerId = peerIdMap[info.peerId]

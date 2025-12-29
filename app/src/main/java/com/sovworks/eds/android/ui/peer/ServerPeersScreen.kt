@@ -21,13 +21,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.sovworks.eds.android.network.SignalingServerPeersRepository
+import com.sovworks.eds.android.network.PeerDirectory
 import com.sovworks.eds.android.trust.TrustStore
 
 @Composable
 fun ServerPeersScreen() {
     val context = LocalContext.current
-    val peersByServer by SignalingServerPeersRepository.peers.collectAsState()
+    val directory by PeerDirectory.state.collectAsState()
     val trustStore = remember { TrustStore.getInstance(context) }
 
     LazyColumn(
@@ -37,18 +37,19 @@ fun ServerPeersScreen() {
         item {
             Text(text = "Server Peers", style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = { SignalingServerPeersRepository.refresh(context) }) {
+            Button(onClick = { PeerDirectory.refreshServers(context) }) {
                 Text("Refresh")
             }
         }
 
-        if (peersByServer.isEmpty()) {
+        if (directory.serverPeers.isEmpty()) {
             item {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(text = "No server peers loaded.", style = MaterialTheme.typography.bodyMedium)
             }
         } else {
-            peersByServer.forEach { (serverUrl, peers) ->
+            val entryMap = directory.entries.associateBy { it.publicKey }
+            directory.serverPeers.forEach { (serverUrl, peers) ->
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(text = serverUrl, style = MaterialTheme.typography.titleSmall)
@@ -57,6 +58,7 @@ fun ServerPeersScreen() {
                     val trusted = trustStore.getKey(peer.publicKey)
                     val alias = trusted?.name?.takeIf { it.isNotBlank() }
                     val display = alias ?: peer.peerId ?: peer.publicKey.take(8)
+                    val entry = entryMap[peer.publicKey]
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -66,10 +68,39 @@ fun ServerPeersScreen() {
                             Text(text = "Peer ID: ${peer.peerId ?: "Unknown"}", style = MaterialTheme.typography.bodySmall)
                             Text(text = "Public Key: ${peer.publicKey}", style = MaterialTheme.typography.bodySmall)
                             Text(text = "Visibility: ${peer.visibility}", style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                text = "Sources: ${entry?.sources?.joinToString(", ") ?: "-"}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                text = "Servers: ${entry?.servers?.joinToString(", ") ?: serverUrl}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                text = "Last seen: ${formatLastSeen(entry?.lastSeenMillis)}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
                         }
                     }
                 }
             }
         }
+    }
+}
+
+private fun formatLastSeen(lastSeenMillis: Long?): String {
+    if (lastSeenMillis == null) return "unknown"
+    val diffMs = System.currentTimeMillis() - lastSeenMillis
+    if (diffMs < 0) return "now"
+    val seconds = diffMs / 1000
+    val minutes = seconds / 60
+    val hours = minutes / 60
+    val days = hours / 24
+    return when {
+        seconds < 30 -> "just now"
+        minutes < 1 -> "${seconds}s ago"
+        hours < 1 -> "${minutes}m ago"
+        days < 1 -> "${hours}h ago"
+        else -> "${days}d ago"
     }
 }

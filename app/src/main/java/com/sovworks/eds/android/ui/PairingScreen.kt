@@ -21,7 +21,7 @@ import android.widget.Toast
 import com.sovworks.eds.android.identity.IdentityManager
 import com.sovworks.eds.android.network.PairingManager
 import com.sovworks.eds.android.network.PeerConnectionRegistry
-import com.sovworks.eds.android.network.PublicPeersDirectory
+import com.sovworks.eds.android.network.PeerDirectory
 import com.sovworks.eds.android.network.SignalingConnectionStatus
 import com.sovworks.eds.android.network.SignalingStatusTracker
 import com.sovworks.eds.android.network.WebRtcService
@@ -38,7 +38,7 @@ fun PairingScreen(onStartScanner: () -> Unit, onOpenIdentitySync: (() -> Unit)? 
     val clipboardManager = LocalClipboardManager.current
     val identity = remember { IdentityManager.loadIdentity(context) }
     val settings = remember { UserSettings.getSettings(context) }
-    val publicPeers by PublicPeersDirectory.publicPeers.collectAsState()
+    val peerDirectory by PeerDirectory.state.collectAsState()
     val signalingStatuses by SignalingStatusTracker.statuses.collectAsState()
     val peerRegistry by PeerConnectionRegistry.state.collectAsState()
     val myMetadata = remember(identity) { identity?.let { PairingManager.createMyMetadata(it) } }
@@ -62,10 +62,10 @@ fun PairingScreen(onStartScanner: () -> Unit, onOpenIdentitySync: (() -> Unit)? 
         }
     }.collectAsState(initial = false)
 
-    LaunchedEffect(publicPeers, autoConnectEnabled) {
+    LaunchedEffect(peerDirectory, autoConnectEnabled) {
         if (!autoConnectEnabled) return@LaunchedEffect
         val myKey = identity?.publicKeyBase64
-        publicPeers.forEach { peer ->
+        peerDirectory.entries.filter { it.visibility == "public" }.forEach { peer ->
             if (peer.publicKey == myKey) return@forEach
             val existing = peerRegistry.firstOrNull { it.peerId == peer.publicKey }
             val status = existing?.status ?: ""
@@ -73,9 +73,9 @@ fun PairingScreen(onStartScanner: () -> Unit, onOpenIdentitySync: (() -> Unit)? 
             if (shouldConnect) {
                 val trustStore = TrustStore.getInstance(context)
                 if (trustStore.getKey(peer.publicKey) == null) {
-                    val display = peer.peerId ?: "Public Peer"
+                    val display = peer.peerIdFromServer ?: "Public Peer"
                     val key = TrustedKey(peer.publicKey, peer.publicKey, display)
-                    key.peerId = peer.peerId
+                    key.peerId = peer.peerIdFromServer
                     trustStore.addKey(key)
                 }
                 WebRtcService.getPeerConnectionManager()?.initiateConnection(peer.publicKey)
@@ -191,11 +191,14 @@ fun PairingScreen(onStartScanner: () -> Unit, onOpenIdentitySync: (() -> Unit)? 
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.padding(top = 4.dp)
         )
-        TextButton(onClick = { WebRtcService.requestPublicPeers() }) {
+        TextButton(onClick = {
+            WebRtcService.requestPublicPeers()
+            PeerDirectory.refreshServers(context)
+        }) {
             Text("Refresh")
         }
         val myKey = identity?.publicKeyBase64
-        val visiblePeers = publicPeers.filter { it.publicKey != myKey }
+        val visiblePeers = peerDirectory.entries.filter { it.visibility == "public" && it.publicKey != myKey }
         if (visiblePeers.isEmpty()) {
             Text(
                 text = "No public peers available",
@@ -207,7 +210,7 @@ fun PairingScreen(onStartScanner: () -> Unit, onOpenIdentitySync: (() -> Unit)? 
             visiblePeers.forEach { peer ->
                 val trusted = trustStore.getKey(peer.publicKey)
                 val alias = trusted?.name?.takeIf { it.isNotBlank() }
-                val displayName = alias ?: peer.peerId ?: peer.publicKey.take(8)
+                val displayName = alias ?: peer.peerIdFromServer ?: peer.publicKey.take(8)
                 val status = peerRegistry.firstOrNull { it.peerId == peer.publicKey }?.status ?: "offline"
                 Row(
                     modifier = Modifier
@@ -218,7 +221,7 @@ fun PairingScreen(onStartScanner: () -> Unit, onOpenIdentitySync: (() -> Unit)? 
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(text = displayName, style = MaterialTheme.typography.bodyMedium)
-                        Text(text = "Peer ID: ${peer.peerId ?: "Unknown"}", style = MaterialTheme.typography.bodySmall)
+                        Text(text = "Peer ID: ${peer.peerIdFromServer ?: "Unknown"}", style = MaterialTheme.typography.bodySmall)
                         Text(
                             text = "Key: ${peer.publicKey.take(16)}...",
                             style = MaterialTheme.typography.bodySmall
@@ -227,9 +230,9 @@ fun PairingScreen(onStartScanner: () -> Unit, onOpenIdentitySync: (() -> Unit)? 
                     }
                     Button(onClick = {
                         if (trusted == null) {
-                            val display = peer.peerId ?: "Public Peer"
+                            val display = peer.peerIdFromServer ?: "Public Peer"
                             val key = TrustedKey(peer.publicKey, peer.publicKey, display)
-                            key.peerId = peer.peerId
+                            key.peerId = peer.peerIdFromServer
                             trustStore.addKey(key)
                         }
                         WebRtcService.getPeerConnectionManager()

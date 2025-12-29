@@ -20,11 +20,12 @@ object WebRtcService {
     fun initialize(context: Context, settings: UserSettings) {
         synchronized(lock) {
             shutdownLocked()
-            
+
             // Start background integrity check
             IntegrityCheckWorker.enqueuePeriodicWork(context)
             com.sovworks.eds.android.identity.KeyRotationWorker.enqueuePeriodicWork(context)
 
+            PeerDirectory.initialize(context)
             val myId = resolvePeerId(context, settings)
             val client = createSignalingClient(context, settings, myId) ?: return
             signalingClient = client

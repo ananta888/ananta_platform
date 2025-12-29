@@ -7,7 +7,7 @@ import com.sovworks.eds.android.trust.TrustNetworkManager
 import com.sovworks.eds.android.trust.TrustNetworkPackage
 import com.sovworks.eds.android.trust.TrustStore
 import com.sovworks.eds.android.trust.TrustedKey
-import com.sovworks.eds.android.network.PublicPeersDirectory
+import com.sovworks.eds.android.network.PeerDirectory
 import kotlinx.coroutines.*
 import android.util.Log
 import org.webrtc.*
@@ -358,7 +358,7 @@ class PeerConnectionManager(
     private fun ensureTrustedKey(peerId: String) {
         val trustStore = TrustStore.getInstance(context)
         if (trustStore.getKey(peerId) != null) return
-        val publicPeerId = PublicPeersDirectory.publicPeers.value.firstOrNull { it.publicKey == peerId }?.peerId
+        val publicPeerId = PeerDirectory.state.value.entries.firstOrNull { it.publicKey == peerId }?.peerIdFromServer
         val name = publicPeerId ?: "Peer"
         val key = TrustedKey(peerId, peerId, name)
         key.peerId = publicPeerId
