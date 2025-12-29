@@ -55,11 +55,14 @@ public abstract class UserSettingsCommon implements SettingsCommon
         public static final String SIGNALING_MODE = "signaling_mode";
         public static final String SIGNALING_SERVER_URL = "signaling_server_url";
         public static final String SIGNALING_PEER_ID = "signaling_peer_id";
+        public static final String SIGNALING_PUBLIC_VISIBILITY = "signaling_public_visibility";
         public static final String TWO_FACTOR_AUTH_ENABLED = "two_factor_auth_enabled";
         public static final String TWO_FACTOR_AUTH_SECRET = "two_factor_auth_secret";
         public static final String SIGNALING_MODE_LOCAL = "local";
         public static final String SIGNALING_MODE_HTTP = "http";
         public static final String SIGNALING_MODE_WEBSOCKET = "websocket";
+        public static final String SIGNALING_VISIBILITY_PUBLIC = "public";
+        public static final String SIGNALING_VISIBILITY_PRIVATE = "private";
 
 	public static final String SETTINGS_PROTECTION_KEY_CHECK = "protection_key_check";
 
@@ -437,6 +440,11 @@ public abstract class UserSettingsCommon implements SettingsCommon
     public String getSignalingServerUrl()
     {
                 return _prefs.getString(SIGNALING_SERVER_URL, BuildConfig.SIGNALING_SERVER_URL);
+    }
+
+    public String getSignalingPublicVisibility()
+    {
+                return _prefs.getString(SIGNALING_PUBLIC_VISIBILITY, SIGNALING_VISIBILITY_PRIVATE);
     }
 
         public List<String> getSignalingServerUrls()

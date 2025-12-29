@@ -12,6 +12,15 @@ const wss = new WebSocket.Server({ server });
 
 const clientsByPublicKey = new Map();
 
+function broadcastPublicKeys() {
+  const keys = Array.from(clientsByPublicKey.values())
+    .filter((client) => client.visibility === "public")
+    .map((client) => client.publicKey);
+  wss.clients.forEach((client) => {
+    safeSend(client, { type: "public_keys", keys });
+  });
+}
+
 function safeSend(ws, payload) {
   if (ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(payload));
@@ -43,6 +52,8 @@ wss.on("connection", (ws) => {
       case "register": {
         const peerId = String(msg.peerId || "").trim();
         const publicKey = String(msg.publicKey || msg.publicKeyBase64 || "").trim();
+        const visibility = String(msg.visibility || "private").trim().toLowerCase();
+        const visibilityMode = visibility === "public" ? "public" : "private";
         if (!publicKey) {
           safeSend(ws, { type: "error", message: "missing_public_key" });
           return;
@@ -53,8 +64,10 @@ wss.on("connection", (ws) => {
         }
         ws.peerId = peerId;
         ws.publicKey = publicKey;
+        ws.visibility = visibilityMode;
         clientsByPublicKey.set(publicKey, ws);
-        safeSend(ws, { type: "registered", peerId, publicKey });
+        safeSend(ws, { type: "registered", peerId, publicKey, visibility: visibilityMode });
+        broadcastPublicKeys();
         return;
       }
       case "signal": {
@@ -81,6 +94,13 @@ wss.on("connection", (ws) => {
         safeSend(ws, { type: "peers", peers: Array.from(clientsByPublicKey.keys()) });
         return;
       }
+      case "list_public": {
+        const keys = Array.from(clientsByPublicKey.values())
+          .filter((client) => client.visibility === "public")
+          .map((client) => client.publicKey);
+        safeSend(ws, { type: "public_keys", keys });
+        return;
+      }
       default: {
         safeSend(ws, { type: "error", message: "unknown_type" });
       }
@@ -89,10 +109,12 @@ wss.on("connection", (ws) => {
 
   ws.on("close", () => {
     unregisterPeer(ws.publicKey);
+    broadcastPublicKeys();
   });
 
   ws.on("error", () => {
     unregisterPeer(ws.publicKey);
+    broadcastPublicKeys();
   });
 });
 

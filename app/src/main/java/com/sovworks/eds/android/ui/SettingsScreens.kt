@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.sovworks.eds.settings.Settings
 import com.sovworks.eds.android.settings.UserSettings
 import com.sovworks.eds.android.settings.UserSettingsCommon
+import com.sovworks.eds.android.network.WebRtcService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -143,6 +144,9 @@ fun ConnectionSettingsScreen() {
     var signalingUrl by remember { mutableStateOf(settings.signalingServerUrl) }
     var testResults by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     var testInProgress by remember { mutableStateOf(false) }
+    var publicVisibility by remember {
+        mutableStateOf(settings.signalingPublicVisibility == UserSettingsCommon.SIGNALING_VISIBILITY_PUBLIC)
+    }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         SettingsGroup(title = "Signaling") {
@@ -269,6 +273,25 @@ fun ConnectionSettingsScreen() {
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            SettingToggleItem(
+                title = "Public Key sichtbar",
+                description = "Erlaubt dem Signaling-Server, deinen Public Key als oeffentlich zu listen",
+                checked = publicVisibility,
+                onCheckedChange = { enabled ->
+                    publicVisibility = enabled
+                    val value = if (enabled) {
+                        UserSettingsCommon.SIGNALING_VISIBILITY_PUBLIC
+                    } else {
+                        UserSettingsCommon.SIGNALING_VISIBILITY_PRIVATE
+                    }
+                    settings.sharedPreferences.edit()
+                        .putString(UserSettingsCommon.SIGNALING_PUBLIC_VISIBILITY, value)
+                        .apply()
+                    WebRtcService.initialize(context.applicationContext, settings)
+                }
+            )
         }
     }
 }

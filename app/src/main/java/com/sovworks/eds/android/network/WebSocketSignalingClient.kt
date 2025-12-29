@@ -12,6 +12,7 @@ class WebSocketSignalingClient(
     private val serverUrl: String,
     private val myId: String,
     private val myPublicKey: String,
+    private val visibility: String = "private",
     private val client: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(0, TimeUnit.SECONDS) // WebSocket needs no timeout
@@ -79,7 +80,8 @@ class WebSocketSignalingClient(
         val register = mapOf(
             "type" to "register",
             "peerId" to myId,
-            "publicKey" to myPublicKey
+            "publicKey" to myPublicKey,
+            "visibility" to visibility
         )
         webSocket.send(gson.toJson(register))
     }

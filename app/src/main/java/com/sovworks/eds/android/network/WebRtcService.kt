@@ -107,13 +107,14 @@ object WebRtcService {
         if (mode == UserSettingsCommon.SIGNALING_MODE_HTTP || mode == UserSettingsCommon.SIGNALING_MODE_WEBSOCKET) {
             if (urls.isEmpty()) return null
             val identity = IdentityManager.loadIdentity(context) ?: return null
+            val visibility = settings.getSignalingPublicVisibility()
             val clients = urls.map { url ->
                 if (mode == UserSettingsCommon.SIGNALING_MODE_HTTP) {
                     logDebug("Using HTTP signaling: $url")
                     HttpSignalingClient(url, myId)
                 } else {
                     logDebug("Using WebSocket signaling: $url")
-                    WebSocketSignalingClient(url, myId, identity.publicKeyBase64)
+                    WebSocketSignalingClient(url, myId, identity.publicKeyBase64, visibility)
                 }
             }
             return MultiSignalingClient(clients)
