@@ -2,6 +2,7 @@ package com.sovworks.eds.android.network
 
 import com.google.gson.Gson
 import kotlinx.coroutines.*
+import android.util.Log
 import okhttp3.*
 import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
@@ -20,6 +21,7 @@ class WebSocketSignalingClient(
     private val gson = Gson()
     private var listener: SignalingListener? = null
     private var webSocket: WebSocket? = null
+    private val tag = "WebSocketSignaling"
 
     init {
         connect()
@@ -29,6 +31,7 @@ class WebSocketSignalingClient(
         val request = Request.Builder()
             .url("$serverUrl")
             .build()
+        Log.d(tag, "Connecting to $serverUrl")
         webSocket = client.newWebSocket(request, this)
     }
 
@@ -67,6 +70,7 @@ class WebSocketSignalingClient(
     }
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
+        Log.d(tag, "Connected to $serverUrl")
         val register = mapOf(
             "type" to "register",
             "peerId" to myId,
@@ -85,6 +89,7 @@ class WebSocketSignalingClient(
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+        Log.w(tag, "WebSocket failure for $serverUrl: ${t.message}", t)
         // Simple reconnect logic
         clientScope.launch {
             delay(5000)

@@ -1,6 +1,7 @@
 package com.sovworks.eds.android.network
 
 import android.content.Context
+import android.util.Log
 import com.sovworks.eds.android.identity.IdentityManager
 import com.sovworks.eds.android.settings.UserSettings
 import com.sovworks.eds.android.settings.UserSettingsCommon
@@ -13,6 +14,7 @@ object WebRtcService {
     private var peerConnectionManager: PeerConnectionManager? = null
     private var serviceScope: CoroutineScope? = null
     private var pollJob: Job? = null
+    private const val TAG = "WebRtcService"
 
     @JvmStatic
     fun initialize(context: Context, settings: UserSettings) {
@@ -100,20 +102,24 @@ object WebRtcService {
     ): SignalingClient? {
         val mode = settings.getSignalingMode()
         val urls = settings.getSignalingServerUrls()
-        
+        Log.d(TAG, "Signaling mode=$mode urls=$urls")
+
         if (mode == UserSettingsCommon.SIGNALING_MODE_HTTP || mode == UserSettingsCommon.SIGNALING_MODE_WEBSOCKET) {
             if (urls.isEmpty()) return null
             val identity = IdentityManager.loadIdentity(context) ?: return null
             val clients = urls.map { url ->
                 if (mode == UserSettingsCommon.SIGNALING_MODE_HTTP) {
+                    Log.d(TAG, "Using HTTP signaling: $url")
                     HttpSignalingClient(url, myId)
                 } else {
+                    Log.d(TAG, "Using WebSocket signaling: $url")
                     WebSocketSignalingClient(url, myId, identity.publicKeyBase64)
                 }
             }
             return MultiSignalingClient(clients)
         }
-        
+
+        Log.d(TAG, "Using local signaling")
         return LocalSignalingClient(context, myId)
     }
 
