@@ -40,7 +40,7 @@ class WebSocketSignalingClientTest {
         val msgJson = """{"type":"signal","fromPublicKey":"otherKey","payload":{"type":"OFFER","data":"sdp-content"}}"""
         client.onMessage(webSocket, msgJson)
 
-        verify(listener).onOfferReceived(check {
+        verify(listener).onOfferReceivedFromKey(check {
             assertEquals("otherKey", it)
         }, check {
             assertEquals(SessionDescription.Type.OFFER, it.type)
@@ -53,7 +53,7 @@ class WebSocketSignalingClientTest {
         val msgJson = """{"type":"signal","fromPublicKey":"otherKey","payload":{"type":"ANSWER","data":"sdp-content"}}"""
         client.onMessage(webSocket, msgJson)
 
-        verify(listener).onAnswerReceived(check {
+        verify(listener).onAnswerReceivedFromKey(check {
             assertEquals("otherKey", it)
         }, check {
             assertEquals(SessionDescription.Type.ANSWER, it.type)
@@ -67,7 +67,7 @@ class WebSocketSignalingClientTest {
         val msgJson = """{"type":"signal","fromPublicKey":"otherKey","payload":{"type":"CANDIDATE","data":${gson.toJson(gson.toJson(candidateMap))}}}"""
         client.onMessage(webSocket, msgJson)
 
-        verify(listener).onIceCandidateReceived(check {
+        verify(listener).onIceCandidateReceivedFromKey(check {
             assertEquals("otherKey", it)
         }, check {
             assertEquals("cand", it.sdp)
