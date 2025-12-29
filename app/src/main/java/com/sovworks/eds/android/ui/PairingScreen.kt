@@ -71,6 +71,13 @@ fun PairingScreen(onStartScanner: () -> Unit, onOpenIdentitySync: (() -> Unit)? 
             val status = existing?.status ?: ""
             val shouldConnect = status.isBlank() || status == "closed" || status == "disconnected" || status == "failed"
             if (shouldConnect) {
+                val trustStore = TrustStore.getInstance(context)
+                if (trustStore.getKey(peer.publicKey) == null) {
+                    val display = peer.peerId ?: "Public Peer"
+                    val key = TrustedKey(peer.publicKey, peer.publicKey, display)
+                    key.peerId = peer.peerId
+                    trustStore.addKey(key)
+                }
                 WebRtcService.getPeerConnectionManager()?.initiateConnection(peer.publicKey)
             }
         }

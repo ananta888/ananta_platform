@@ -4,12 +4,14 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.sovworks.eds.android.network.PeerConnectionRegistry
+import com.sovworks.eds.android.network.PublicPeersDirectory
 import com.sovworks.eds.android.network.WebRtcService
 import com.sovworks.eds.android.trust.TrustStore
 import com.sovworks.eds.android.trust.TrustedKey
 import com.sovworks.eds.android.ui.messenger.ChatGroup
 import com.sovworks.eds.android.ui.messenger.MessengerRepository
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -17,23 +19,26 @@ import kotlinx.coroutines.flow.stateIn
 class PeerConnectionsViewModel(application: Application) : AndroidViewModel(application) {
     private val trustStore = TrustStore.getInstance(application)
 
-    val peers: StateFlow<List<PeerConnectionDisplay>> = PeerConnectionRegistry.state
-        .map { list ->
-            list.map { info ->
-                val trust = trustStore.getKey(info.peerId)
-                PeerConnectionDisplay(
-                    peerKey = info.peerId,
-                    peerId = trust?.peerId ?: trust?.name ?: info.peerId,
-                    alias = trust?.name,
-                    publicKey = trust?.publicKey ?: info.peerId,
-                    endpoint = info.endpoint,
-                    status = info.status,
-                    stats = info.stats,
-                    trustLevel = trust?.trustLevel ?: 0
-                )
-            }
+    val peers: StateFlow<List<PeerConnectionDisplay>> = combine(
+        PeerConnectionRegistry.state,
+        PublicPeersDirectory.publicPeers
+    ) { list, publicPeers ->
+        val peerIdMap = publicPeers.associateBy({ it.publicKey }, { it.peerId })
+        list.map { info ->
+            val trust = trustStore.getKey(info.peerId)
+            val publicPeerId = peerIdMap[info.peerId]
+            PeerConnectionDisplay(
+                peerKey = info.peerId,
+                peerId = trust?.peerId ?: trust?.name ?: publicPeerId ?: info.peerId,
+                alias = trust?.name,
+                publicKey = trust?.publicKey ?: info.peerId,
+                endpoint = info.endpoint,
+                status = info.status,
+                stats = info.stats,
+                trustLevel = trust?.trustLevel ?: 0
+            )
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val groups: StateFlow<Map<String, ChatGroup>> = MessengerRepository.groups
 
