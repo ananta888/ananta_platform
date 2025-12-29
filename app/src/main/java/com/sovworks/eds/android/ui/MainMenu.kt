@@ -93,6 +93,10 @@ fun MainMenu(
             navigationViewModel.navigateToRoot(Screen.ConnectedDevices)
             onCloseDrawer()
         })
+        MenuItem(text = "Server Peers", onClick = {
+            navigationViewModel.navigateToRoot(Screen.ServerPeers)
+            onCloseDrawer()
+        })
         MenuItem(text = "Peer Connections", onClick = {
             navigationViewModel.navigateToRoot(Screen.PeerConnections)
             onCloseDrawer()

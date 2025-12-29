@@ -21,6 +21,7 @@ sealed class Screen(val title: String) {
     object FileTransfers : Screen("File Transfers")
     object PeerConnections : Screen("Peer Connections")
     object ConnectedDevices : Screen("Connected Devices")
+    object ServerPeers : Screen("Server Peers")
     object IdentitySync : Screen("Identity Sync")
     object Pairing : Screen("Device Pairing")
     object Peers : Screen("Peers & Devices")

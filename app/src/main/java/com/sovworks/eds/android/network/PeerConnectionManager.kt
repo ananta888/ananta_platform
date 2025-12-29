@@ -147,6 +147,7 @@ class PeerConnectionManager(
             override fun onRemoveStream(stream: MediaStream?) {}
             override fun onDataChannel(dataChannel: DataChannel?) {
                 dataChannel?.let {
+ich                    ensureTrustedKey(peerId)
                     multiplexer.onDataChannelCreated(peerId, it, false)
                 }
             }
@@ -165,6 +166,7 @@ class PeerConnectionManager(
             return
         }
         logDebug("initiateConnection -> $peerId")
+        ensureTrustedKey(peerId)
         PeerConnectionRegistry.updateStatus(peerId, "connecting")
         val pc = getOrCreatePeerConnection(peerId) ?: return
         
