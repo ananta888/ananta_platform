@@ -194,7 +194,9 @@ fun PairingScreen(onStartScanner: () -> Unit, onOpenIdentitySync: (() -> Unit)? 
         TextButton(onClick = { WebRtcService.requestPublicPeers() }) {
             Text("Refresh")
         }
-        if (publicPeers.isEmpty()) {
+        val myKey = identity?.publicKeyBase64
+        val visiblePeers = publicPeers.filter { it.publicKey != myKey }
+        if (visiblePeers.isEmpty()) {
             Text(
                 text = "No public peers available",
                 style = MaterialTheme.typography.bodySmall,
@@ -202,10 +204,11 @@ fun PairingScreen(onStartScanner: () -> Unit, onOpenIdentitySync: (() -> Unit)? 
             )
         } else {
             val trustStore = remember { TrustStore.getInstance(context) }
-            publicPeers.forEach { peer ->
+            visiblePeers.forEach { peer ->
                 val trusted = trustStore.getKey(peer.publicKey)
                 val alias = trusted?.name?.takeIf { it.isNotBlank() }
                 val displayName = alias ?: peer.peerId ?: peer.publicKey.take(8)
+                val status = peerRegistry.firstOrNull { it.peerId == peer.publicKey }?.status ?: "offline"
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -215,10 +218,12 @@ fun PairingScreen(onStartScanner: () -> Unit, onOpenIdentitySync: (() -> Unit)? 
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(text = displayName, style = MaterialTheme.typography.bodyMedium)
+                        Text(text = "Peer ID: ${peer.peerId ?: "Unknown"}", style = MaterialTheme.typography.bodySmall)
                         Text(
                             text = "Key: ${peer.publicKey.take(16)}...",
                             style = MaterialTheme.typography.bodySmall
                         )
+                        Text(text = "Status: $status", style = MaterialTheme.typography.bodySmall)
                     }
                     Button(onClick = {
                         if (trusted == null) {
@@ -229,7 +234,7 @@ fun PairingScreen(onStartScanner: () -> Unit, onOpenIdentitySync: (() -> Unit)? 
                         }
                         WebRtcService.getPeerConnectionManager()
                             ?.initiateConnection(peer.publicKey)
-                    }) {
+                    }, enabled = status != "connecting" && status != "connected") {
                         Text("Connect")
                     }
                 }

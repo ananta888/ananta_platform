@@ -7,6 +7,7 @@ import com.sovworks.eds.android.trust.TrustNetworkManager
 import com.sovworks.eds.android.trust.TrustNetworkPackage
 import com.sovworks.eds.android.trust.TrustStore
 import com.sovworks.eds.android.trust.TrustedKey
+import com.sovworks.eds.android.network.PublicPeersDirectory
 import kotlinx.coroutines.*
 import android.util.Log
 import org.webrtc.*
@@ -24,7 +25,7 @@ class PeerConnectionManager(
     private val tag = "PeerConnectionManager"
 
     private val managerScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-    private val peerConnections = ConcurrentHashMap<String, PeerConnection>()
+    private val peerConnections = ConcurrentHashMap<String, PeerConnection>()   
     private val pendingIceCandidates = ConcurrentHashMap<String, MutableList<IceCandidate>>()
     private var listener: PeerConnectionListener? = null
     private var statsJob: Job? = null
@@ -118,9 +119,10 @@ class PeerConnectionManager(
             override fun onSignalingChange(newState: PeerConnection.SignalingState?) {}
             override fun onIceConnectionChange(newState: PeerConnection.IceConnectionState?) {
                 newState?.let {
+                    logDebug("iceConnectionState -> $peerId = ${it.name.lowercase()}")
                     listener?.onConnectionStateChange(peerId, it)
                     PeerConnectionRegistry.updateStatus(peerId, it.name.lowercase())
-                    if (it == PeerConnection.IceConnectionState.CONNECTED) {
+                    if (it == PeerConnection.IceConnectionState.CONNECTED) {    
                         onPeerConnected(peerId)
                     }
                     if (it == PeerConnection.IceConnectionState.DISCONNECTED ||
@@ -157,6 +159,11 @@ class PeerConnectionManager(
     }
 
     fun initiateConnection(peerId: String) {
+        val identity = IdentityManager.loadIdentity(context)
+        if (identity?.publicKeyBase64 == peerId) {
+            logDebug("initiateConnection skipped (self) -> $peerId")
+            return
+        }
         logDebug("initiateConnection -> $peerId")
         PeerConnectionRegistry.updateStatus(peerId, "connecting")
         val pc = getOrCreatePeerConnection(peerId) ?: return
@@ -195,6 +202,7 @@ class PeerConnectionManager(
     }
 
     override fun onOfferReceived(peerId: String, sdp: SessionDescription) {     
+        ensureTrustedKey(peerId)
         logDebug("onOfferReceived <- $peerId")
         val pc = getOrCreatePeerConnection(peerId) ?: return
         pc.setRemoteDescription(object : SdpObserver {
@@ -227,6 +235,7 @@ class PeerConnectionManager(
     }
 
     override fun onAnswerReceived(peerId: String, sdp: SessionDescription) {    
+        ensureTrustedKey(peerId)
         logDebug("onAnswerReceived <- $peerId")
         val pc = peerConnections[peerId] ?: return
         pc.setRemoteDescription(object : SdpObserver {
@@ -251,6 +260,7 @@ class PeerConnectionManager(
     }
 
     override fun onIceCandidateReceived(peerId: String, candidate: IceCandidate) {
+        ensureTrustedKey(peerId)
         logDebug("onIceCandidateReceived <- $peerId")
         val pc = peerConnections[peerId]
         if (pc != null && pc.remoteDescription != null) {
@@ -332,6 +342,16 @@ class PeerConnectionManager(
     }
 
     override fun onBinaryReceived(peerId: String, data: ByteArray) {}
+
+    private fun ensureTrustedKey(peerId: String) {
+        val trustStore = TrustStore.getInstance(context)
+        if (trustStore.getKey(peerId) != null) return
+        val publicPeerId = PublicPeersDirectory.publicPeers.value.firstOrNull { it.publicKey == peerId }?.peerId
+        val name = publicPeerId ?: "Peer"
+        val key = TrustedKey(peerId, peerId, name)
+        key.peerId = publicPeerId
+        trustStore.addKey(key)
+    }
 
     private fun logDebug(message: String) {
         try {
