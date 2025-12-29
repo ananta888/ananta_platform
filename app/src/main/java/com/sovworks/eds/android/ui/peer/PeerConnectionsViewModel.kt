@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.sovworks.eds.android.network.PeerConnectionRegistry
 import com.sovworks.eds.android.network.WebRtcService
 import com.sovworks.eds.android.trust.TrustStore
+import com.sovworks.eds.android.trust.TrustedKey
 import com.sovworks.eds.android.ui.messenger.ChatGroup
 import com.sovworks.eds.android.ui.messenger.MessengerRepository
 import kotlinx.coroutines.flow.SharingStarted
@@ -36,8 +37,15 @@ class PeerConnectionsViewModel(application: Application) : AndroidViewModel(appl
 
     val groups: StateFlow<Map<String, ChatGroup>> = MessengerRepository.groups
 
-    fun connect(peerKey: String) {
-        WebRtcService.getPeerConnectionManager()?.initiateConnection(peerKey)
+    fun connect(peer: PeerConnectionDisplay) {
+        val existing = trustStore.getKey(peer.peerKey)
+        if (existing == null) {
+            val fallbackName = peer.alias ?: peer.peerId
+            val key = TrustedKey(peer.peerKey, peer.peerKey, fallbackName)
+            key.peerId = peer.peerId
+            trustStore.addKey(key)
+        }
+        WebRtcService.getPeerConnectionManager()?.initiateConnection(peer.peerKey)
     }
 
     fun disconnect(peerKey: String) {

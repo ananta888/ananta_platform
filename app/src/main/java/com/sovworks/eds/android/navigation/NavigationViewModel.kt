@@ -20,6 +20,7 @@ sealed class Screen(val title: String) {
     object DebugLog : Screen("Debug Log")
     object FileTransfers : Screen("File Transfers")
     object PeerConnections : Screen("Peer Connections")
+    object ConnectedDevices : Screen("Connected Devices")
     object IdentitySync : Screen("Identity Sync")
     object Pairing : Screen("Device Pairing")
     object Peers : Screen("Peers & Devices")

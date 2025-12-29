@@ -91,7 +91,7 @@ fun PeerConnectionsScreen(
                             if (contains(peer.peerKey)) remove(peer.peerKey) else add(peer.peerKey)
                         }
                     },
-                    onConnect = { viewModel.connect(peer.peerKey) },
+                    onConnect = { viewModel.connect(peer) },
                     onDisconnect = { viewModel.disconnect(peer.peerKey) },
                     onChat = { navigationViewModel.navigateTo(Screen.Messenger(peerId = peer.peerKey)) }
                 )

@@ -29,6 +29,7 @@ import com.sovworks.eds.android.locations.ContainerBasedLocation
 import com.sovworks.eds.android.locations.activities.CreateLocationActivity
 import com.sovworks.eds.android.locations.activities.OpenLocationsActivity
 import com.sovworks.eds.android.ui.transfers.FileTransferDashboardScreen
+import com.sovworks.eds.android.ui.peer.ConnectedPeersScreen
 import com.sovworks.eds.android.ui.peer.PeerConnectionsScreen
 import com.sovworks.eds.android.ui.peer.PeerManagementScreen
 import com.sovworks.eds.android.ui.peer.PeerViewModel
@@ -182,6 +183,7 @@ fun AppScaffold(
                     is Screen.Help -> HelpScreen()
                     is Screen.DebugLog -> DebugLogScreen()
                     is Screen.FileTransfers -> FileTransferDashboardScreen()
+                    is Screen.ConnectedDevices -> ConnectedPeersScreen()
                     is Screen.PeerConnections -> PeerConnectionsScreen()
                     is Screen.IdentitySync -> IdentitySyncScreen(onStartScanner = { onStartIdentityScanner?.invoke() })
                     is Screen.Pairing -> PairingScreen(

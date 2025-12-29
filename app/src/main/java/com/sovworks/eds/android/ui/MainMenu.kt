@@ -89,6 +89,10 @@ fun MainMenu(
             navigationViewModel.navigateToRoot(Screen.FileTransfers)
             onCloseDrawer()
         })
+        MenuItem(text = "Connected Devices", onClick = {
+            navigationViewModel.navigateToRoot(Screen.ConnectedDevices)
+            onCloseDrawer()
+        })
         MenuItem(text = "Peer Connections", onClick = {
             navigationViewModel.navigateToRoot(Screen.PeerConnections)
             onCloseDrawer()
