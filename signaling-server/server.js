@@ -10,7 +10,7 @@ const server = http.createServer((req, res) => {
 
 const wss = new WebSocket.Server({ server });
 
-const clientsById = new Map();
+jaconst clientsByPublicKey = new Map();
 
 function safeSend(ws, payload) {
   if (ws.readyState === WebSocket.OPEN) {
@@ -18,16 +18,17 @@ function safeSend(ws, payload) {
   }
 }
 
-function unregisterPeer(peerId) {
-  if (!peerId) return;
-  const existing = clientsById.get(peerId);
-  if (existing && existing.peerId === peerId) {
-    clientsById.delete(peerId);
+function unregisterPeer(publicKey) {
+  if (!publicKey) return;
+  const existing = clientsByPublicKey.get(publicKey);
+  if (existing && existing.publicKey === publicKey) {
+    clientsByPublicKey.delete(publicKey);
   }
 }
 
 wss.on("connection", (ws) => {
   ws.peerId = null;
+  ws.publicKey = null;
 
   ws.on("message", (raw) => {
     let msg;
@@ -41,26 +42,29 @@ wss.on("connection", (ws) => {
     switch (msg.type) {
       case "register": {
         const peerId = String(msg.peerId || "").trim();
-        if (!peerId) {
-          safeSend(ws, { type: "error", message: "missing_peer_id" });
+        const publicKey = String(msg.publicKey || msg.publicKeyBase64 || "").trim();
+        if (!publicKey) {
+          safeSend(ws, { type: "error", message: "missing_public_key" });
           return;
         }
-        if (clientsById.has(peerId)) {
-          safeSend(ws, { type: "error", message: "peer_id_in_use" });
+        if (clientsByPublicKey.has(publicKey)) {
+          safeSend(ws, { type: "error", message: "public_key_in_use" });
           return;
         }
         ws.peerId = peerId;
-        clientsById.set(peerId, ws);
-        safeSend(ws, { type: "registered", peerId });
+        ws.publicKey = publicKey;
+        clientsByPublicKey.set(publicKey, ws);
+        safeSend(ws, { type: "registered", peerId, publicKey });
         return;
       }
       case "signal": {
         const to = String(msg.to || "").trim();
+        const toPublicKey = String(msg.toPublicKey || "").trim();
         if (!to) {
           safeSend(ws, { type: "error", message: "missing_target" });
           return;
         }
-        const target = clientsById.get(to);
+        const target = toPublicKey ? clientsByPublicKey.get(toPublicKey) : clientsByPublicKey.get(to);
         if (!target) {
           safeSend(ws, { type: "error", message: "target_not_found", to });
           return;
@@ -68,12 +72,13 @@ wss.on("connection", (ws) => {
         safeSend(target, {
           type: "signal",
           from: ws.peerId,
+          fromPublicKey: ws.publicKey,
           payload: msg.payload || null,
         });
         return;
       }
       case "list": {
-        safeSend(ws, { type: "peers", peers: Array.from(clientsById.keys()) });
+        safeSend(ws, { type: "peers", peers: Array.from(clientsByPublicKey.keys()) });
         return;
       }
       default: {
@@ -83,11 +88,11 @@ wss.on("connection", (ws) => {
   });
 
   ws.on("close", () => {
-    unregisterPeer(ws.peerId);
+    unregisterPeer(ws.publicKey);
   });
 
   ws.on("error", () => {
-    unregisterPeer(ws.peerId);
+    unregisterPeer(ws.publicKey);
   });
 });
 

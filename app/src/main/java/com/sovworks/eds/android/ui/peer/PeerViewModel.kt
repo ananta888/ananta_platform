@@ -37,4 +37,13 @@ class PeerViewModel(application: Application) : AndroidViewModel(application) {
         trustStore.removeKey(fingerprint)
         loadPeers()
     }
+
+    fun updateAlias(fingerprint: String, alias: String) {
+        val key = trustStore.getKey(fingerprint)
+        if (key != null) {
+            key.name = alias
+            trustStore.save()
+            loadPeers()
+        }
+    }
 }

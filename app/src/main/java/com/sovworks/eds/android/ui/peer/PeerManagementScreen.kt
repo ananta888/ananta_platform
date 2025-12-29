@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.*
@@ -17,12 +19,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sovworks.eds.android.identity.IdentityManager
@@ -76,7 +82,8 @@ fun PeerManagementScreen(viewModel: PeerViewModel) {
                                 onTrustLevelChange = { level ->
                                     viewModel.updateTrustLevel(peer.fingerprint, level)
                                 },
-                                onDelete = { viewModel.removePeer(peer.fingerprint) }
+                                onDelete = { viewModel.removePeer(peer.fingerprint) },
+                                onAliasChange = { alias -> viewModel.updateAlias(peer.fingerprint, alias) }
                             )
                         }
                     }
@@ -96,6 +103,7 @@ fun PeerManagementScreen(viewModel: PeerViewModel) {
 private data class TrustGraphNode(
     val id: String,
     val label: String,
+    val alias: String?,
     val trustLevel: Int,
     val status: TrustedKey.TrustStatus?,
     val isSelf: Boolean
@@ -156,11 +164,19 @@ private fun TrustGraphCanvas(
             textSize = 28f
         }
     }
+    val badgeTextPaint = remember {
+        android.graphics.Paint().apply {
+            isAntiAlias = true
+            color = android.graphics.Color.WHITE
+            textSize = 22f
+        }
+    }
 
     val trustedColor = Color(0xFF2E7D32)
     val pendingColor = Color(0xFFF9A825)
     val distrustColor = Color(0xFFC62828)
     val neutralColor = MaterialTheme.colorScheme.primary
+    val badgeColor = MaterialTheme.colorScheme.secondary
 
     Canvas(
         modifier = Modifier.fillMaxSize()
@@ -245,6 +261,33 @@ private fun TrustGraphCanvas(
                     labelPaint
                 )
             }
+
+            val alias = node.alias
+            if (!alias.isNullOrBlank()) {
+                val textWidth = badgeTextPaint.measureText(alias)
+                val padding = 8f
+                val badgeHeight = badgeTextPaint.textSize + 8f
+                val top = position.y + radius + 6f
+                val left = position.x - (textWidth / 2f) - padding
+                val width = textWidth + padding * 2f
+                val textY = top + (badgeHeight / 2f) - (badgeTextPaint.ascent() + badgeTextPaint.descent()) / 2f
+
+                drawRoundRect(
+                    color = badgeColor.copy(alpha = 0.9f),
+                    topLeft = Offset(left, top),
+                    size = Size(width, badgeHeight),
+                    cornerRadius = CornerRadius(10f, 10f)
+                )
+                drawIntoCanvas { canvas ->
+                    badgeTextPaint.textAlign = android.graphics.Paint.Align.CENTER
+                    canvas.nativeCanvas.drawText(
+                        alias,
+                        position.x,
+                        textY,
+                        badgeTextPaint
+                    )
+                }
+            }
         }
     }
 }
@@ -287,6 +330,7 @@ private fun buildGraphData(
             TrustGraphNode(
                 id = selfFingerprint,
                 label = selfLabel,
+                alias = null,
                 trustLevel = 5,
                 status = null,
                 isSelf = true
@@ -295,11 +339,13 @@ private fun buildGraphData(
     }
 
     peers.forEach { peer ->
-        val label = peer.name ?: peer.fingerprint.take(6)
+        val alias = peer.name?.takeIf { it.isNotBlank() }
+        val label = peer.fingerprint.take(6)
         nodes.add(
             TrustGraphNode(
                 id = peer.fingerprint,
                 label = label,
+                alias = alias,
                 trustLevel = peer.trustLevel,
                 status = peer.status,
                 isSelf = false
@@ -326,8 +372,17 @@ private fun buildGraphData(
 fun PeerItem(
     peer: TrustedKey,
     onTrustLevelChange: (Int) -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onAliasChange: (String) -> Unit
 ) {
+    val clipboardManager = LocalClipboardManager.current
+    val showKeyDialog = remember { mutableStateOf(false) }
+    val showAliasDialog = remember { mutableStateOf(false) }
+    val aliasDraft = remember { mutableStateOf(peer.name ?: "") }
+    val aliasIsBlank = aliasDraft.value.trim().isEmpty()
+    val alias = peer.name?.takeIf { it.isNotBlank() } ?: "Unknown Peer"
+    val peerId = peer.peerId?.takeIf { it.isNotBlank() } ?: "Unknown ID"
+    val publicKey = peer.publicKey ?: ""
     Card(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -340,12 +395,25 @@ fun PeerItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = peer.name ?: "Unknown Peer", style = MaterialTheme.typography.titleMedium)
-                    Text(text = peer.fingerprint.take(16) + "...", style = MaterialTheme.typography.bodySmall)
+                    Text(text = alias, style = MaterialTheme.typography.titleMedium)
+                    Text(text = "Peer ID: $peerId", style = MaterialTheme.typography.bodySmall)
+                    Text(text = "Public Key: ${publicKey.take(16)}...", style = MaterialTheme.typography.bodySmall)
                     Text(text = "Status: ${peer.status}", style = MaterialTheme.typography.bodySmall)
                 }
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { showAliasDialog.value = true }) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit Alias")
+                    }
+                    IconButton(onClick = {
+                        if (publicKey.isNotBlank()) {
+                            clipboardManager.setText(AnnotatedString(publicKey))
+                        }
+                    }) {
+                        Icon(Icons.Default.ContentCopy, contentDescription = "Copy Public Key")
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                    }
                 }
             }
             
@@ -363,6 +431,71 @@ fun PeerItem(
                     }
                 }
             }
+
+            TextButton(onClick = { showKeyDialog.value = true }) {
+                Text("Show Public Key")
+            }
         }
+    }
+
+    if (showKeyDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showKeyDialog.value = false },
+            title = { Text("Public Key") },
+            text = {
+                Text(text = if (publicKey.isNotBlank()) publicKey else "No public key available")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (publicKey.isNotBlank()) {
+                            clipboardManager.setText(AnnotatedString(publicKey))
+                        }
+                        showKeyDialog.value = false
+                    }
+                ) {
+                    Text("Copy")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showKeyDialog.value = false }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
+
+    if (showAliasDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showAliasDialog.value = false },
+            title = { Text("Edit Alias") },
+            text = {
+                OutlinedTextField(
+                    value = aliasDraft.value,
+                    onValueChange = { aliasDraft.value = it },
+                    label = { Text("Alias") },
+                    isError = aliasIsBlank,
+                    supportingText = {
+                        if (aliasIsBlank) {
+                            Text("Alias is required")
+                        }
+                    }
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val cleaned = aliasDraft.value.trim()
+                    onAliasChange(cleaned)
+                    showAliasDialog.value = false
+                }, enabled = !aliasIsBlank) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAliasDialog.value = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

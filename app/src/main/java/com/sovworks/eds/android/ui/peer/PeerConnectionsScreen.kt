@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -18,12 +20,15 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sovworks.eds.android.navigation.NavigationViewModel
 import com.sovworks.eds.android.navigation.Screen
-import com.sovworks.eds.android.network.PeerConnectionRegistry
 import com.sovworks.eds.android.ui.theme.TrustStars
 
 @Composable
@@ -42,12 +47,12 @@ fun PeerConnectionsScreen(
             item {
                 Text(text = "Peers", style = MaterialTheme.typography.titleLarge)
             }
-            items(peers, key = { it.peerId }) { peer ->
+            items(peers, key = { it.peerKey }) { peer ->
                 PeerConnectionCard(
                     peer = peer,
-                    onConnect = { viewModel.connect(peer.peerId) },
-                    onDisconnect = { viewModel.disconnect(peer.peerId) },
-                    onChat = { navigationViewModel.navigateTo(Screen.Messenger(peerId = peer.peerId)) }
+                    onConnect = { viewModel.connect(peer.peerKey) },
+                    onDisconnect = { viewModel.disconnect(peer.peerKey) },
+                    onChat = { navigationViewModel.navigateTo(Screen.Messenger(peerId = peer.peerKey)) }
                 )
             }
         }
@@ -85,7 +90,7 @@ fun PeerConnectionsScreen(
             Spacer(modifier = Modifier.height(16.dp))
             TextButton(
                 onClick = {
-                    val connectedPeerIds = peers.filter { it.status == "connected" }.map { it.peerId }.toSet()
+                    val connectedPeerIds = peers.filter { it.status == "connected" }.map { it.peerKey }.toSet()
                     if (connectedPeerIds.isNotEmpty()) {
                         viewModel.createGroup("New Group", connectedPeerIds)
                     }
@@ -119,11 +124,14 @@ private fun EmptyPeersState() {
 
 @Composable
 private fun PeerConnectionCard(
-    peer: PeerConnectionRegistry.PeerInfo,
+    peer: PeerConnectionDisplay,
     onConnect: () -> Unit,
     onDisconnect: () -> Unit,
     onChat: () -> Unit
 ) {
+    val clipboardManager = LocalClipboardManager.current
+    val showKeyDialog = remember { mutableStateOf(false) }
+    val alias = peer.alias ?: "Unknown Alias"
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -134,7 +142,11 @@ private fun PeerConnectionCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
             ) {
-                Text(text = peer.peerId, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = alias, style = MaterialTheme.typography.titleMedium)
+                    Text(text = "Peer ID: ${peer.peerId}", style = MaterialTheme.typography.bodySmall)
+                    Text(text = "Public Key: ${peer.publicKey.take(16)}...", style = MaterialTheme.typography.bodySmall)
+                }
                 TrustStars(level = peer.trustLevel)
             }
             Spacer(modifier = Modifier.height(4.dp))
@@ -163,6 +175,17 @@ private fun PeerConnectionCard(
                     TextButton(onClick = onDisconnect) {
                         Text("Disconnect")
                     }
+                    androidx.compose.material3.IconButton(onClick = {
+                        clipboardManager.setText(AnnotatedString(peer.publicKey))
+                    }) {
+                        androidx.compose.material3.Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = "Copy Public Key"
+                        )
+                    }
+                    TextButton(onClick = { showKeyDialog.value = true }) {
+                        Text("Public Key")
+                    }
                 }
                 TextButton(
                     onClick = onChat,
@@ -172,5 +195,26 @@ private fun PeerConnectionCard(
                 }
             }
         }
+    }
+
+    if (showKeyDialog.value) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showKeyDialog.value = false },
+            title = { Text("Public Key") },
+            text = { Text(peer.publicKey) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        clipboardManager.setText(AnnotatedString(peer.publicKey))
+                        showKeyDialog.value = false
+                    }
+                ) { Text("Copy") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showKeyDialog.value = false }) {
+                    Text("Close")
+                }
+            }
+        )
     }
 }

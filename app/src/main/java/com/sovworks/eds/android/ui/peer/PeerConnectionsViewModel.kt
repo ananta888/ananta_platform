@@ -15,27 +15,47 @@ import kotlinx.coroutines.flow.stateIn
 
 class PeerConnectionsViewModel(application: Application) : AndroidViewModel(application) {
     private val trustStore = TrustStore.getInstance(application)
-    
-    val peers: StateFlow<List<PeerConnectionRegistry.PeerInfo>> = PeerConnectionRegistry.state
+
+    val peers: StateFlow<List<PeerConnectionDisplay>> = PeerConnectionRegistry.state
         .map { list ->
             list.map { info ->
                 val trust = trustStore.getKey(info.peerId)
-                info.copy(trustLevel = trust?.trustLevel ?: 0)
+                PeerConnectionDisplay(
+                    peerKey = info.peerId,
+                    peerId = trust?.peerId ?: trust?.name ?: info.peerId,
+                    alias = trust?.name,
+                    publicKey = trust?.publicKey ?: info.peerId,
+                    endpoint = info.endpoint,
+                    status = info.status,
+                    stats = info.stats,
+                    trustLevel = trust?.trustLevel ?: 0
+                )
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val groups: StateFlow<Map<String, ChatGroup>> = MessengerRepository.groups
 
-    fun connect(peerId: String) {
-        WebRtcService.getPeerConnectionManager()?.initiateConnection(peerId)
+    fun connect(peerKey: String) {
+        WebRtcService.getPeerConnectionManager()?.initiateConnection(peerKey)
     }
 
-    fun disconnect(peerId: String) {
-        WebRtcService.getPeerConnectionManager()?.closeConnection(peerId)
+    fun disconnect(peerKey: String) {
+        WebRtcService.getPeerConnectionManager()?.closeConnection(peerKey)
     }
 
     fun createGroup(name: String, memberIds: Set<String>) {
         MessengerRepository.createGroup(name, memberIds)
     }
 }
+
+data class PeerConnectionDisplay(
+    val peerKey: String,
+    val peerId: String,
+    val alias: String?,
+    val publicKey: String,
+    val endpoint: String?,
+    val status: String,
+    val stats: PeerConnectionRegistry.PeerStats?,
+    val trustLevel: Int
+)

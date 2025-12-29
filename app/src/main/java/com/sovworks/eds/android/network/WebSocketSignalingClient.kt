@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit
 class WebSocketSignalingClient(
     private val serverUrl: String,
     private val myId: String,
+    private val myPublicKey: String,
     private val client: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(0, TimeUnit.SECONDS) // WebSocket needs no timeout
@@ -26,7 +27,7 @@ class WebSocketSignalingClient(
 
     private fun connect() {
         val request = Request.Builder()
-            .url("$serverUrl/ws?id=$myId")
+            .url("$serverUrl")
             .build()
         webSocket = client.newWebSocket(request, this)
     }
@@ -52,14 +53,26 @@ class WebSocketSignalingClient(
         this.listener = listener
     }
 
-    private fun sendPayload(peerId: String, type: String, data: String) {
+    private fun sendPayload(peerId: String, type: String, data: String) {       
         val bodyMap = mapOf(
-            "from" to myId,
+            "type" to "signal",
             "to" to peerId,
-            "type" to type,
-            "data" to data
+            "toPublicKey" to peerId,
+            "payload" to mapOf(
+                "type" to type,
+                "data" to data
+            )
         )
         webSocket?.send(gson.toJson(bodyMap))
+    }
+
+    override fun onOpen(webSocket: WebSocket, response: Response) {
+        val register = mapOf(
+            "type" to "register",
+            "peerId" to myId,
+            "publicKey" to myPublicKey
+        )
+        webSocket.send(gson.toJson(register))
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
@@ -80,17 +93,24 @@ class WebSocketSignalingClient(
     }
 
     private fun processMessage(msg: SignalingMessage) {
-        when (msg.type) {
-            "OFFER" -> listener?.onOfferReceived(msg.from, SessionDescription(SessionDescription.Type.OFFER, msg.data))
-            "ANSWER" -> listener?.onAnswerReceived(msg.from, SessionDescription(SessionDescription.Type.ANSWER, msg.data))
+        if (msg.type != "signal" || msg.payload == null || msg.fromPublicKey.isNullOrBlank()) return
+        when (msg.payload.type) {
+            "OFFER" -> listener?.onOfferReceivedFromKey(
+                msg.fromPublicKey,
+                SessionDescription(SessionDescription.Type.OFFER, msg.payload.data)
+            )
+            "ANSWER" -> listener?.onAnswerReceivedFromKey(
+                msg.fromPublicKey,
+                SessionDescription(SessionDescription.Type.ANSWER, msg.payload.data)
+            )
             "CANDIDATE" -> {
-                val candidateMap = gson.fromJson(msg.data, Map::class.java)
+                val candidateMap = gson.fromJson(msg.payload.data, Map::class.java)
                 val candidate = IceCandidate(
                     candidateMap["sdpMid"] as String,
                     (candidateMap["sdpMLineIndex"] as Double).toInt(),
                     candidateMap["sdp"] as String
                 )
-                listener?.onIceCandidateReceived(msg.from, candidate)
+                listener?.onIceCandidateReceivedFromKey(msg.fromPublicKey, candidate)
             }
         }
     }
@@ -100,5 +120,15 @@ class WebSocketSignalingClient(
         webSocket?.close(1000, "Shutdown")
     }
 
-    private data class SignalingMessage(val from: String, val type: String, val data: String)
+    private data class SignalingMessage(
+        val type: String,
+        val from: String?,
+        val fromPublicKey: String?,
+        val payload: SignalingPayload?
+    )
+
+    private data class SignalingPayload(
+        val type: String,
+        val data: String
+    )
 }

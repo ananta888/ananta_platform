@@ -18,14 +18,14 @@ Server listens on `http://localhost:8080` by default.
 
 ## Protocol
 
-Register:
+Register (public key required):
 ```json
-{ "type": "register", "peerId": "alice" }
+{ "type": "register", "peerId": "alice", "publicKey": "BASE64_PUBLIC_KEY" }
 ```
 
-Send signal:
+Send signal (by public key):
 ```json
-{ "type": "signal", "to": "bob", "payload": { "sdp": "...", "ice": "..." } }
+{ "type": "signal", "to": "BASE64_PUBLIC_KEY", "payload": { "sdp": "...", "ice": "..." } }
 ```
 
 List peers:
@@ -35,5 +35,5 @@ List peers:
 
 Incoming signal:
 ```json
-{ "type": "signal", "from": "alice", "payload": { "sdp": "..." } }
+{ "type": "signal", "from": "alice", "fromPublicKey": "BASE64_PUBLIC_KEY", "payload": { "sdp": "..." } }
 ```

@@ -56,6 +56,7 @@ class PairingActivity : ComponentActivity() {
                 metadata.publicKeyBase64,
                 metadata.peerId
             )
+            trustedKey.peerId = metadata.peerId
             trustedKey.status = TrustedKey.TrustStatus.TRUSTED
             trustedKey.trustLevel = 5
             trustedKey.addReason("Verified via QR Code")
@@ -65,7 +66,7 @@ class PairingActivity : ComponentActivity() {
                 .setTitle("Connect now?")
                 .setMessage("Pairing saved. You can connect now or later.")
                 .setPositiveButton("Connect") { _, _ ->
-                    WebRtcService.getPeerConnectionManager()?.initiateConnection(metadata.peerId)
+                    WebRtcService.getPeerConnectionManager()?.initiateConnection(metadata.publicKeyBase64)
                     Toast.makeText(this, "Connecting to ${metadata.peerId}", Toast.LENGTH_SHORT).show()
                     finish()
                 }

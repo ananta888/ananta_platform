@@ -103,11 +103,12 @@ object WebRtcService {
         
         if (mode == UserSettingsCommon.SIGNALING_MODE_HTTP || mode == UserSettingsCommon.SIGNALING_MODE_WEBSOCKET) {
             if (urls.isEmpty()) return null
+            val identity = IdentityManager.loadIdentity(context) ?: return null
             val clients = urls.map { url ->
                 if (mode == UserSettingsCommon.SIGNALING_MODE_HTTP) {
                     HttpSignalingClient(url, myId)
                 } else {
-                    WebSocketSignalingClient(url, myId)
+                    WebSocketSignalingClient(url, myId, identity.publicKeyBase64)
                 }
             }
             return MultiSignalingClient(clients)

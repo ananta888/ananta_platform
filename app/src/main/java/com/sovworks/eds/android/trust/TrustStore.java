@@ -68,6 +68,7 @@ public class TrustStore {
         if (key != null) {
             // In dieser Implementierung ist der Fingerprint der Public Key
             TrustedKey newKey = new TrustedKey(newPublicKey, newPublicKey, key.getName());
+            newKey.setPeerId(key.getPeerId());
             newKey.setStatus(key.getStatus());
             newKey.setTrustLevel(key.getTrustLevel());
             // Kopiere weitere Attribute falls nötig

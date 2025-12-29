@@ -12,6 +12,7 @@ public class TrustedKey implements Serializable {
     private String publicKey;
     private String fingerprint;
     private String name;
+    private String peerId;
     private TrustStatus status;
     private int trustLevel; // 1-5 Sterne
     private List<String> reasons;
@@ -70,6 +71,14 @@ public class TrustedKey implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getPeerId() {
+        return peerId;
+    }
+
+    public void setPeerId(String peerId) {
+        this.peerId = peerId;
     }
 
     public TrustStatus getStatus() {
