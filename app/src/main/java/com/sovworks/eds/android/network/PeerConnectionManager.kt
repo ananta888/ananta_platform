@@ -8,6 +8,7 @@ import com.sovworks.eds.android.trust.TrustNetworkPackage
 import com.sovworks.eds.android.trust.TrustStore
 import com.sovworks.eds.android.trust.TrustedKey
 import kotlinx.coroutines.*
+import android.util.Log
 import org.webrtc.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -20,6 +21,7 @@ class PeerConnectionManager(
     private val signalingClient: SignalingClient,
     private val myId: String
 ) : SignalingListener, DataChannelListener {
+    private val tag = "PeerConnectionManager"
 
     private val managerScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val peerConnections = ConcurrentHashMap<String, PeerConnection>()
@@ -155,6 +157,7 @@ class PeerConnectionManager(
     }
 
     fun initiateConnection(peerId: String) {
+        logDebug("initiateConnection -> $peerId")
         PeerConnectionRegistry.updateStatus(peerId, "connecting")
         val pc = getOrCreatePeerConnection(peerId) ?: return
         
@@ -177,6 +180,7 @@ class PeerConnectionManager(
                     pc.setLocalDescription(object : SdpObserver {
                         override fun onCreateSuccess(p0: SessionDescription?) {}
                         override fun onSetSuccess() {
+                            logDebug("sendOffer -> $peerId")
                             signalingClient.sendOffer(peerId, it)
                         }
                         override fun onCreateFailure(p0: String?) {}
@@ -190,7 +194,8 @@ class PeerConnectionManager(
         }, constraints)
     }
 
-    override fun onOfferReceived(peerId: String, sdp: SessionDescription) {
+    override fun onOfferReceived(peerId: String, sdp: SessionDescription) {     
+        logDebug("onOfferReceived <- $peerId")
         val pc = getOrCreatePeerConnection(peerId) ?: return
         pc.setRemoteDescription(object : SdpObserver {
             override fun onCreateSuccess(p0: SessionDescription?) {}
@@ -203,7 +208,8 @@ class PeerConnectionManager(
                             pc.setLocalDescription(object : SdpObserver {
                                 override fun onCreateSuccess(p0: SessionDescription?) {}
                                 override fun onSetSuccess() {
-                                    signalingClient.sendAnswer(peerId, it)
+                                    logDebug("sendAnswer -> $peerId")
+                                    signalingClient.sendAnswer(peerId, it)      
                                 }
                                 override fun onCreateFailure(p0: String?) {}
                                 override fun onSetFailure(p0: String?) {}
@@ -220,7 +226,8 @@ class PeerConnectionManager(
         }, sdp)
     }
 
-    override fun onAnswerReceived(peerId: String, sdp: SessionDescription) {
+    override fun onAnswerReceived(peerId: String, sdp: SessionDescription) {    
+        logDebug("onAnswerReceived <- $peerId")
         val pc = peerConnections[peerId] ?: return
         pc.setRemoteDescription(object : SdpObserver {
             override fun onCreateSuccess(p0: SessionDescription?) {}
@@ -244,6 +251,7 @@ class PeerConnectionManager(
     }
 
     override fun onIceCandidateReceived(peerId: String, candidate: IceCandidate) {
+        logDebug("onIceCandidateReceived <- $peerId")
         val pc = peerConnections[peerId]
         if (pc != null && pc.remoteDescription != null) {
             pc.addIceCandidate(candidate)
@@ -259,6 +267,7 @@ class PeerConnectionManager(
     }
 
     fun closeConnection(peerId: String) {
+        logDebug("closeConnection -> $peerId")
         peerConnections.remove(peerId)?.dispose()
         PeerConnectionRegistry.updateStatus(peerId, "closed")
     }
@@ -323,4 +332,12 @@ class PeerConnectionManager(
     }
 
     override fun onBinaryReceived(peerId: String, data: ByteArray) {}
+
+    private fun logDebug(message: String) {
+        try {
+            Log.d(tag, message)
+        } catch (_: Throwable) {
+            // Ignore logging failures in JVM unit tests.
+        }
+    }
 }

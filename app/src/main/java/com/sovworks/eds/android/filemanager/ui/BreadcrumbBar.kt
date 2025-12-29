@@ -12,6 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
+import com.sovworks.eds.android.identity.IdentityManager
 import com.sovworks.eds.locations.Location
 
 import com.sovworks.eds.android.navigation.Screen
@@ -25,6 +28,7 @@ fun BreadcrumbBar(
     onScreenClick: (Screen) -> Unit,
     onLocationClick: (Location) -> Unit
 ) {
+    val identity = IdentityManager.loadIdentity(LocalContext.current)
     TopAppBar(
         title = {
             LazyRow(
@@ -61,8 +65,19 @@ fun BreadcrumbBar(
             }
         },
         navigationIcon = {
-            IconButton(onClick = onMenuClick) {
-                Icon(Icons.Default.Menu, contentDescription = "Menu")
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onMenuClick) {
+                    Icon(Icons.Default.Menu, contentDescription = "Menu")
+                }
+                identity?.id?.takeIf { it.isNotBlank() }?.let { name ->
+                    Text(
+                        text = name,
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(end = 4.dp)
+                    )
+                }
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(

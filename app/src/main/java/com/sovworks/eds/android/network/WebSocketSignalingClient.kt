@@ -64,7 +64,7 @@ class WebSocketSignalingClient(
         this.listener = listener
     }
 
-    private fun sendPayload(peerId: String, type: String, data: String) {       
+    private fun sendPayload(peerId: String, type: String, data: String) {
         val bodyMap = mapOf(
             "type" to "signal",
             "to" to peerId,
@@ -74,6 +74,7 @@ class WebSocketSignalingClient(
                 "data" to data
             )
         )
+        logDebug("sendPayload -> $peerId ($type)")
         webSocket?.send(gson.toJson(bodyMap))
     }
 
