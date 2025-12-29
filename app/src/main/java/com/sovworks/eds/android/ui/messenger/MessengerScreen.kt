@@ -10,8 +10,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.sovworks.eds.android.trust.TrustStore
 
 @Composable
 fun MessengerScreen(
@@ -29,6 +31,8 @@ fun MessengerScreen(
 
     val messages by viewModel.messages.collectAsState()
     var inputText by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val trustStore = remember { TrustStore.getInstance(context) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Chat Header
@@ -41,7 +45,13 @@ fun MessengerScreen(
             ) {
                 val headerText = when {
                     groupId != null -> "Group: $groupId"
-                    peerId != null -> "Chat with $peerId"
+                    peerId != null -> {
+                        val trusted = trustStore.getKey(peerId)
+                        val display = trusted?.name?.takeIf { it.isNotBlank() }
+                            ?: trusted?.peerId?.takeIf { it.isNotBlank() }
+                            ?: peerId
+                        "Chat with $display"
+                    }
                     else -> "Messenger"
                 }
                 Text(
