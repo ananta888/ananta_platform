@@ -147,7 +147,7 @@ class PeerConnectionManager(
             override fun onRemoveStream(stream: MediaStream?) {}
             override fun onDataChannel(dataChannel: DataChannel?) {
                 dataChannel?.let {
-ich                    ensureTrustedKey(peerId)
+                    ensureTrustedKey(peerId)
                     multiplexer.onDataChannelCreated(peerId, it, false)
                 }
             }
