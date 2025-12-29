@@ -25,17 +25,23 @@ class WebSocketSignalingClientTest {
     @Before
     fun setup() {
         whenever(mockClient.newWebSocket(any(), any())).thenReturn(webSocket)
-        client = WebSocketSignalingClient("http://localhost", "myId", mockClient, testScope)
+        client = WebSocketSignalingClient(
+            "http://localhost",
+            "myId",
+            "myPublicKey",
+            mockClient,
+            testScope
+        )
         client.setListener(listener)
     }
 
     @Test
     fun `onMessage with OFFER should notify listener`() {
-        val msgJson = """{"from":"other","type":"OFFER","data":"sdp-content"}"""
+        val msgJson = """{"type":"signal","fromPublicKey":"otherKey","payload":{"type":"OFFER","data":"sdp-content"}}"""
         client.onMessage(webSocket, msgJson)
-        
+
         verify(listener).onOfferReceived(check {
-            assertEquals("other", it)
+            assertEquals("otherKey", it)
         }, check {
             assertEquals(SessionDescription.Type.OFFER, it.type)
             assertEquals("sdp-content", it.description)
@@ -44,11 +50,11 @@ class WebSocketSignalingClientTest {
 
     @Test
     fun `onMessage with ANSWER should notify listener`() {
-        val msgJson = """{"from":"other","type":"ANSWER","data":"sdp-content"}"""
+        val msgJson = """{"type":"signal","fromPublicKey":"otherKey","payload":{"type":"ANSWER","data":"sdp-content"}}"""
         client.onMessage(webSocket, msgJson)
-        
+
         verify(listener).onAnswerReceived(check {
-            assertEquals("other", it)
+            assertEquals("otherKey", it)
         }, check {
             assertEquals(SessionDescription.Type.ANSWER, it.type)
             assertEquals("sdp-content", it.description)
@@ -58,11 +64,11 @@ class WebSocketSignalingClientTest {
     @Test
     fun `onMessage with CANDIDATE should notify listener`() {
         val candidateMap = mapOf("sdp" to "cand", "sdpMid" to "0", "sdpMLineIndex" to 1.0)
-        val msgJson = """{"from":"other","type":"CANDIDATE","data":${gson.toJson(gson.toJson(candidateMap))}}"""
+        val msgJson = """{"type":"signal","fromPublicKey":"otherKey","payload":{"type":"CANDIDATE","data":${gson.toJson(gson.toJson(candidateMap))}}}"""
         client.onMessage(webSocket, msgJson)
-        
+
         verify(listener).onIceCandidateReceived(check {
-            assertEquals("other", it)
+            assertEquals("otherKey", it)
         }, check {
             assertEquals("cand", it.sdp)
             assertEquals("0", it.sdpMid)
@@ -74,13 +80,15 @@ class WebSocketSignalingClientTest {
     fun `sendOffer should send correct JSON`() {
         val sdp = SessionDescription(SessionDescription.Type.OFFER, "sdp-content")
         client.sendOffer("peerId", sdp)
-        
+
         verify(webSocket).send(check<String> {
             val map = gson.fromJson(it, Map::class.java)
-            assertEquals("myId", map["from"])
             assertEquals("peerId", map["to"])
-            assertEquals("OFFER", map["type"])
-            assertEquals("sdp-content", map["data"])
+            assertEquals("peerId", map["toPublicKey"])
+            assertEquals("signal", map["type"])
+            val payload = map["payload"] as Map<*, *>
+            assertEquals("OFFER", payload["type"])
+            assertEquals("sdp-content", payload["data"])
         })
     }
 
@@ -88,13 +96,15 @@ class WebSocketSignalingClientTest {
     fun `sendAnswer should send correct JSON`() {
         val sdp = SessionDescription(SessionDescription.Type.ANSWER, "sdp-content")
         client.sendAnswer("peerId", sdp)
-        
+
         verify(webSocket).send(check<String> {
             val map = gson.fromJson(it, Map::class.java)
-            assertEquals("myId", map["from"])
             assertEquals("peerId", map["to"])
-            assertEquals("ANSWER", map["type"])
-            assertEquals("sdp-content", map["data"])
+            assertEquals("peerId", map["toPublicKey"])
+            assertEquals("signal", map["type"])
+            val payload = map["payload"] as Map<*, *>
+            assertEquals("ANSWER", payload["type"])
+            assertEquals("sdp-content", payload["data"])
         })
     }
 
@@ -102,13 +112,15 @@ class WebSocketSignalingClientTest {
     fun `sendIceCandidate should send correct JSON`() {
         val candidate = IceCandidate("0", 1, "cand")
         client.sendIceCandidate("peerId", candidate)
-        
+
         verify(webSocket).send(check<String> {
             val map = gson.fromJson(it, Map::class.java)
-            assertEquals("myId", map["from"])
             assertEquals("peerId", map["to"])
-            assertEquals("CANDIDATE", map["type"])
-            val dataMap = gson.fromJson(map["data"] as String, Map::class.java)
+            assertEquals("peerId", map["toPublicKey"])
+            assertEquals("signal", map["type"])
+            val payload = map["payload"] as Map<*, *>
+            assertEquals("CANDIDATE", payload["type"])
+            val dataMap = gson.fromJson(payload["data"] as String, Map::class.java)
             assertEquals("cand", dataMap["sdp"])
             assertEquals("0", dataMap["sdpMid"])
             assertEquals(1.0, dataMap["sdpMLineIndex"])
