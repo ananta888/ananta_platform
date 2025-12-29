@@ -17,7 +17,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.sovworks.eds.settings.Settings
 import com.sovworks.eds.android.settings.UserSettings
-ijamport com.sovworks.eds.android.settings.UserSettingsCommon
+import com.sovworks.eds.android.settings.UserSettingsCommon
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
