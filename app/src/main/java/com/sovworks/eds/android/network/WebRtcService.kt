@@ -102,25 +102,33 @@ object WebRtcService {
     ): SignalingClient? {
         val mode = settings.getSignalingMode()
         val urls = settings.getSignalingServerUrls()
-        Log.d(TAG, "Signaling mode=$mode urls=$urls")
+        logDebug("Signaling mode=$mode urls=$urls")
 
         if (mode == UserSettingsCommon.SIGNALING_MODE_HTTP || mode == UserSettingsCommon.SIGNALING_MODE_WEBSOCKET) {
             if (urls.isEmpty()) return null
             val identity = IdentityManager.loadIdentity(context) ?: return null
             val clients = urls.map { url ->
                 if (mode == UserSettingsCommon.SIGNALING_MODE_HTTP) {
-                    Log.d(TAG, "Using HTTP signaling: $url")
+                    logDebug("Using HTTP signaling: $url")
                     HttpSignalingClient(url, myId)
                 } else {
-                    Log.d(TAG, "Using WebSocket signaling: $url")
+                    logDebug("Using WebSocket signaling: $url")
                     WebSocketSignalingClient(url, myId, identity.publicKeyBase64)
                 }
             }
             return MultiSignalingClient(clients)
         }
 
-        Log.d(TAG, "Using local signaling")
+        logDebug("Using local signaling")
         return LocalSignalingClient(context, myId)
+    }
+
+    private fun logDebug(message: String) {
+        try {
+            Log.d(TAG, message)
+        } catch (_: Throwable) {
+            // Ignore logging failures in JVM unit tests.
+        }
     }
 
     @JvmStatic

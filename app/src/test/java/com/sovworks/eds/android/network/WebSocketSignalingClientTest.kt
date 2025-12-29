@@ -26,7 +26,7 @@ class WebSocketSignalingClientTest {
     fun setup() {
         whenever(mockClient.newWebSocket(any(), any())).thenReturn(webSocket)
         client = WebSocketSignalingClient(
-            "http://localhost",
+            "ws://localhost",
             "myId",
             "myPublicKey",
             mockClient,

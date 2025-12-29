@@ -28,11 +28,16 @@ class WebSocketSignalingClient(
     }
 
     private fun connect() {
-        val request = Request.Builder()
-            .url("$serverUrl")
-            .build()
-        Log.d(tag, "Connecting to $serverUrl")
-        webSocket = client.newWebSocket(request, this)
+        try {
+            val requestUrl = normalizeWebSocketUrl(serverUrl)
+            val request = Request.Builder()
+                .url(requestUrl)
+                .build()
+            logDebug("Connecting to $serverUrl")
+            webSocket = client.newWebSocket(request, this)
+        } catch (e: Exception) {
+            logWarn("Failed to connect to $serverUrl: ${e.message}", e)
+        }
     }
 
     override fun sendOffer(peerId: String, sdp: SessionDescription) {
@@ -70,7 +75,7 @@ class WebSocketSignalingClient(
     }
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
-        Log.d(tag, "Connected to $serverUrl")
+        logDebug("Connected to $serverUrl")
         val register = mapOf(
             "type" to "register",
             "peerId" to myId,
@@ -89,11 +94,35 @@ class WebSocketSignalingClient(
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-        Log.w(tag, "WebSocket failure for $serverUrl: ${t.message}", t)
+        logWarn("WebSocket failure for $serverUrl: ${t.message}", t)
         // Simple reconnect logic
         clientScope.launch {
             delay(5000)
             connect()
+        }
+    }
+
+    private fun logDebug(message: String) {
+        try {
+            Log.d(tag, message)
+        } catch (_: Throwable) {
+            // Ignore logging failures in JVM unit tests.
+        }
+    }
+
+    private fun logWarn(message: String, throwable: Throwable) {
+        try {
+            Log.w(tag, message, throwable)
+        } catch (_: Throwable) {
+            // Ignore logging failures in JVM unit tests.
+        }
+    }
+
+    private fun normalizeWebSocketUrl(url: String): String {
+        return when {
+            url.startsWith("ws://") -> "http://" + url.removePrefix("ws://")
+            url.startsWith("wss://") -> "https://" + url.removePrefix("wss://")
+            else -> url
         }
     }
 
