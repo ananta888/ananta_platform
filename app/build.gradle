@@ -11,6 +11,11 @@ android {
     namespace "com.sovworks.eds.android"
     compileSdk 34
 
+    dexOptions {
+        javaMaxHeapSize "4g"
+        preDexLibraries true
+    }
+
     defaultConfig {
         applicationId "com.sovworks.eds.android"
         minSdk 23
