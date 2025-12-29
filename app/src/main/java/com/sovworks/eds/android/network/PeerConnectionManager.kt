@@ -206,16 +206,26 @@ class PeerConnectionManager(
     override fun onOfferReceived(peerId: String, sdp: SessionDescription) {     
         ensureTrustedKey(peerId)
         logDebug("onOfferReceived <- $peerId")
+        val polite = isPolitePeer(peerId)
         val pc = getOrCreatePeerConnection(peerId) ?: return
-        pc.setRemoteDescription(object : SdpObserver {
+        if (pc.signalingState() == PeerConnection.SignalingState.HAVE_LOCAL_OFFER) {
+            if (!polite) {
+                logDebug("offer glare: ignoring offer from $peerId (impolite)")
+                return
+            }
+            logDebug("offer glare: resetting local offer for $peerId (polite)")
+            resetPeerConnection(peerId)
+        }
+        val nextPc = getOrCreatePeerConnection(peerId) ?: return
+        nextPc.setRemoteDescription(object : SdpObserver {
             override fun onCreateSuccess(p0: SessionDescription?) {}
             override fun onSetSuccess() {
-                drainIceCandidates(peerId, pc)
+                drainIceCandidates(peerId, nextPc)
                 val constraints = MediaConstraints()
-                pc.createAnswer(object : SdpObserver {
+                nextPc.createAnswer(object : SdpObserver {
                     override fun onCreateSuccess(answerSdp: SessionDescription?) {
                         answerSdp?.let {
-                            pc.setLocalDescription(object : SdpObserver {
+                            nextPc.setLocalDescription(object : SdpObserver {
                                 override fun onCreateSuccess(p0: SessionDescription?) {}
                                 override fun onSetSuccess() {
                                     logDebug("sendAnswer -> $peerId")
@@ -353,6 +363,17 @@ class PeerConnectionManager(
         val key = TrustedKey(peerId, peerId, name)
         key.peerId = publicPeerId
         trustStore.addKey(key)
+    }
+
+    private fun resetPeerConnection(peerId: String) {
+        peerConnections.remove(peerId)?.dispose()
+        pendingIceCandidates.remove(peerId)
+    }
+
+    private fun isPolitePeer(peerId: String): Boolean {
+        val myKey = IdentityManager.loadIdentity(context)?.publicKeyBase64
+        if (myKey.isNullOrBlank()) return true
+        return myKey < peerId
     }
 
     private fun logDebug(message: String) {
