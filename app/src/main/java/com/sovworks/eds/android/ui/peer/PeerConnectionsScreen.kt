@@ -12,11 +12,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,11 +43,40 @@ fun PeerConnectionsScreen(
 ) {
     val peers by viewModel.peers.collectAsState()
     val groups by viewModel.groups.collectAsState()
+    val selectedPeersState = remember { mutableStateOf<Set<String>>(emptySet()) }
+    val showMultiSendDialog = remember { mutableStateOf(false) }
+    val showCreateGroupDialog = remember { mutableStateOf(false) }
+    val messageDraft = remember { mutableStateOf("") }
+    val groupNameDraft = remember { mutableStateOf("New Group") }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        if (selectedPeersState.value.isNotEmpty()) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Selected: ${selectedPeersState.value.size}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Row {
+                        TextButton(onClick = { showMultiSendDialog.value = true }) {
+                            Text("Send Message")
+                        }
+                        TextButton(onClick = { showCreateGroupDialog.value = true }) {
+                            Text("Create Group")
+                        }
+                        TextButton(onClick = { selectedPeersState.value = emptySet() }) {
+                            Text("Clear")
+                        }
+                    }
+                }
+            }
+        }
         if (peers.isNotEmpty()) {
             item {
                 Text(text = "Peers", style = MaterialTheme.typography.titleLarge)
@@ -50,6 +84,12 @@ fun PeerConnectionsScreen(
             items(peers, key = { it.peerKey }) { peer ->
                 PeerConnectionCard(
                     peer = peer,
+                    selected = selectedPeersState.value.contains(peer.peerKey),
+                    onToggleSelect = {
+                        selectedPeersState.value = selectedPeersState.value.toMutableSet().apply {
+                            if (contains(peer.peerKey)) remove(peer.peerKey) else add(peer.peerKey)
+                        }
+                    },
                     onConnect = { viewModel.connect(peer.peerKey) },
                     onDisconnect = { viewModel.disconnect(peer.peerKey) },
                     onChat = { navigationViewModel.navigateTo(Screen.Messenger(peerId = peer.peerKey)) }
@@ -75,11 +115,22 @@ fun PeerConnectionsScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(text = group.name, style = MaterialTheme.typography.titleMedium)
                             Text(text = "${group.memberIds.size} members", style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                text = group.memberIds.joinToString(", ").take(120),
+                                style = MaterialTheme.typography.bodySmall
+                            )
                         }
-                        TextButton(onClick = { 
-                            navigationViewModel.navigateTo(Screen.Messenger(groupId = group.id))
-                        }) {
-                            Text("Chat")
+                        Row {
+                            TextButton(onClick = {
+                                navigationViewModel.navigateTo(Screen.Messenger(groupId = group.id))
+                            }) {
+                                Text("Chat")
+                            }
+                            TextButton(onClick = { viewModel.deleteGroup(group.id) }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete Group")
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Delete")
+                            }
                         }
                     }
                 }
@@ -108,6 +159,91 @@ fun PeerConnectionsScreen(
             }
         }
     }
+
+    if (showMultiSendDialog.value) {
+        val connected = peers.filter { it.status == "connected" }.map { it.peerKey }.toSet()
+        val targets = selectedPeersState.value.intersect(connected)
+        AlertDialog(
+            onDismissRequest = { showMultiSendDialog.value = false },
+            title = { Text("Send to Selected Peers") },
+            text = {
+                Column {
+                    Text(
+                        text = "Connected targets: ${targets.size}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    OutlinedTextField(
+                        value = messageDraft.value,
+                        onValueChange = { messageDraft.value = it },
+                        label = { Text("Message") },
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val text = messageDraft.value.trim()
+                        if (text.isNotEmpty() && targets.isNotEmpty()) {
+                            viewModel.sendMessageToPeers(targets, text)
+                            messageDraft.value = ""
+                            showMultiSendDialog.value = false
+                        }
+                    },
+                    enabled = messageDraft.value.isNotBlank() && targets.isNotEmpty()
+                ) {
+                    Text("Send")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showMultiSendDialog.value = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showCreateGroupDialog.value) {
+        val connected = peers.filter { it.status == "connected" }.map { it.peerKey }.toSet()
+        val members = selectedPeersState.value.intersect(connected)
+        AlertDialog(
+            onDismissRequest = { showCreateGroupDialog.value = false },
+            title = { Text("Create Group") },
+            text = {
+                Column {
+                    Text(
+                        text = "Connected members: ${members.size}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    OutlinedTextField(
+                        value = groupNameDraft.value,
+                        onValueChange = { groupNameDraft.value = it },
+                        label = { Text("Group name") },
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val name = groupNameDraft.value.trim()
+                        if (name.isNotEmpty() && members.isNotEmpty()) {
+                            viewModel.createGroup(name, members)
+                            showCreateGroupDialog.value = false
+                        }
+                    },
+                    enabled = groupNameDraft.value.isNotBlank() && members.isNotEmpty()
+                ) {
+                    Text("Create")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCreateGroupDialog.value = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -125,6 +261,8 @@ private fun EmptyPeersState() {
 @Composable
 private fun PeerConnectionCard(
     peer: PeerConnectionDisplay,
+    selected: Boolean,
+    onToggleSelect: () -> Unit,
     onConnect: () -> Unit,
     onDisconnect: () -> Unit,
     onChat: () -> Unit
@@ -147,7 +285,10 @@ private fun PeerConnectionCard(
                     Text(text = "Peer ID: ${peer.peerId}", style = MaterialTheme.typography.bodySmall)
                     Text(text = "Public Key: ${peer.publicKey.take(16)}...", style = MaterialTheme.typography.bodySmall)
                 }
-                TrustStars(level = peer.trustLevel)
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Checkbox(checked = selected, onCheckedChange = { onToggleSelect() })
+                    TrustStars(level = peer.trustLevel)
+                }
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = "Status: ${peer.status}", style = MaterialTheme.typography.bodySmall)

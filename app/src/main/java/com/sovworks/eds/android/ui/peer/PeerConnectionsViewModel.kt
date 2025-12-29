@@ -47,6 +47,14 @@ class PeerConnectionsViewModel(application: Application) : AndroidViewModel(appl
     fun createGroup(name: String, memberIds: Set<String>) {
         MessengerRepository.createGroup(name, memberIds)
     }
+
+    fun deleteGroup(groupId: String) {
+        MessengerRepository.deleteGroup(groupId)
+    }
+
+    fun sendMessageToPeers(peerIds: Set<String>, text: String) {
+        MessengerRepository.sendMessageToPeers(peerIds, text)
+    }
 }
 
 data class PeerConnectionDisplay(

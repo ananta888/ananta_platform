@@ -244,6 +244,13 @@ object MessengerRepository : DataChannelListener {
         addMessage(peerId, chatMessage)
     }
 
+    fun sendMessageToPeers(peerIds: Set<String>, text: String) {
+        if (peerIds.isEmpty()) return
+        peerIds.forEach { peerId ->
+            sendMessage(peerId, text)
+        }
+    }
+
     fun sendGroupMessage(groupId: String, text: String) {
         val group = _groups.value[groupId] ?: return
         val manager = WebRtcService.getPeerConnectionManager() ?: return
@@ -266,6 +273,13 @@ object MessengerRepository : DataChannelListener {
             groupId = groupId
         )
         addMessage(groupId, chatMessage)
+    }
+
+    fun deleteGroup(groupId: String) {
+        _groups.update { it - groupId }
+        scope.launch {
+            database?.groupDao()?.deleteGroupById(groupId)
+        }
     }
 
     fun shareTrustWithGroup(groupId: String) {

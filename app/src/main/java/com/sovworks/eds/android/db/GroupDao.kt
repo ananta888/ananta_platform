@@ -13,4 +13,7 @@ interface GroupDao {
 
     @Delete
     suspend fun deleteGroup(group: ChatGroupEntity)
+
+    @Query("DELETE FROM chat_groups WHERE id = :groupId")
+    suspend fun deleteGroupById(groupId: String)
 }
