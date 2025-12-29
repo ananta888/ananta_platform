@@ -11,11 +11,23 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.sovworks.eds.settings.Settings
 import com.sovworks.eds.android.settings.UserSettings
+ijamport com.sovworks.eds.android.settings.UserSettingsCommon
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.net.URI
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun SettingsGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
@@ -125,8 +137,12 @@ fun EncryptionSettingsScreen() {
 fun ConnectionSettingsScreen() {
     val context = LocalContext.current
     val settings = remember { UserSettings.getSettings(context) }
-    
+    val scope = rememberCoroutineScope()
+
     var signalingMode by remember { mutableStateOf(settings.signalingMode) }
+    var signalingUrl by remember { mutableStateOf(settings.signalingServerUrl) }
+    var testResults by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
+    var testInProgress by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         SettingsGroup(title = "Signaling") {
@@ -135,21 +151,198 @@ fun ConnectionSettingsScreen() {
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 style = MaterialTheme.typography.bodyMedium
             )
-            // Hier könnte ein Dropdown oder RadioButton-Gruppe hin
-            listOf("WebSocket", "HTTP", "P2P").forEach { mode ->
+            val modes = listOf(
+                UserSettingsCommon.SIGNALING_MODE_WEBSOCKET to "WebSocket",
+                UserSettingsCommon.SIGNALING_MODE_HTTP to "HTTP",
+                UserSettingsCommon.SIGNALING_MODE_LOCAL to "P2P (Local)"
+            )
+            modes.forEach { (modeKey, label) ->
                 Row(
-                    modifier = Modifier.fillMaxWidth().clickable { 
-                        signalingMode = mode
-                        settings.sharedPreferences.edit().putString("signaling_mode", mode).apply()
+                    modifier = Modifier.fillMaxWidth().clickable {
+                        signalingMode = modeKey
+                        settings.sharedPreferences.edit()
+                            .putString(UserSettingsCommon.SIGNALING_MODE, modeKey)
+                            .apply()
                     }.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    RadioButton(selected = (signalingMode == mode), onClick = null)
+                    RadioButton(selected = (signalingMode == modeKey), onClick = null)
                     Spacer(modifier = Modifier.width(16.dp))
-                    Text(mode)
+                    Text(label)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedTextField(
+                value = signalingUrl,
+                onValueChange = {
+                    signalingUrl = it
+                    val cleaned = it.trim()
+                    val editor = settings.sharedPreferences.edit()
+                    if (cleaned.isEmpty()) {
+                        editor.remove(UserSettingsCommon.SIGNALING_SERVER_URL)
+                    } else {
+                        editor.putString(UserSettingsCommon.SIGNALING_SERVER_URL, cleaned)
+                    }
+                    editor.apply()
+                },
+                label = { Text("Signaling-Server URL") },
+                isError = signalingUrl.isNotBlank() && !isValidSignalingUrl(signalingUrl),
+                supportingText = {
+                    val trimmed = signalingUrl.trim()
+                    when {
+                        trimmed.isEmpty() -> Text("Mehrere URLs mit ; trennen")
+                        !isValidSignalingUrl(trimmed) ->
+                            Text("Ungueltige URL. Erlaubt: ws/wss/http/https")
+                        else -> Text("Mehrere URLs mit ; trennen")
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        val url = signalingUrl.trim()
+                        testResults = emptyList()
+                        testInProgress = true
+                        scope.launch {
+                            val result = testSignalingUrls(url)
+                            testResults = result
+                            testInProgress = false
+                        }
+                    },
+                    enabled = signalingUrl.isNotBlank() &&
+                        isValidSignalingUrl(signalingUrl) &&
+                        !testInProgress
+                ) {
+                    Text(if (testInProgress) "Teste..." else "Verbindung testen")
+                }
+                if (testInProgress) {
+                    Text(
+                        text = "Teste...",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
+            if (testResults.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    testResults.forEach { (url, status) ->
+                        Text(
+                            text = "$url: $status",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (status == "OK") Color(0xFF2E7D32) else MaterialTheme.colorScheme.error
+                        )
+                    }
+                    val failed = testResults.filter { it.second != "OK" }.map { it.first }
+                    if (failed.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        OutlinedButton(
+                            onClick = {
+                                testResults = emptyList()
+                                testInProgress = true
+                                scope.launch {
+                                    val result = testSignalingUrls(failed)
+                                    testResults = result
+                                    testInProgress = false
+                                }
+                            },
+                            enabled = !testInProgress
+                        ) {
+                            Text("Fehlgeschlagene erneut testen")
+                        }
+                    }
                 }
             }
         }
+    }
+}
+
+private fun isValidSignalingUrl(url: String): Boolean {
+    val entries = parseSignalingUrls(url)
+    if (entries.isEmpty()) return false
+    return entries.all { entry ->
+        try {
+            val uri = URI(entry)
+            val scheme = uri.scheme?.lowercase()
+            val allowed = setOf("ws", "wss", "http", "https")
+            scheme in allowed && !uri.host.isNullOrBlank()
+        } catch (_: Exception) {
+            false
+        }
+    }
+}
+
+private fun parseSignalingUrls(urls: String): List<String> {
+    return urls.split(";").map { it.trim() }.filter { it.isNotEmpty() }
+}
+
+private suspend fun testSignalingUrls(urls: String): List<Pair<String, String>> {
+    val entries = parseSignalingUrls(urls)
+    return testSignalingUrls(entries)
+}
+
+private suspend fun testSignalingUrls(entries: List<String>): List<Pair<String, String>> {
+    return withContext(Dispatchers.IO) {
+        entries.map { entry ->
+            async { entry to testSignalingUrl(entry) }
+        }.awaitAll()
+    }
+}
+
+private suspend fun testSignalingUrl(url: String): String {
+    return try {
+        val uri = URI(url)
+        val scheme = uri.scheme?.lowercase()
+        if (scheme == "ws" || scheme == "wss") {
+            val client = OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5, TimeUnit.SECONDS)
+                .build()
+            val request = Request.Builder().url(url).build()
+            val result = kotlinx.coroutines.CompletableDeferred<String>()
+            val ws = client.newWebSocket(request, object : okhttp3.WebSocketListener() {
+                override fun onOpen(webSocket: okhttp3.WebSocket, response: okhttp3.Response) {
+                    result.complete("OK")
+                    webSocket.close(1000, "ok")
+                }
+
+                override fun onFailure(
+                    webSocket: okhttp3.WebSocket,
+                    t: Throwable,
+                    response: okhttp3.Response?
+                ) {
+                    result.complete("Fehler")
+                }
+            })
+            val status = withTimeoutOrNull(5000) { result.await() } ?: "Timeout"
+            ws.cancel()
+            status
+        } else {
+            val client = OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5, TimeUnit.SECONDS)
+                .build()
+            val response = client.newCall(Request.Builder().url(url).head().build()).execute()
+            if (response.isSuccessful) "OK" else "Fehler"
+        }
+    } catch (_: Exception) {
+        "Fehler"
     }
 }
 
