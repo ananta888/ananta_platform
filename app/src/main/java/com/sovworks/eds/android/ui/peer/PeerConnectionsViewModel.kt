@@ -7,6 +7,7 @@ import com.sovworks.eds.android.network.PeerConnectionRegistry
 import com.sovworks.eds.android.network.PeerConnectionRequestRegistry
 import com.sovworks.eds.android.network.PeerDirectory
 import com.sovworks.eds.android.network.WebRtcService
+import com.sovworks.eds.android.identity.IdentityManager
 import com.sovworks.eds.android.trust.TrustStore
 import com.sovworks.eds.android.trust.TrustedKey
 import com.sovworks.eds.android.ui.messenger.ChatGroup
@@ -25,8 +26,9 @@ class PeerConnectionsViewModel(application: Application) : AndroidViewModel(appl
         PeerDirectory.state,
         PeerConnectionRequestRegistry.state
     ) { list, directory, requests ->
+        val myKey = IdentityManager.loadIdentity(getApplication())?.publicKeyBase64
         val peerIdMap = directory.entries.associateBy({ it.publicKey }, { it.peerIdFromServer })
-        list.map { info ->
+        list.filter { info -> info.peerId != myKey }.map { info ->
             val trust = trustStore.getKey(info.peerId)
             val publicPeerId = peerIdMap[info.peerId]
             val requestState = requests[info.peerId]
