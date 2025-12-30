@@ -127,6 +127,7 @@ android {
     lint {
           abortOnError false
           disable "CoroutineCreationDuringComposition"
+          disable "StateFlowValueCalledInComposition"
     }
 
     applicationVariants.all { variant ->
