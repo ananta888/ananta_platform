@@ -91,7 +91,8 @@ fun PeerConnectionsScreen(
                             if (contains(peer.peerKey)) remove(peer.peerKey) else add(peer.peerKey)
                         }
                     },
-                    onConnect = { viewModel.connect(peer) },
+                    onPing = { viewModel.requestConnection(peer) },
+                    onConfirm = { viewModel.confirmConnection(peer.peerKey) },
                     onDisconnect = { viewModel.disconnect(peer.peerKey) },
                     onChat = { navigationViewModel.navigateTo(Screen.Messenger(peerId = peer.peerKey)) }
                 )
@@ -264,7 +265,8 @@ private fun PeerConnectionCard(
     peer: PeerConnectionDisplay,
     selected: Boolean,
     onToggleSelect: () -> Unit,
-    onConnect: () -> Unit,
+    onPing: () -> Unit,
+    onConfirm: () -> Unit,
     onDisconnect: () -> Unit,
     onChat: () -> Unit
 ) {
@@ -293,6 +295,14 @@ private fun PeerConnectionCard(
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = "Status: ${peer.status}", style = MaterialTheme.typography.bodySmall)
+            if (peer.requestIncoming || peer.requestOutgoing) {
+                val requestLabel = when {
+                    peer.requestIncoming && peer.requestOutgoing -> "Request: mutual"
+                    peer.requestIncoming -> "Request: incoming"
+                    else -> "Request: outgoing"
+                }
+                Text(text = requestLabel, style = MaterialTheme.typography.bodySmall)
+            }
             peer.stats?.let { stats ->
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
@@ -311,8 +321,19 @@ private fun PeerConnectionCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row {
-                    TextButton(onClick = onConnect) {
-                        Text("Connect")
+                    TextButton(
+                        onClick = onPing,
+                        enabled = !peer.requestOutgoing && peer.status != "connected"
+                    ) {
+                        Text("Ping")
+                    }
+                    if (peer.requestIncoming) {
+                        TextButton(
+                            onClick = onConfirm,
+                            enabled = peer.status != "connected"
+                        ) {
+                            Text("Confirm")
+                        }
                     }
                     TextButton(onClick = onDisconnect) {
                         Text("Disconnect")

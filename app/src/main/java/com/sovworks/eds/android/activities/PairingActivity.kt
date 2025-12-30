@@ -66,7 +66,7 @@ class PairingActivity : ComponentActivity() {
                 .setTitle("Connect now?")
                 .setMessage("Pairing saved. You can connect now or later.")
                 .setPositiveButton("Connect") { _, _ ->
-                    WebRtcService.getPeerConnectionManager()?.initiateConnection(metadata.publicKeyBase64)
+                    WebRtcService.getPeerConnectionManager()?.requestConnection(metadata.publicKeyBase64)
                     Toast.makeText(this, "Connecting to ${metadata.peerId}", Toast.LENGTH_SHORT).show()
                     finish()
                 }

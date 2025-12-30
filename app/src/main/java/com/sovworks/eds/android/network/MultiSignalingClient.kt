@@ -17,6 +17,14 @@ class MultiSignalingClient(private val clients: List<SignalingClient>) : Signali
         clients.forEach { it.sendIceCandidate(peerId, candidate) }
     }
 
+    override fun sendConnectionRequest(peerId: String) {
+        clients.forEach { it.sendConnectionRequest(peerId) }
+    }
+
+    override fun sendConnectionAccept(peerId: String) {
+        clients.forEach { it.sendConnectionAccept(peerId) }
+    }
+
     override fun setListener(listener: SignalingListener) {
         clients.forEach { it.setListener(listener) }
     }

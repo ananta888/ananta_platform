@@ -44,6 +44,8 @@ class LocalSignalingClient(
                 )
                 listener?.onIceCandidateReceived(message.from, candidate)
             }
+            "CONNECT_REQUEST" -> listener?.onConnectionRequestReceived(message.from)
+            "CONNECT_ACCEPT" -> listener?.onConnectionAcceptReceived(message.from)
         }
     }
     private var listener: SignalingListener? = null
@@ -82,6 +84,14 @@ class LocalSignalingClient(
             "sdpMLineIndex" to candidate.sdpMLineIndex
         )
         sendPayload(peerId, "CANDIDATE", gson.toJson(candidateMap))
+    }
+
+    override fun sendConnectionRequest(peerId: String) {
+        sendPayload(peerId, "CONNECT_REQUEST", "")
+    }
+
+    override fun sendConnectionAccept(peerId: String) {
+        sendPayload(peerId, "CONNECT_ACCEPT", "")
     }
 
     override fun setListener(listener: SignalingListener) {

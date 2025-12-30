@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.sovworks.eds.android.network.PeerConnectionRegistry
+import com.sovworks.eds.android.network.PeerConnectionRequestRegistry
 import com.sovworks.eds.android.network.PeerDirectory
 import com.sovworks.eds.android.network.WebRtcService
 import com.sovworks.eds.android.trust.TrustStore
@@ -21,12 +22,14 @@ class PeerConnectionsViewModel(application: Application) : AndroidViewModel(appl
 
     val peers: StateFlow<List<PeerConnectionDisplay>> = combine(
         PeerConnectionRegistry.state,
-        PeerDirectory.state
-    ) { list, directory ->
+        PeerDirectory.state,
+        PeerConnectionRequestRegistry.state
+    ) { list, directory, requests ->
         val peerIdMap = directory.entries.associateBy({ it.publicKey }, { it.peerIdFromServer })
         list.map { info ->
             val trust = trustStore.getKey(info.peerId)
             val publicPeerId = peerIdMap[info.peerId]
+            val requestState = requests[info.peerId]
             PeerConnectionDisplay(
                 peerKey = info.peerId,
                 peerId = trust?.peerId ?: trust?.name ?: publicPeerId ?: info.peerId,
@@ -35,14 +38,16 @@ class PeerConnectionsViewModel(application: Application) : AndroidViewModel(appl
                 endpoint = info.endpoint,
                 status = info.status,
                 stats = info.stats,
-                trustLevel = trust?.trustLevel ?: 0
+                trustLevel = trust?.trustLevel ?: 0,
+                requestIncoming = requestState?.incoming == true,
+                requestOutgoing = requestState?.outgoing == true
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val groups: StateFlow<Map<String, ChatGroup>> = MessengerRepository.groups
 
-    fun connect(peer: PeerConnectionDisplay) {
+    fun requestConnection(peer: PeerConnectionDisplay) {
         val existing = trustStore.getKey(peer.peerKey)
         if (existing == null) {
             val fallbackName = peer.alias ?: peer.peerId
@@ -50,7 +55,11 @@ class PeerConnectionsViewModel(application: Application) : AndroidViewModel(appl
             key.peerId = peer.peerId
             trustStore.addKey(key)
         }
-        WebRtcService.getPeerConnectionManager()?.initiateConnection(peer.peerKey)
+        WebRtcService.getPeerConnectionManager()?.requestConnection(peer.peerKey)
+    }
+
+    fun confirmConnection(peerKey: String) {
+        WebRtcService.getPeerConnectionManager()?.acceptConnection(peerKey)
     }
 
     fun disconnect(peerKey: String) {
@@ -78,5 +87,7 @@ data class PeerConnectionDisplay(
     val endpoint: String?,
     val status: String,
     val stats: PeerConnectionRegistry.PeerStats?,
-    val trustLevel: Int
+    val trustLevel: Int,
+    val requestIncoming: Boolean,
+    val requestOutgoing: Boolean
 )

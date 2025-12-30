@@ -55,6 +55,8 @@ class FcmSignalingService : FirebaseMessagingService() {
                     Log.e(TAG, "Error parsing candidate data", e)
                 }
             }
+            "CONNECT_REQUEST" -> manager.onConnectionRequestReceived(from)
+            "CONNECT_ACCEPT" -> manager.onConnectionAcceptReceived(from)
         }
     }
 

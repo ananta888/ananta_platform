@@ -29,6 +29,7 @@ class PeerConnectionManager(
     private val peerConnections = ConcurrentHashMap<String, PeerConnection>()
     private val pendingIceCandidates = ConcurrentHashMap<String, MutableList<IceCandidate>>()
     private val lastConnectAttempt = ConcurrentHashMap<String, Long>()
+    private val approvedPeers = ConcurrentHashMap<String, Boolean>()
     private var listener: PeerConnectionListener? = null
     private var statsJob: Job? = null
     private val connectBackoffMillis = 4000L
@@ -130,11 +131,7 @@ class PeerConnectionManager(
                     }
                     if (it == PeerConnection.IceConnectionState.DISCONNECTED ||
                         it == PeerConnection.IceConnectionState.FAILED) {
-                        // Automatischer Reconnect-Versuch nach Verzögerung
-                        managerScope.launch {
-                            delay(3000)
-                            initiateConnection(peerId)
-                        }
+                        approvedPeers.remove(peerId)
                     }
                 }
             }
@@ -166,6 +163,10 @@ class PeerConnectionManager(
         val identity = IdentityManager.loadIdentity(context)
         if (identity?.publicKeyBase64 == peerId) {
             logDebug("initiateConnection skipped (self) -> $peerId")
+            return
+        }
+        if (!isApproved(peerId)) {
+            logDebug("initiateConnection skipped (not approved) -> $peerId")
             return
         }
         val currentStatus = PeerConnectionRegistry.state.value
@@ -220,9 +221,33 @@ class PeerConnectionManager(
         }, constraints)
     }
 
-    override fun onOfferReceived(peerId: String, sdp: SessionDescription) {     
+    fun requestConnection(peerId: String) {
+        val identity = IdentityManager.loadIdentity(context)
+        if (identity?.publicKeyBase64 == peerId) {
+            logDebug("requestConnection skipped (self) -> $peerId")
+            return
+        }
+        PeerConnectionRequestRegistry.markOutgoing(peerId)
+        PeerConnectionRegistry.updateStatus(peerId, "requesting")
+        signalingClient.sendConnectionRequest(peerId)
+        logDebug("sendConnectionRequest -> $peerId")
+    }
+
+    fun acceptConnection(peerId: String) {
+        PeerConnectionRequestRegistry.clearIncoming(peerId)
+        approvedPeers[peerId] = true
+        signalingClient.sendConnectionAccept(peerId)
+        logDebug("sendConnectionAccept -> $peerId")
+    }
+
+    override fun onOfferReceived(peerId: String, sdp: SessionDescription) {
+        if (!isApproved(peerId)) {
+            logDebug("onOfferReceived ignored (not approved) <- $peerId")
+            return
+        }
         ensureTrustedKey(peerId)
         logDebug("onOfferReceived <- $peerId")
+        PeerConnectionRegistry.updateStatus(peerId, "connecting")
         val polite = isPolitePeer(peerId)
         val pc = getOrCreatePeerConnection(peerId) ?: return
         if (pc.signalingState() == PeerConnection.SignalingState.HAVE_LOCAL_OFFER) {
@@ -289,6 +314,10 @@ class PeerConnectionManager(
     }
 
     override fun onIceCandidateReceived(peerId: String, candidate: IceCandidate) {
+        if (!isApproved(peerId)) {
+            logDebug("onIceCandidateReceived ignored (not approved) <- $peerId")
+            return
+        }
         ensureTrustedKey(peerId)
         logDebug("onIceCandidateReceived <- $peerId")
         val pc = peerConnections[peerId]
@@ -308,6 +337,7 @@ class PeerConnectionManager(
     fun closeConnection(peerId: String) {
         logDebug("closeConnection -> $peerId")
         peerConnections.remove(peerId)?.dispose()
+        approvedPeers.remove(peerId)
         PeerConnectionRegistry.updateStatus(peerId, "closed")
     }
 
@@ -334,6 +364,7 @@ class PeerConnectionManager(
         statsScope.cancel()
         peerConnections.values.forEach { it.dispose() }
         peerConnections.clear()
+        approvedPeers.clear()
     }
 
     override fun onMessageReceived(peerId: String, message: String) {
@@ -351,6 +382,24 @@ class PeerConnectionManager(
         } else if (message.startsWith("IDENTITY_TRUST_SYNC:")) {
             val json = message.removePrefix("IDENTITY_TRUST_SYNC:")
             com.sovworks.eds.android.identity.IdentitySyncManager.importTrustSync(context, json)
+        }
+    }
+
+    override fun onConnectionRequestReceived(peerId: String) {
+        ensureTrustedKey(peerId)
+        PeerConnectionRequestRegistry.markIncoming(peerId)
+        PeerConnectionRegistry.updateStatus(peerId, "request")
+        logDebug("onConnectionRequestReceived <- $peerId")
+    }
+
+    override fun onConnectionAcceptReceived(peerId: String) {
+        val state = PeerConnectionRequestRegistry.get(peerId)
+        approvedPeers[peerId] = true
+        PeerConnectionRequestRegistry.clearOutgoing(peerId)
+        PeerConnectionRequestRegistry.clearIncoming(peerId)
+        logDebug("onConnectionAcceptReceived <- $peerId")
+        if (shouldInitiateAfterAccept(peerId, state)) {
+            initiateConnection(peerId)
         }
     }
 
@@ -386,6 +435,17 @@ class PeerConnectionManager(
     private fun resetPeerConnection(peerId: String) {
         peerConnections.remove(peerId)?.dispose()
         pendingIceCandidates.remove(peerId)
+    }
+
+    private fun isApproved(peerId: String): Boolean = approvedPeers[peerId] == true
+
+    private fun shouldInitiateAfterAccept(
+        peerId: String,
+        state: PeerConnectionRequestRegistry.RequestState?
+    ): Boolean {
+        if (state == null) return false
+        if (!state.outgoing) return false
+        return !state.incoming || isPolitePeer(peerId)
     }
 
     private fun isPolitePeer(peerId: String): Boolean {

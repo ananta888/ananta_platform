@@ -147,7 +147,6 @@ fun ConnectionSettingsScreen() {
     var publicVisibility by remember {
         mutableStateOf(settings.signalingPublicVisibility == UserSettingsCommon.SIGNALING_VISIBILITY_PUBLIC)
     }
-    var autoConnectPublic by remember { mutableStateOf(settings.isAutoConnectPublicPeers) }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         SettingsGroup(title = "Signaling") {
@@ -293,17 +292,6 @@ fun ConnectionSettingsScreen() {
                     scope.launch(Dispatchers.IO) {
                         WebRtcService.initialize(context.applicationContext, settings)
                     }
-                }
-            )
-            SettingToggleItem(
-                title = "Auto-Connect Public Peers",
-                description = "Verbindet automatisch mit oeffentlichen Peers",
-                checked = autoConnectPublic,
-                onCheckedChange = { enabled ->
-                    autoConnectPublic = enabled
-                    settings.sharedPreferences.edit()
-                        .putBoolean(UserSettingsCommon.SIGNALING_AUTO_CONNECT_PUBLIC, enabled)
-                        .apply()
                 }
             )
         }

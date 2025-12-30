@@ -42,6 +42,14 @@ class HttpSignalingClient(
         sendPayload(peerId, "CANDIDATE", gson.toJson(candidateMap))
     }
 
+    override fun sendConnectionRequest(peerId: String) {
+        sendPayload(peerId, "CONNECT_REQUEST", "")
+    }
+
+    override fun sendConnectionAccept(peerId: String) {
+        sendPayload(peerId, "CONNECT_ACCEPT", "")
+    }
+
     override fun setListener(listener: SignalingListener) {
         this.listener = listener
     }
@@ -143,6 +151,8 @@ class HttpSignalingClient(
                 )
                 listener?.onIceCandidateReceived(msg.from, candidate)
             }
+            "CONNECT_REQUEST" -> listener?.onConnectionRequestReceived(msg.from)
+            "CONNECT_ACCEPT" -> listener?.onConnectionAcceptReceived(msg.from)
         }
     }
 

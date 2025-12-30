@@ -10,6 +10,8 @@ interface SignalingClient {
     fun sendOffer(peerId: String, sdp: SessionDescription)
     fun sendAnswer(peerId: String, sdp: SessionDescription)
     fun sendIceCandidate(peerId: String, candidate: IceCandidate)
+    fun sendConnectionRequest(peerId: String)
+    fun sendConnectionAccept(peerId: String)
 
     fun setListener(listener: SignalingListener)
     fun shutdown() {}
@@ -22,6 +24,8 @@ interface SignalingListener {
     fun onOfferReceived(peerId: String, sdp: SessionDescription)
     fun onAnswerReceived(peerId: String, sdp: SessionDescription)
     fun onIceCandidateReceived(peerId: String, candidate: IceCandidate)
+    fun onConnectionRequestReceived(peerId: String) {}
+    fun onConnectionAcceptReceived(peerId: String) {}
 
     fun onOfferReceivedFromKey(publicKey: String, sdp: SessionDescription) {
         onOfferReceived(publicKey, sdp)

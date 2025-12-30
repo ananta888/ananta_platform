@@ -60,6 +60,14 @@ class WebSocketSignalingClient(
         sendPayload(peerId, "CANDIDATE", gson.toJson(candidateMap))
     }
 
+    override fun sendConnectionRequest(peerId: String) {
+        sendPayload(peerId, "CONNECT_REQUEST", "")
+    }
+
+    override fun sendConnectionAccept(peerId: String) {
+        sendPayload(peerId, "CONNECT_ACCEPT", "")
+    }
+
     override fun setListener(listener: SignalingListener) {
         this.listener = listener
     }
@@ -176,6 +184,12 @@ class WebSocketSignalingClient(
                     candidateMap["sdp"] as String
                 )
                 listener?.onIceCandidateReceivedFromKey(msg.fromPublicKey, candidate)
+            }
+            "CONNECT_REQUEST" -> {
+                listener?.onConnectionRequestReceived(msg.fromPublicKey)
+            }
+            "CONNECT_ACCEPT" -> {
+                listener?.onConnectionAcceptReceived(msg.fromPublicKey)
             }
         }
     }

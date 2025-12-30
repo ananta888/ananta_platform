@@ -8,7 +8,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,63 +24,20 @@ import com.sovworks.eds.android.network.PeerDirectory
 import com.sovworks.eds.android.network.SignalingConnectionStatus
 import com.sovworks.eds.android.network.SignalingStatusTracker
 import com.sovworks.eds.android.network.WebRtcService
-import com.sovworks.eds.android.settings.UserSettings
-import com.sovworks.eds.android.settings.UserSettingsCommon
 import com.sovworks.eds.android.trust.TrustStore
 import com.sovworks.eds.android.trust.TrustedKey
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.channels.awaitClose
 
 @Composable
 fun PairingScreen(onStartScanner: () -> Unit, onOpenIdentitySync: (() -> Unit)? = null) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
     val identity = remember { IdentityManager.loadIdentity(context) }
-    val settings = remember { UserSettings.getSettings(context) }
     val peerDirectory by PeerDirectory.state.collectAsState()
     val signalingStatuses by SignalingStatusTracker.statuses.collectAsState()
     val peerRegistry by PeerConnectionRegistry.state.collectAsState()
     val myMetadata = remember(identity) { identity?.let { PairingManager.createMyMetadata(it) } }
     val qrBitmap = remember(myMetadata) { myMetadata?.let { PairingManager.generateQrCode(it) } }
     val pairingCode = remember(identity) { identity?.id }
-    val autoConnectEnabled by remember {
-        callbackFlow {
-            val prefs = settings.sharedPreferences
-            val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-                if (key == UserSettingsCommon.SIGNALING_AUTO_CONNECT_PUBLIC) {
-                    trySend(
-                        prefs.getBoolean(UserSettingsCommon.SIGNALING_AUTO_CONNECT_PUBLIC, false)
-                    )
-                }
-            }
-            prefs.registerOnSharedPreferenceChangeListener(listener)
-            trySend(
-                prefs.getBoolean(UserSettingsCommon.SIGNALING_AUTO_CONNECT_PUBLIC, false)
-            )
-            awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
-        }
-    }.collectAsState(initial = false)
-
-    LaunchedEffect(peerDirectory, autoConnectEnabled) {
-        if (!autoConnectEnabled) return@LaunchedEffect
-        val myKey = identity?.publicKeyBase64
-        peerDirectory.entries.filter { it.visibility == "public" }.forEach { peer ->
-            if (peer.publicKey == myKey) return@forEach
-            val existing = peerRegistry.firstOrNull { it.peerId == peer.publicKey }
-            val status = existing?.status ?: ""
-            val shouldConnect = status.isBlank() || status == "closed" || status == "disconnected" || status == "failed"
-            if (shouldConnect) {
-                val trustStore = TrustStore.getInstance(context)
-                if (trustStore.getKey(peer.publicKey) == null) {
-                    val display = peer.peerIdFromServer ?: "Public Peer"
-                    val key = TrustedKey(peer.publicKey, peer.publicKey, display)
-                    key.peerId = peer.peerIdFromServer
-                    trustStore.addKey(key)
-                }
-                WebRtcService.getPeerConnectionManager()?.initiateConnection(peer.publicKey)
-            }
-        }
-    }
 
     Column(
         modifier = Modifier
@@ -187,7 +143,7 @@ fun PairingScreen(onStartScanner: () -> Unit, onOpenIdentitySync: (() -> Unit)? 
             style = MaterialTheme.typography.titleSmall
         )
         Text(
-            text = if (autoConnectEnabled) "Auto-Connect: On" else "Auto-Connect: Off",
+            text = "Auto-Connect: Disabled (manual only)",
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.padding(top = 4.dp)
         )
@@ -236,9 +192,14 @@ fun PairingScreen(onStartScanner: () -> Unit, onOpenIdentitySync: (() -> Unit)? 
                             trustStore.addKey(key)
                         }
                         WebRtcService.getPeerConnectionManager()
-                            ?.initiateConnection(peer.publicKey)
-                    }, enabled = status != "connecting" && status != "connected") {
-                        Text("Connect")
+                            ?.requestConnection(peer.publicKey)
+                    },
+                        enabled = status != "connecting" &&
+                            status != "connected" &&
+                            status != "requesting" &&
+                            status != "request"
+                    ) {
+                        Text("Ping")
                     }
                 }
             }
