@@ -332,7 +332,7 @@ object MessengerRepository : DataChannelListener {
         relaySessions.send(peerId, text)
     }
 
-    private inner class SignalingRelaySessionManager {
+    private class SignalingRelaySessionManager {
         private val sessions = ConcurrentHashMap<String, RelaySession>()
 
         fun send(peerId: String, text: String): Boolean {
@@ -371,7 +371,7 @@ object MessengerRepository : DataChannelListener {
         }
     }
 
-    private inner class RelaySession(
+    private class RelaySession(
         private val peerId: String,
         private val pfsSession: PfsSession
     ) {
