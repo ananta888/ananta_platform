@@ -26,6 +26,7 @@ interface SignalingListener {
     fun onIceCandidateReceived(peerId: String, candidate: IceCandidate)
     fun onConnectionRequestReceived(peerId: String) {}
     fun onConnectionAcceptReceived(peerId: String) {}
+    fun onRelayPayloadReceived(peerId: String, payload: String) {}
 
     fun onOfferReceivedFromKey(publicKey: String, sdp: SessionDescription) {
         onOfferReceived(publicKey, sdp)

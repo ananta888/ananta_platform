@@ -42,4 +42,12 @@ class MultiSignalingClient(private val clients: List<SignalingClient>) : Signali
             }
         }
     }
+
+    fun sendRelayPayload(peerIds: List<String>, payload: String) {
+        clients.forEach { client ->
+            if (client is WebSocketSignalingClient) {
+                client.sendRelayPayload(peerIds, payload)
+            }
+        }
+    }
 }

@@ -103,6 +103,19 @@ class WebSocketSignalingClient(
     override fun onMessage(webSocket: WebSocket, text: String) {
         val root = gson.fromJson(text, Map::class.java)
         val type = root["type"] as? String
+        if (type == "ice_servers") {
+            val configs = parseIceServers(root["iceServers"])
+            if (configs.isNotEmpty()) {
+                IceServersRegistry.updateFromConfigs(configs)
+            }
+            return
+        }
+        if (type == "relay") {
+            val fromKey = root["fromPublicKey"] as? String ?: return
+            val payload = root["payload"] as? String ?: return
+            listener?.onRelayPayloadReceived(fromKey, payload)
+            return
+        }
         if (type == "public_peers") {
             val peers = (root["peers"] as? List<*>)?.mapNotNull { entry ->
                 val map = entry as? Map<*, *> ?: return@mapNotNull null
@@ -207,6 +220,16 @@ class WebSocketSignalingClient(
         webSocket?.send(gson.toJson(bodyMap))
     }
 
+    fun sendRelayPayload(peerIds: List<String>, payload: String) {
+        if (peerIds.isEmpty()) return
+        val bodyMap = mapOf(
+            "type" to "relay",
+            "toPeers" to peerIds,
+            "payload" to payload
+        )
+        webSocket?.send(gson.toJson(bodyMap))
+    }
+
     private data class SignalingMessage(
         val type: String,
         val from: String?,
@@ -218,4 +241,24 @@ class WebSocketSignalingClient(
         val type: String,
         val data: String
     )
+
+    private fun parseIceServers(payload: Any?): List<ConnectionMetadata.IceServerConfig> {
+        val entries = payload as? List<*> ?: return emptyList()
+        return entries.mapNotNull { entry ->
+            val map = entry as? Map<*, *> ?: return@mapNotNull null
+            val urls = when (val raw = map["urls"]) {
+                is String -> listOf(raw)
+                is List<*> -> raw.mapNotNull { it as? String }
+                else -> emptyList()
+            }
+            if (urls.isEmpty()) return@mapNotNull null
+            val username = map["username"] as? String
+            val credential = map["credential"] as? String
+            ConnectionMetadata.IceServerConfig(
+                urls = urls,
+                username = username,
+                credential = credential
+            )
+        }
+    }
 }

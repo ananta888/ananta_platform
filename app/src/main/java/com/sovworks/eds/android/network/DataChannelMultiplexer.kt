@@ -37,8 +37,8 @@ class DataChannelMultiplexer(
     }
 
     fun isConnected(peerId: String): Boolean {
-        // Wir prüfen, ob der Relay-Kanal für diesen Peer offen ist
-        return relayChannels.containsKey(peerId)
+        // Use any established channel as a connectivity signal.
+        return chatChannels.containsKey(peerId) || relayChannels.containsKey(peerId)
     }
 
     fun onDataChannelCreated(peerId: String, dataChannel: DataChannel, isInitiator: Boolean) {

@@ -84,10 +84,6 @@ class PeerConnectionManager(
         }
     }
 
-    private val iceServers = listOf(
-        PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer()
-    )
-    
     private val multiplexer = DataChannelMultiplexer(context)
     private val vaultFileReceiver = VaultFileReceiver(context)
     private val vaultFileSender = VaultFileSender(multiplexer)
@@ -119,7 +115,9 @@ class PeerConnectionManager(
     private fun getOrCreatePeerConnection(peerId: String): PeerConnection? {
         peerConnections[peerId]?.let { return it }
 
-        val pc = WebRTCManager.createPeerConnection(iceServers, object : PeerConnection.Observer {
+        val pc = WebRTCManager.createPeerConnection(
+            IceServersRegistry.getIceServers(),
+            object : PeerConnection.Observer {
             override fun onSignalingChange(newState: PeerConnection.SignalingState?) {}
             override fun onIceConnectionChange(newState: PeerConnection.IceConnectionState?) {
                 newState?.let {
@@ -162,7 +160,7 @@ class PeerConnectionManager(
             }
             override fun onRenegotiationNeeded() {}
             override fun onAddTrack(receiver: RtpReceiver?, mediaStreams: Array<out MediaStream>?) {}
-        })
+            })
 
         pc?.let { peerConnections[peerId] = it }
         return pc
@@ -410,6 +408,10 @@ class PeerConnectionManager(
         if (shouldInitiateAfterAccept(peerId, state)) {
             initiateConnection(peerId)
         }
+    }
+
+    override fun onRelayPayloadReceived(peerId: String, payload: String) {
+        SignalingRelayBus.dispatch(peerId, payload)
     }
 
     private fun handleFileRequest(peerId: String, fileName: String) {

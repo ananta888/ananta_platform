@@ -3,6 +3,8 @@ package com.sovworks.eds.android.ui.messenger
 import com.sovworks.eds.android.network.DataChannelListener
 import com.sovworks.eds.android.network.OfflineMessageListener
 import com.sovworks.eds.android.network.OfflineMessageManager
+import com.sovworks.eds.android.network.PfsSession
+import com.sovworks.eds.android.network.SignalingRelayBus
 import com.sovworks.eds.android.network.StoreRequest
 import com.sovworks.eds.android.network.WebRtcService
 import com.sovworks.eds.android.db.AppDatabase
@@ -15,6 +17,8 @@ import com.sovworks.eds.android.trust.TrustNetworkManager
 import com.sovworks.eds.android.trust.TrustNetworkPackage
 import com.sovworks.eds.android.trust.TrustStore
 import com.sovworks.eds.android.trust.TrustedKey
+import android.util.Base64
+import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -22,6 +26,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 import com.sovworks.eds.android.security.SecurityUtils
+import java.util.ArrayDeque
+import java.util.concurrent.ConcurrentHashMap
 import javax.crypto.SecretKey
 
 data class ChatMessage(
@@ -49,16 +55,21 @@ object MessengerRepository : DataChannelListener {
     private var context: Context? = null
     private var database: AppDatabase? = null
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val relaySessions = SignalingRelaySessionManager()
     private val offlineMessageListener = object : OfflineMessageListener {
         override fun onOfflineMessageReceived(request: StoreRequest) {
             processMessage(request.senderId, request.encryptedPayload, request.timestamp)
         }
+    }
+    private val relayListener: (String, String) -> Unit = { peerId, payload ->
+        relaySessions.handleIncoming(peerId, payload)
     }
 
     fun initialize(context: Context) {
         this.context = context.applicationContext
         WebRtcService.getPeerConnectionManager()?.getMultiplexer()?.addListener(this)
         OfflineMessageManager.getInstance(context).addListener(offlineMessageListener)
+        SignalingRelayBus.addListener(relayListener)
         
         database = AppDatabase.getDatabase(context)
         
@@ -115,9 +126,8 @@ object MessengerRepository : DataChannelListener {
 
         // Send invite to all members
         val invitePayload = "GROUP_INVITE:$groupId:$name:${memberIds.joinToString(",")}:${SecurityUtils.keyToString(groupKey)}"
-        val manager = WebRtcService.getPeerConnectionManager()
         memberIds.forEach { memberId ->
-            manager?.getMultiplexer()?.sendMessage(memberId, invitePayload)
+            sendMessageWithFallback(memberId, invitePayload)
         }
 
         return groupId
@@ -233,11 +243,10 @@ object MessengerRepository : DataChannelListener {
     }
 
     fun sendMessage(peerId: String, text: String) {
-        val manager = WebRtcService.getPeerConnectionManager() ?: return
-        manager.getMultiplexer().sendMessage(peerId, text)
-        
+        sendMessageWithFallback(peerId, text)
+
         val chatMessage = ChatMessage(
-            senderId = "me", 
+            senderId = "me",
             text = text,
             isMe = true
         )
@@ -253,8 +262,7 @@ object MessengerRepository : DataChannelListener {
 
     fun sendGroupMessage(groupId: String, text: String) {
         val group = _groups.value[groupId] ?: return
-        val manager = WebRtcService.getPeerConnectionManager() ?: return
-        
+
         val payload = if (group.groupKey != null) {
             val encrypted = SecurityUtils.encrypt(text.toByteArray(Charsets.UTF_8), group.groupKey)
             "GROUP_MSG_E2EE:$groupId:${encrypted.iv}:${encrypted.data}"
@@ -263,7 +271,7 @@ object MessengerRepository : DataChannelListener {
         }
 
         group.memberIds.forEach { memberId ->
-            manager.getMultiplexer().sendMessage(memberId, payload)
+            sendMessageWithFallback(memberId, payload)
         }
 
         val chatMessage = ChatMessage(
@@ -311,6 +319,100 @@ object MessengerRepository : DataChannelListener {
                     groupId = message.groupId
                 )
             )
+        }
+    }
+
+    private fun sendMessageWithFallback(peerId: String, text: String) {
+        val manager = WebRtcService.getPeerConnectionManager()
+        val multiplexer = manager?.getMultiplexer()
+        if (multiplexer != null && multiplexer.isConnected(peerId)) {
+            multiplexer.sendMessage(peerId, text)
+            return
+        }
+        relaySessions.send(peerId, text)
+    }
+
+    private inner class SignalingRelaySessionManager {
+        private val sessions = ConcurrentHashMap<String, RelaySession>()
+
+        fun send(peerId: String, text: String): Boolean {
+            val session = getOrCreate(peerId) ?: return false
+            session.send(text)
+            return true
+        }
+
+        fun handleIncoming(peerId: String, payload: String) {
+            val session = getOrCreate(peerId) ?: return
+            val plaintext = session.handleIncoming(payload) ?: return
+            processMessage(peerId, plaintext, System.currentTimeMillis())
+        }
+
+        private fun getOrCreate(peerId: String): RelaySession? {
+            val existing = sessions[peerId]
+            if (existing != null) return existing
+            val created = createSession(peerId) ?: return null
+            val previous = sessions.putIfAbsent(peerId, created)
+            return previous ?: created
+        }
+
+        private fun createSession(peerId: String): RelaySession? {
+            val currentContext = context ?: return null
+            val identity = IdentityManager.loadIdentity(currentContext) ?: return null
+            val localPrivateKey = IdentityManager.getDecryptedPrivateKey(identity) ?: return null
+            val trustStore = TrustStore.getInstance(currentContext)
+            val trustedKey = trustStore.getKey(peerId) ?: return null
+            val remotePublicKey = Ed25519PublicKeyParameters(
+                Base64.decode(trustedKey.publicKey, Base64.NO_WRAP),
+                0
+            )
+            val isInitiator = identity.publicKeyBase64 < peerId
+            val session = PfsSession(isInitiator, localPrivateKey, remotePublicKey)
+            return RelaySession(peerId, session)
+        }
+    }
+
+    private inner class RelaySession(
+        private val peerId: String,
+        private val pfsSession: PfsSession
+    ) {
+        private val pending = ArrayDeque<String>()
+
+        fun send(text: String) {
+            if (!pfsSession.isReady()) {
+                pending.addLast(text)
+                ensureHandshake()
+                return
+            }
+            val encrypted = pfsSession.encryptText(text) ?: return
+            sendPayload("${PfsSession.PFS_MESSAGE_PREFIX}$encrypted")
+        }
+
+        fun handleIncoming(payload: String): String? {
+            if (pfsSession.handleControl(payload, ::sendPayload)) {
+                if (pfsSession.isReady()) {
+                    flushPending()
+                }
+                return null
+            }
+            if (!payload.startsWith(PfsSession.PFS_MESSAGE_PREFIX)) {
+                return null
+            }
+            val encrypted = payload.removePrefix(PfsSession.PFS_MESSAGE_PREFIX)
+            return pfsSession.decryptText(encrypted)
+        }
+
+        private fun ensureHandshake() {
+            pfsSession.ensureHello(::sendPayload)
+        }
+
+        private fun flushPending() {
+            while (pending.isNotEmpty()) {
+                send(pending.removeFirst())
+            }
+        }
+
+        private fun sendPayload(payload: String) {
+            WebRtcService.sendRelayPayload(listOf(peerId), payload)
         }
     }
 }

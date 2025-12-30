@@ -17,6 +17,8 @@ object WebRtcService {
     private var peerConnectionManager: PeerConnectionManager? = null
     private var serviceScope: CoroutineScope? = null
     private var pollJob: Job? = null
+    private var iceScope: CoroutineScope? = null
+    private var iceJob: Job? = null
     private val _pollingActive = MutableStateFlow(false)
     val pollingActive: StateFlow<Boolean> = _pollingActive.asStateFlow()
     private const val TAG = "WebRtcService"
@@ -35,6 +37,7 @@ object WebRtcService {
             val client = createSignalingClient(context, settings, myId) ?: return
             signalingClient = client
             peerConnectionManager = PeerConnectionManager(context, client, myId)
+            refreshIceServers(settings.getSignalingServerUrls())
 
             // Initial state: assume foreground for now, but usually follow app state
             if ((client is HttpSignalingClient || client is MultiSignalingClient) &&
@@ -97,6 +100,23 @@ object WebRtcService {
     }
 
     @JvmStatic
+    fun sendRelayPayload(peerIds: List<String>, payload: String): Boolean {
+        if (peerIds.isEmpty()) return false
+        val client = signalingClient ?: return false
+        return when (client) {
+            is WebSocketSignalingClient -> {
+                client.sendRelayPayload(peerIds, payload)
+                true
+            }
+            is MultiSignalingClient -> {
+                client.sendRelayPayload(peerIds, payload)
+                true
+            }
+            else -> false
+        }
+    }
+
+    @JvmStatic
     fun shutdown() {
         synchronized(lock) {
             shutdownLocked()
@@ -106,8 +126,12 @@ object WebRtcService {
     private fun shutdownLocked() {
         pollJob?.cancel()
         pollJob = null
+        iceJob?.cancel()
+        iceJob = null
         serviceScope?.cancel()
         serviceScope = null
+        iceScope?.cancel()
+        iceScope = null
         _pollingActive.value = false
         signalingClient?.shutdown()
         signalingClient = null
@@ -126,6 +150,20 @@ object WebRtcService {
                     client.pollMessages()
                 }
                 delay(POLL_INTERVAL_SECONDS * 1000)
+            }
+        }
+    }
+
+    private fun refreshIceServers(urls: List<String>) {
+        if (urls.isEmpty()) return
+        if (iceScope == null) {
+            iceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        }
+        iceJob?.cancel()
+        iceJob = iceScope?.launch {
+            val configs = SignalingIceServersFetcher.fetch(urls)
+            if (!configs.isNullOrEmpty()) {
+                IceServersRegistry.updateFromConfigs(configs)
             }
         }
     }

@@ -1,7 +1,18 @@
 const http = require("http");
 const WebSocket = require("ws");
-
 const PORT = process.env.PORT || 8080;
+let iceServers = [];
+
+if (process.env.ICE_SERVERS) {
+  try {
+    const parsed = JSON.parse(process.env.ICE_SERVERS);
+    if (Array.isArray(parsed)) {
+      iceServers = parsed;
+    }
+  } catch (err) {
+    console.warn("Invalid ICE_SERVERS JSON:", err.message);
+  }
+}
 
 const server = http.createServer((req, res) => {
   if (req.url === "/peers") {
@@ -24,6 +35,11 @@ const server = http.createServer((req, res) => {
       }));
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ peers }, null, 2));
+    return;
+  }
+  if (req.url === "/ice-servers") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ iceServers }, null, 2));
     return;
   }
   res.writeHead(200, { "Content-Type": "text/plain" });
@@ -93,6 +109,7 @@ wss.on("connection", (ws) => {
         ws.visibility = visibilityMode;
         clientsByPublicKey.set(publicKey, ws);
         safeSend(ws, { type: "registered", peerId, publicKey, visibility: visibilityMode });
+        safeSend(ws, { type: "ice_servers", iceServers });
         broadcastPublicPeers();
         return;
       }
@@ -113,6 +130,32 @@ wss.on("connection", (ws) => {
           from: ws.peerId,
           fromPublicKey: ws.publicKey,
           payload: msg.payload || null,
+        });
+        return;
+      }
+      case "relay": {
+        const targets = Array.isArray(msg.toPeers)
+          ? msg.toPeers.map((peer) => String(peer || "").trim()).filter(Boolean)
+          : [];
+        const single = String(msg.to || msg.toPublicKey || "").trim();
+        if (single) targets.push(single);
+        if (targets.length === 0) {
+          safeSend(ws, { type: "error", message: "missing_target" });
+          return;
+        }
+        const payload = typeof msg.payload === "string" ? msg.payload : null;
+        targets.forEach((targetKey) => {
+          const target = clientsByPublicKey.get(targetKey);
+          if (!target) {
+            safeSend(ws, { type: "error", message: "target_not_found", to: targetKey });
+            return;
+          }
+          safeSend(target, {
+            type: "relay",
+            from: ws.peerId,
+            fromPublicKey: ws.publicKey,
+            payload,
+          });
         });
         return;
       }
