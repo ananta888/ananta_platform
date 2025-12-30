@@ -2,6 +2,7 @@ package com.sovworks.eds.android.network
 
 import android.content.Context
 import com.google.gson.Gson
+import com.sovworks.eds.android.Logger
 import com.sovworks.eds.android.settings.UserSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,10 +25,7 @@ data class ServerPeer(
 object SignalingServerPeersRepository {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val gson = Gson()
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(5, TimeUnit.SECONDS)
-        .readTimeout(5, TimeUnit.SECONDS)
-        .build()
+    private val client: OkHttpClient? by lazy { createClientOrNull() }
 
     private val _peers = MutableStateFlow<Map<String, List<ServerPeer>>>(emptyMap())
     val peers: StateFlow<Map<String, List<ServerPeer>>> = _peers.asStateFlow()
@@ -48,12 +46,13 @@ object SignalingServerPeersRepository {
     }
 
     private fun fetchPeers(serverUrl: String): List<ServerPeer> {
+        val httpClient = client ?: return emptyList()
         val httpUrl = toHttpUrl(serverUrl).trimEnd('/')
         val request = Request.Builder()
             .url("$httpUrl/peers")
             .build()
         return try {
-            client.newCall(request).execute().use { response ->
+            httpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) return emptyList()
                 val body = response.body?.string() ?: return emptyList()
                 val payload = gson.fromJson(body, PeersResponse::class.java) ?: return emptyList()
@@ -69,6 +68,18 @@ object SignalingServerPeersRepository {
             }
         } catch (_: Exception) {
             emptyList()
+        }
+    }
+
+    private fun createClientOrNull(): OkHttpClient? {
+        return try {
+            OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5, TimeUnit.SECONDS)
+                .build()
+        } catch (e: Exception) {
+            Logger.log("SignalingServerPeersRepository: OkHttp init failed: ${e.message}")
+            null
         }
     }
 
