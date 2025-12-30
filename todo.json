@@ -3,7 +3,10 @@
   "version": "1.0.0-draft",
   "description": "Erweiterung von EDS Lite zu einer dezentralen WebRTC-Plattform für sichere Kommunikation und Dateiaustausch.",
   "tasks": [
-    "Collect and analyze ANR/FATAL logs from device to pinpoint actual freeze/crash cause (enable filtered logcat + timestamps)."
+    "Collect and analyze ANR/FATAL logs from device to pinpoint actual freeze/crash cause (enable filtered logcat + timestamps).",
+    "Audit and document all automatic signaling connections (WebSocketSignalingClient connect/reconnect, SignalingWorker HTTP polling, LocalSignalingClient discovery) and confirm they never trigger peer connections.",
+    "Review any remaining auto-initiated peer connection paths (FCM signaling offers/answers, app startup flows) to ensure handshake gating is enforced everywhere.",
+    "Add a lightweight debug screen/log entry listing recent connection attempts (request/accept/offer) to help verify no silent auto-connects in the field."
   ],
   "architecture_goals": [
     "Vollständige Dezentralität (kein zentraler Server außer Signaling/STUN)",
