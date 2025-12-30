@@ -30,6 +30,7 @@ class WebSocketSignalingClientTest {
             "myId",
             "myPublicKey",
             "private",
+            true,
             mockClient,
             testScope
         )
