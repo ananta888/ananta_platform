@@ -125,8 +125,17 @@ class PeerConnectionManager(
                 newState?.let {
                     logDebug("iceConnectionState -> $peerId = ${it.name.lowercase()}")
                     listener?.onConnectionStateChange(peerId, it)
-                    PeerConnectionRegistry.updateStatus(peerId, it.name.lowercase())
-                    if (it == PeerConnection.IceConnectionState.CONNECTED) {    
+                    val status = if (it == PeerConnection.IceConnectionState.CONNECTED ||
+                        it == PeerConnection.IceConnectionState.COMPLETED
+                    ) {
+                        "connected"
+                    } else {
+                        it.name.lowercase()
+                    }
+                    PeerConnectionRegistry.updateStatus(peerId, status)
+                    if (it == PeerConnection.IceConnectionState.CONNECTED ||
+                        it == PeerConnection.IceConnectionState.COMPLETED
+                    ) {
                         onPeerConnected(peerId)
                     }
                     if (it == PeerConnection.IceConnectionState.DISCONNECTED ||

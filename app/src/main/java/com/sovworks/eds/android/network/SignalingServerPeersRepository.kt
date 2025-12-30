@@ -42,6 +42,11 @@ object SignalingServerPeersRepository {
                 fetchPeers(url)
             }
             _peers.value = results
+            results.forEach { (url, peers) ->
+                peers.forEach { peer ->
+                    PeerConnectionRegistry.updatePeer(peer.publicKey, url)
+                }
+            }
         }
     }
 
