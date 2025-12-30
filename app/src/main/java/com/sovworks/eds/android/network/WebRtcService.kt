@@ -6,6 +6,9 @@ import com.sovworks.eds.android.identity.IdentityManager
 import com.sovworks.eds.android.settings.UserSettings
 import com.sovworks.eds.android.settings.UserSettingsCommon
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.util.UUID
 
 object WebRtcService {
@@ -14,6 +17,8 @@ object WebRtcService {
     private var peerConnectionManager: PeerConnectionManager? = null
     private var serviceScope: CoroutineScope? = null
     private var pollJob: Job? = null
+    private val _pollingActive = MutableStateFlow(false)
+    val pollingActive: StateFlow<Boolean> = _pollingActive.asStateFlow()
     private const val TAG = "WebRtcService"
 
     @JvmStatic
@@ -30,10 +35,14 @@ object WebRtcService {
             val client = createSignalingClient(context, settings, myId) ?: return
             signalingClient = client
             peerConnectionManager = PeerConnectionManager(context, client, myId)
-            
+
             // Initial state: assume foreground for now, but usually follow app state
-            if (client is HttpSignalingClient || client is MultiSignalingClient) {
+            if ((client is HttpSignalingClient || client is MultiSignalingClient) &&
+                settings.isSignalingAutoPollHttpEnabled()
+            ) {
                 startPolling(client)
+            } else {
+                _pollingActive.value = false
             }
         }
     }
@@ -43,8 +52,14 @@ object WebRtcService {
         synchronized(lock) {
             SignalingWorker.stopWork(context)
             val client = signalingClient
-            if ((client is HttpSignalingClient || client is MultiSignalingClient) && pollJob == null) {
+            val settings = UserSettings.getSettings(context)
+            if ((client is HttpSignalingClient || client is MultiSignalingClient) &&
+                pollJob == null &&
+                settings.isSignalingAutoPollHttpEnabled()
+            ) {
                 startPolling(client!!)
+            } else if (!settings.isSignalingAutoPollHttpEnabled()) {
+                _pollingActive.value = false
             }
         }
     }
@@ -54,8 +69,11 @@ object WebRtcService {
         synchronized(lock) {
             pollJob?.cancel()
             pollJob = null
+            _pollingActive.value = false
             val settings = UserSettings.getSettings(context)
-            if (settings.getSignalingMode() == UserSettingsCommon.SIGNALING_MODE_HTTP) {
+            if (settings.getSignalingMode() == UserSettingsCommon.SIGNALING_MODE_HTTP &&
+                settings.isSignalingAutoPollHttpEnabled()
+            ) {
                 SignalingWorker.enqueuePeriodicWork(context)
             }
         }
@@ -90,6 +108,7 @@ object WebRtcService {
         pollJob = null
         serviceScope?.cancel()
         serviceScope = null
+        _pollingActive.value = false
         signalingClient?.shutdown()
         signalingClient = null
         peerConnectionManager?.shutdown()
@@ -98,6 +117,7 @@ object WebRtcService {
 
     private fun startPolling(client: SignalingClient) {
         serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        _pollingActive.value = true
         pollJob = serviceScope?.launch {
             while (isActive) {
                 if (client is HttpSignalingClient) {
@@ -123,13 +143,20 @@ object WebRtcService {
             if (urls.isEmpty()) return null
             val identity = IdentityManager.loadIdentity(context) ?: return null
             val visibility = settings.getSignalingPublicVisibility()
+            val autoReconnect = settings.isSignalingAutoReconnectEnabled()
             val clients = urls.map { url ->
                 if (mode == UserSettingsCommon.SIGNALING_MODE_HTTP) {
                     logDebug("Using HTTP signaling: $url")
                     HttpSignalingClient(url, myId)
                 } else {
                     logDebug("Using WebSocket signaling: $url")
-                    WebSocketSignalingClient(url, myId, identity.publicKeyBase64, visibility)
+                    WebSocketSignalingClient(
+                        url,
+                        myId,
+                        identity.publicKeyBase64,
+                        visibility,
+                        autoReconnect
+                    )
                 }
             }
             return MultiSignalingClient(clients)

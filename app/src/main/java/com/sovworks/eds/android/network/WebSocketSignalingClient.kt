@@ -13,6 +13,7 @@ class WebSocketSignalingClient(
     private val myId: String,
     private val myPublicKey: String,
     private val visibility: String = "private",
+    private val autoReconnect: Boolean = true,
     private val client: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(0, TimeUnit.SECONDS) // WebSocket needs no timeout
@@ -134,10 +135,11 @@ class WebSocketSignalingClient(
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         SignalingStatusTracker.update(serverUrl, SignalingConnectionStatus.ERROR)
         logWarn("WebSocket failure for $serverUrl: ${t.message}", t)
-        // Simple reconnect logic
-        clientScope.launch {
-            delay(5000)
-            connect()
+        if (autoReconnect) {
+            clientScope.launch {
+                delay(5000)
+                connect()
+            }
         }
     }
 

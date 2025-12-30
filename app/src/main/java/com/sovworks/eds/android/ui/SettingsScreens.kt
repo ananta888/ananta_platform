@@ -147,6 +147,8 @@ fun ConnectionSettingsScreen() {
     var publicVisibility by remember {
         mutableStateOf(settings.signalingPublicVisibility == UserSettingsCommon.SIGNALING_VISIBILITY_PUBLIC)
     }
+    var autoReconnectWs by remember { mutableStateOf(settings.isSignalingAutoReconnectEnabled()) }
+    var autoPollHttp by remember { mutableStateOf(settings.isSignalingAutoPollHttpEnabled()) }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         SettingsGroup(title = "Signaling") {
@@ -288,6 +290,34 @@ fun ConnectionSettingsScreen() {
                     }
                     settings.sharedPreferences.edit()
                         .putString(UserSettingsCommon.SIGNALING_PUBLIC_VISIBILITY, value)
+                        .apply()
+                    scope.launch(Dispatchers.IO) {
+                        WebRtcService.initialize(context.applicationContext, settings)
+                    }
+                }
+            )
+            SettingToggleItem(
+                title = "Auto-Reconnect WebSocket",
+                description = "Versucht WebSocket-Signaling automatisch neu zu verbinden",
+                checked = autoReconnectWs,
+                onCheckedChange = { enabled ->
+                    autoReconnectWs = enabled
+                    settings.sharedPreferences.edit()
+                        .putBoolean(UserSettingsCommon.SIGNALING_AUTO_RECONNECT_WS, enabled)
+                        .apply()
+                    scope.launch(Dispatchers.IO) {
+                        WebRtcService.initialize(context.applicationContext, settings)
+                    }
+                }
+            )
+            SettingToggleItem(
+                title = "Auto-Poll HTTP",
+                description = "Pollt HTTP-Signaling automatisch im Vorder- und Hintergrund",
+                checked = autoPollHttp,
+                onCheckedChange = { enabled ->
+                    autoPollHttp = enabled
+                    settings.sharedPreferences.edit()
+                        .putBoolean(UserSettingsCommon.SIGNALING_AUTO_POLL_HTTP, enabled)
                         .apply()
                     scope.launch(Dispatchers.IO) {
                         WebRtcService.initialize(context.applicationContext, settings)

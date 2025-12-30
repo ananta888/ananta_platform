@@ -57,6 +57,8 @@ public abstract class UserSettingsCommon implements SettingsCommon
         public static final String SIGNALING_PEER_ID = "signaling_peer_id";
         public static final String SIGNALING_PUBLIC_VISIBILITY = "signaling_public_visibility";
         public static final String SIGNALING_AUTO_CONNECT_PUBLIC = "signaling_auto_connect_public";
+        public static final String SIGNALING_AUTO_RECONNECT_WS = "signaling_auto_reconnect_ws";
+        public static final String SIGNALING_AUTO_POLL_HTTP = "signaling_auto_poll_http";
         public static final String TWO_FACTOR_AUTH_ENABLED = "two_factor_auth_enabled";
         public static final String TWO_FACTOR_AUTH_SECRET = "two_factor_auth_secret";
         public static final String SIGNALING_MODE_LOCAL = "local";
@@ -451,6 +453,16 @@ public abstract class UserSettingsCommon implements SettingsCommon
     public boolean isAutoConnectPublicPeers()
     {
                 return _prefs.getBoolean(SIGNALING_AUTO_CONNECT_PUBLIC, false);
+    }
+
+    public boolean isSignalingAutoReconnectEnabled()
+    {
+                return _prefs.getBoolean(SIGNALING_AUTO_RECONNECT_WS, true);
+    }
+
+    public boolean isSignalingAutoPollHttpEnabled()
+    {
+                return _prefs.getBoolean(SIGNALING_AUTO_POLL_HTTP, true);
     }
 
         public List<String> getSignalingServerUrls()

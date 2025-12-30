@@ -28,13 +28,20 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.sovworks.eds.android.network.PeerConnectionRequestRegistry
+import com.sovworks.eds.android.network.SignalingConnectionStatus
+import com.sovworks.eds.android.network.SignalingStatusTracker
+import com.sovworks.eds.android.network.WebRtcService
 import com.sovworks.eds.android.navigation.NavigationViewModel
 import com.sovworks.eds.android.navigation.Screen
+import com.sovworks.eds.android.settings.UserSettings
+import com.sovworks.eds.android.settings.UserSettingsCommon
 import com.sovworks.eds.android.ui.theme.TrustStars
 
 @Composable
@@ -44,6 +51,11 @@ fun PeerConnectionsScreen(
 ) {
     val peers by viewModel.peers.collectAsState()
     val groups by viewModel.groups.collectAsState()
+    val context = LocalContext.current
+    val settings = remember { UserSettings.getSettings(context) }
+    val signalingStatuses by SignalingStatusTracker.statuses.collectAsState()
+    val pollingActive by WebRtcService.pollingActive.collectAsState()
+    val requestStates by PeerConnectionRequestRegistry.state.collectAsState()
     val selectedPeersState = remember { mutableStateOf<Set<String>>(emptySet()) }
     val showMultiSendDialog = remember { mutableStateOf(false) }
     val showCreateGroupDialog = remember { mutableStateOf(false) }
@@ -54,6 +66,47 @@ fun PeerConnectionsScreen(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        item {
+            val incoming = requestStates.values.count { it.incoming }
+            val outgoing = requestStates.values.count { it.outgoing }
+            val mode = settings.signalingMode
+            val signalingSummary = when (mode) {
+                UserSettingsCommon.SIGNALING_MODE_WEBSOCKET -> {
+                    val total = signalingStatuses.size
+                    if (total == 0) {
+                        "Signaling: websocket (disconnected)"
+                    } else {
+                        val connected = signalingStatuses.values.count {
+                            it == SignalingConnectionStatus.CONNECTED
+                        }
+                        val connecting = signalingStatuses.values.count {
+                            it == SignalingConnectionStatus.CONNECTING
+                        }
+                        val errors = signalingStatuses.values.count {
+                            it == SignalingConnectionStatus.ERROR
+                        }
+                        "Signaling: websocket connected $connected/$total (connecting $connecting, error $errors)"
+                    }
+                }
+                UserSettingsCommon.SIGNALING_MODE_HTTP -> {
+                    val pollingLabel = if (pollingActive) "polling active" else "polling off"
+                    "Signaling: http ($pollingLabel)"
+                }
+                else -> "Signaling: local discovery"
+            }
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(text = signalingSummary, style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = "Requests: incoming $incoming, outgoing $outgoing",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        }
         if (selectedPeersState.value.isNotEmpty()) {
             item {
                 Row(
