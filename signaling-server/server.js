@@ -45,11 +45,12 @@ function buildIceServersFromTurnConfig(configPath) {
   const parsed = parseTurnConfig(configPath);
   if (!parsed) return [];
   const { config } = parsed;
-  const host =
-    process.env.TURN_PUBLIC_HOST ||
-    process.env.TURN_PUBLIC_IP ||
-    config.realm ||
-    "127.0.0.1";
+  const envHost = process.env.TURN_PUBLIC_HOST || process.env.TURN_PUBLIC_IP || "";
+  const host = envHost || config.realm || "127.0.0.1";
+  if (!envHost && (host === "turn.example.com" || host === "localdomain")) {
+    console.warn("TURN realm is a placeholder; set TURN_PUBLIC_HOST or ICE_SERVERS to advertise TURN.");
+    return [];
+  }
   const port = config["listening-port"] || "3478";
   const urls = [
     `stun:${host}:${port}`,
