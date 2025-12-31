@@ -77,7 +77,20 @@ function configWantsNoAuth(configPath) {
 function startTurnServer() {
   if (!process.env.START_TURN) return;
   const bin = process.env.TURN_SERVER_BIN || "turnserver";
-  const configPath = process.env.TURN_CONFIG || path.join(__dirname, "turnserver.conf");
+  const defaultConfigPath = path.join(__dirname, "turnserver.conf");
+  let configPath = process.env.TURN_CONFIG || defaultConfigPath;
+  try {
+    configPath = path.resolve(configPath);
+  } catch (_) {
+    // Keep original path if resolve fails.
+  }
+  if (!fs.existsSync(configPath) && configPath !== defaultConfigPath && fs.existsSync(defaultConfigPath)) {
+    console.warn(`TURN_CONFIG not found, falling back to ${defaultConfigPath}`);
+    configPath = defaultConfigPath;
+  }
+  if (!fs.existsSync(configPath)) {
+    console.warn(`TURN config missing: ${configPath}`);
+  }
   let args = ["-c", configPath];
   let useShell = process.platform === "win32";
   const binName = path.basename(bin).toLowerCase();
