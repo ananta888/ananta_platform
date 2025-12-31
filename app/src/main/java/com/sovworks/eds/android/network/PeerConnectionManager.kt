@@ -30,9 +30,11 @@ class PeerConnectionManager(
     private val pendingIceCandidates = ConcurrentHashMap<String, MutableList<IceCandidate>>()
     private val lastConnectAttempt = ConcurrentHashMap<String, Long>()
     private val approvedPeers = ConcurrentHashMap<String, Boolean>()
+    private val connectionTimeouts = ConcurrentHashMap<String, Job>()
     private var listener: PeerConnectionListener? = null
     private var statsJob: Job? = null
     private val connectBackoffMillis = 4000L
+    private val connectionTimeoutMillis = 10000L
 
     init {
         startStatsPolling()
@@ -135,15 +137,21 @@ class PeerConnectionManager(
                         it == PeerConnection.IceConnectionState.COMPLETED
                     ) {
                         onPeerConnected(peerId)
+                        cancelConnectionTimeout(peerId)
                     }
                     if (it == PeerConnection.IceConnectionState.DISCONNECTED ||
                         it == PeerConnection.IceConnectionState.FAILED) {
                         approvedPeers.remove(peerId)
+                        cancelConnectionTimeout(peerId)
                     }
                 }
             }
             override fun onIceConnectionReceivingChange(receiving: Boolean) {}
-            override fun onIceGatheringChange(newState: PeerConnection.IceGatheringState?) {}
+            override fun onIceGatheringChange(newState: PeerConnection.IceGatheringState?) {
+                newState?.let {
+                    logDebug("iceGatheringState -> $peerId = ${it.name.lowercase()}")
+                }
+            }
             override fun onIceCandidate(candidate: IceCandidate?) {
                 candidate?.let {
                     logDebug("onIceCandidate -> $peerId ${formatCandidate(it)}")
@@ -194,6 +202,7 @@ class PeerConnectionManager(
         logDebug("initiateConnection -> $peerId")
         ensureTrustedKey(peerId)
         PeerConnectionRegistry.updateStatus(peerId, "connecting")
+        startConnectionTimeout(peerId)
         val pc = getOrCreatePeerConnection(peerId) ?: return
         
         // DataChannels erstellen (nur eine Seite muss dies tun)
@@ -256,6 +265,7 @@ class PeerConnectionManager(
         ensureTrustedKey(peerId)
         logDebug("onOfferReceived <- $peerId")
         PeerConnectionRegistry.updateStatus(peerId, "connecting")
+        startConnectionTimeout(peerId)
         val polite = isPolitePeer(peerId)
         val pc = getOrCreatePeerConnection(peerId) ?: return
         if (pc.signalingState() == PeerConnection.SignalingState.HAVE_LOCAL_OFFER) {
@@ -344,6 +354,7 @@ class PeerConnectionManager(
 
     fun closeConnection(peerId: String) {
         logDebug("closeConnection -> $peerId")
+        cancelConnectionTimeout(peerId)
         peerConnections.remove(peerId)?.dispose()
         approvedPeers.remove(peerId)
         PeerConnectionRegistry.updateStatus(peerId, "closed")
@@ -445,6 +456,7 @@ class PeerConnectionManager(
     }
 
     private fun resetPeerConnection(peerId: String) {
+        cancelConnectionTimeout(peerId)
         peerConnections.remove(peerId)?.dispose()
         pendingIceCandidates.remove(peerId)
     }
@@ -472,6 +484,27 @@ class PeerConnectionManager(
         } catch (_: Throwable) {
             // Ignore logging failures in JVM unit tests.
         }
+    }
+
+    private fun startConnectionTimeout(peerId: String) {
+        cancelConnectionTimeout(peerId)
+        connectionTimeouts[peerId] = managerScope.launch {
+            delay(connectionTimeoutMillis)
+            val status = PeerConnectionRegistry.state.value
+                .firstOrNull { it.peerId == peerId }
+                ?.status
+            if (status == "connecting" || status == "checking" || status == "new") {
+                logDebug("connect timeout -> $peerId (status=$status)")
+                PeerConnectionRequestRegistry.clear(peerId)
+                approvedPeers.remove(peerId)
+                peerConnections.remove(peerId)?.dispose()
+                PeerConnectionRegistry.updateStatus(peerId, "failed")
+            }
+        }
+    }
+
+    private fun cancelConnectionTimeout(peerId: String) {
+        connectionTimeouts.remove(peerId)?.cancel()
     }
 
     private fun formatCandidate(candidate: IceCandidate): String {
