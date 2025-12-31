@@ -19,13 +19,17 @@ import com.sovworks.eds.android.trust.TrustStore
 fun MessengerScreen(
     peerId: String? = null,
     groupId: String? = null,
+    relayOnly: Boolean = false,
     viewModel: MessengerViewModel = viewModel()
 ) {
-    LaunchedEffect(peerId, groupId) {
+    var relayOnlyState by remember { mutableStateOf(relayOnly) }
+
+    LaunchedEffect(peerId, groupId, relayOnly) {
+        relayOnlyState = relayOnly
         if (groupId != null) {
             viewModel.setChat(groupId, isGroupChat = true)
         } else {
-            viewModel.setChat(peerId, isGroupChat = false)
+            viewModel.setChat(peerId, isGroupChat = false, relayOnly = relayOnly)
         }
     }
 
@@ -50,14 +54,44 @@ fun MessengerScreen(
                         val display = trusted?.name?.takeIf { it.isNotBlank() }
                             ?: trusted?.peerId?.takeIf { it.isNotBlank() }
                             ?: peerId
-                        "Chat with $display"
+                        if (relayOnlyState) {
+                            "Chat with $display (Relay)"
+                        } else {
+                            "Chat with $display"
+                        }
                     }
                     else -> "Messenger"
                 }
-                Text(
-                    text = headerText,
-                    style = MaterialTheme.typography.titleLarge
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = headerText,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    if (peerId != null && groupId == null) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Relay",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Switch(
+                                checked = relayOnlyState,
+                                onCheckedChange = { enabled ->
+                                    relayOnlyState = enabled
+                                    viewModel.setChat(
+                                        peerId,
+                                        isGroupChat = false,
+                                        relayOnly = enabled
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
             }
         }
 

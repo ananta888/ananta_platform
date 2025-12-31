@@ -197,7 +197,11 @@ fun AppScaffold(
                     is Screen.Trust -> PeerManagementScreen(viewModel = viewModel())
                     is Screen.Messenger -> {
                         val screen = currentScreen as Screen.Messenger
-                        MessengerScreen(peerId = screen.peerId, groupId = screen.groupId)
+                        MessengerScreen(
+                            peerId = screen.peerId,
+                            groupId = screen.groupId,
+                            relayOnly = screen.relayOnly
+                        )
                     }
                 }
             }

@@ -27,7 +27,11 @@ sealed class Screen(val title: String) {
     object Peers : Screen("Peers & Devices")
     object Exchange : Screen("Exchange")
     object Trust : Screen("Trust")
-    data class Messenger(val peerId: String? = null, val groupId: String? = null) : Screen("Messenger")
+    data class Messenger(
+        val peerId: String? = null,
+        val groupId: String? = null,
+        val relayOnly: Boolean = false
+    ) : Screen("Messenger")
 }
 
 class NavigationViewModel : ViewModel() {

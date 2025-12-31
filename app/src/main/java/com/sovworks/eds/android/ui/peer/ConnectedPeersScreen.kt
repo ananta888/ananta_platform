@@ -2,6 +2,7 @@ package com.sovworks.eds.android.ui.peer
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -55,14 +56,30 @@ fun ConnectedPeersScreen(
                     Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                         Text(text = peer.alias ?: peer.peerId, style = MaterialTheme.typography.titleMedium)
                         Text(text = "Peer ID: ${peer.peerId}", style = MaterialTheme.typography.bodySmall)
-                        Text(text = "Public Key: ${peer.publicKey.take(16)}...", style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            text = "Public Key: ${peer.publicKey.take(16)}...",
+                            style = MaterialTheme.typography.bodySmall
+                        )
                         Spacer(modifier = Modifier.height(8.dp))
-                        TextButton(
-                            onClick = {
-                                navigationViewModel.navigateTo(Screen.Messenger(peerId = peer.peerKey))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            TextButton(
+                                onClick = {
+                                    navigationViewModel.navigateTo(
+                                        Screen.Messenger(peerId = peer.peerKey)
+                                    )
+                                }
+                            ) {
+                                Text("Chat")
                             }
-                        ) {
-                            Text("Chat")
+                            TextButton(
+                                onClick = {
+                                    navigationViewModel.navigateTo(
+                                        Screen.Messenger(peerId = peer.peerKey, relayOnly = true)
+                                    )
+                                }
+                            ) {
+                                Text("Relay")
+                            }
                         }
                     }
                 }

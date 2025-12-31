@@ -56,6 +56,7 @@ object MessengerRepository : DataChannelListener {
     private var database: AppDatabase? = null
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val relaySessions = SignalingRelaySessionManager()
+    private val relayOnlyPeers = ConcurrentHashMap<String, Boolean>()
     private val offlineMessageListener = object : OfflineMessageListener {
         override fun onOfflineMessageReceived(request: StoreRequest) {
             processMessage(request.senderId, request.encryptedPayload, request.timestamp)
@@ -158,6 +159,15 @@ object MessengerRepository : DataChannelListener {
 
     override fun onMessageReceived(peerId: String, message: String) {
         processMessage(peerId, message, System.currentTimeMillis())
+    }
+
+    fun setRelayOnly(peerId: String?, enabled: Boolean) {
+        if (peerId.isNullOrBlank()) return
+        if (enabled) {
+            relayOnlyPeers[peerId] = true
+        } else {
+            relayOnlyPeers.remove(peerId)
+        }
     }
 
     private fun handleGroupMessage(peerId: String, payload: String, timestamp: Long) {
@@ -323,6 +333,10 @@ object MessengerRepository : DataChannelListener {
     }
 
     private fun sendMessageWithFallback(peerId: String, text: String) {
+        if (relayOnlyPeers[peerId] == true) {
+            relaySessions.send(peerId, text)
+            return
+        }
         val manager = WebRtcService.getPeerConnectionManager()
         val multiplexer = manager?.getMultiplexer()
         if (multiplexer != null && multiplexer.isConnected(peerId)) {

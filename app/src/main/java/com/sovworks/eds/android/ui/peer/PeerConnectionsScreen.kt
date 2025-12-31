@@ -147,7 +147,12 @@ fun PeerConnectionsScreen(
                     onPing = { viewModel.requestConnection(peer) },
                     onConfirm = { viewModel.confirmConnection(peer.peerKey) },
                     onDisconnect = { viewModel.disconnect(peer.peerKey) },
-                    onChat = { navigationViewModel.navigateTo(Screen.Messenger(peerId = peer.peerKey)) }
+                    onChat = { navigationViewModel.navigateTo(Screen.Messenger(peerId = peer.peerKey)) },
+                    onRelayChat = {
+                        navigationViewModel.navigateTo(
+                            Screen.Messenger(peerId = peer.peerKey, relayOnly = true)
+                        )
+                    }
                 )
             }
         }
@@ -321,7 +326,8 @@ private fun PeerConnectionCard(
     onPing: () -> Unit,
     onConfirm: () -> Unit,
     onDisconnect: () -> Unit,
-    onChat: () -> Unit
+    onChat: () -> Unit,
+    onRelayChat: () -> Unit
 ) {
     val clipboardManager = LocalClipboardManager.current
     val showKeyDialog = remember { mutableStateOf(false) }
@@ -403,11 +409,16 @@ private fun PeerConnectionCard(
                         Text("Public Key")
                     }
                 }
-                TextButton(
-                    onClick = onChat,
-                    enabled = peer.status == "connected"
-                ) {
-                    Text("Chat")
+                Row {
+                    TextButton(
+                        onClick = onChat,
+                        enabled = peer.status == "connected"
+                    ) {
+                        Text("Chat")
+                    }
+                    TextButton(onClick = onRelayChat) {
+                        Text("Relay")
+                    }
                 }
             }
         }
