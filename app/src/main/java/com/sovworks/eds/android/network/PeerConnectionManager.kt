@@ -146,6 +146,7 @@ class PeerConnectionManager(
             override fun onIceGatheringChange(newState: PeerConnection.IceGatheringState?) {}
             override fun onIceCandidate(candidate: IceCandidate?) {
                 candidate?.let {
+                    logDebug("onIceCandidate -> $peerId ${formatCandidate(it)}")
                     signalingClient.sendIceCandidate(peerId, it)
                 }
             }
@@ -326,7 +327,7 @@ class PeerConnectionManager(
             return
         }
         ensureTrustedKey(peerId)
-        logDebug("onIceCandidateReceived <- $peerId")
+        logDebug("onIceCandidateReceived <- $peerId ${formatCandidate(candidate)}")
         val pc = peerConnections[peerId]
         if (pc != null && pc.remoteDescription != null) {
             pc.addIceCandidate(candidate)
@@ -471,5 +472,11 @@ class PeerConnectionManager(
         } catch (_: Throwable) {
             // Ignore logging failures in JVM unit tests.
         }
+    }
+
+    private fun formatCandidate(candidate: IceCandidate): String {
+        val sdp = candidate.sdp ?: ""
+        val type = Regex("\\btyp\\s+(\\w+)").find(sdp)?.groupValues?.get(1) ?: "unknown"
+        return "type=$type sdp=${candidate.sdp}"
     }
 }
