@@ -1,7 +1,10 @@
 const http = require("http");
+const path = require("path");
+const { spawn } = require("child_process");
 const WebSocket = require("ws");
 const PORT = process.env.PORT || 8080;
 let iceServers = [];
+let turnProcess = null;
 
 if (process.env.ICE_SERVERS) {
   try {
@@ -12,6 +15,35 @@ if (process.env.ICE_SERVERS) {
   } catch (err) {
     console.warn("Invalid ICE_SERVERS JSON:", err.message);
   }
+}
+
+function startTurnServer() {
+  if (!process.env.START_TURN) return;
+  const bin = process.env.TURN_SERVER_BIN || "turnserver";
+  const configPath = process.env.TURN_CONFIG || path.join(__dirname, "turnserver.conf");
+  console.log(`Starting TURN server: ${bin} -c ${configPath}`);
+  turnProcess = spawn(bin, ["-c", configPath], {
+    stdio: "inherit",
+    shell: process.platform === "win32",
+  });
+  turnProcess.on("exit", (code) => {
+    console.warn(`TURN server exited with code ${code}`);
+    turnProcess = null;
+  });
+  turnProcess.on("error", (err) => {
+    console.warn(`TURN server failed to start: ${err.message}`);
+    turnProcess = null;
+  });
+}
+
+function stopTurnServer() {
+  if (!turnProcess) return;
+  try {
+    turnProcess.kill();
+  } catch (err) {
+    console.warn(`Failed to stop TURN server: ${err.message}`);
+  }
+  turnProcess = null;
 }
 
 const server = http.createServer((req, res) => {
@@ -196,4 +228,15 @@ wss.on("connection", (ws) => {
 
 server.listen(PORT, () => {
   console.log(`Signaling server listening on :${PORT}`);
+  startTurnServer();
+});
+
+process.on("SIGINT", () => {
+  stopTurnServer();
+  process.exit(0);
+});
+
+process.on("SIGTERM", () => {
+  stopTurnServer();
+  process.exit(0);
 });
