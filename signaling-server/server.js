@@ -140,13 +140,16 @@ wss.on("connection", (ws) => {
         const single = String(msg.to || msg.toPublicKey || "").trim();
         if (single) targets.push(single);
         if (targets.length === 0) {
+          console.warn("relay: missing_target");
           safeSend(ws, { type: "error", message: "missing_target" });
           return;
         }
         const payload = typeof msg.payload === "string" ? msg.payload : null;
+        console.log(`relay: from=${ws.publicKey} targets=${targets.length} payload=${payload ? payload.length : 0}`);
         targets.forEach((targetKey) => {
           const target = clientsByPublicKey.get(targetKey);
           if (!target) {
+            console.warn(`relay: target_not_found ${targetKey}`);
             safeSend(ws, { type: "error", message: "target_not_found", to: targetKey });
             return;
           }

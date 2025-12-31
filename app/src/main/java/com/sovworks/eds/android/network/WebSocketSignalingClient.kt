@@ -113,6 +113,7 @@ class WebSocketSignalingClient(
         if (type == "relay") {
             val fromKey = root["fromPublicKey"] as? String ?: return
             val payload = root["payload"] as? String ?: return
+            logDebug("Received relay payload from $fromKey (${payload.length} chars)")
             listener?.onRelayPayloadReceived(fromKey, payload)
             return
         }
@@ -227,6 +228,7 @@ class WebSocketSignalingClient(
             "toPeers" to peerIds,
             "payload" to payload
         )
+        logDebug("sendRelayPayload -> ${peerIds.size} peers (${payload.length} chars)")
         webSocket?.send(gson.toJson(bodyMap))
     }
 
