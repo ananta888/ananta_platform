@@ -9,14 +9,18 @@ object IceServersRegistry {
 
     @Volatile
     private var iceServers: List<PeerConnection.IceServer> = buildIceServers(defaultConfigs)
+    @Volatile
+    private var iceServerConfigs: List<ConnectionMetadata.IceServerConfig> = defaultConfigs
 
     fun getIceServers(): List<PeerConnection.IceServer> = iceServers
+    fun getConfigs(): List<ConnectionMetadata.IceServerConfig> = iceServerConfigs
 
     fun updateFromConfigs(configs: List<ConnectionMetadata.IceServerConfig>?) {
         if (configs.isNullOrEmpty()) return
         val mapped = buildIceServers(configs)
         if (mapped.isNotEmpty()) {
             iceServers = mapped
+            iceServerConfigs = configs
         }
     }
 

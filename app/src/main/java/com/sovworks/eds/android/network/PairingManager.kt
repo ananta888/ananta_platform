@@ -14,9 +14,7 @@ object PairingManager {
         return ConnectionMetadata(
             peerId = identity.id,
             publicKeyBase64 = identity.publicKeyBase64,
-            iceServers = listOf(
-                ConnectionMetadata.IceServerConfig(listOf("stun:stun.l.google.com:19302"))
-            )
+            iceServers = IceServersRegistry.getConfigs()
         )
     }
 

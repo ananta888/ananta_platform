@@ -1,3 +1,4 @@
+const fs = require("fs");
 const http = require("http");
 const path = require("path");
 const { spawn } = require("child_process");
@@ -17,15 +18,73 @@ if (process.env.ICE_SERVERS) {
   }
 }
 
+function parseTurnConfig(configPath) {
+  try {
+    const raw = fs.readFileSync(configPath, "utf8");
+    const config = {};
+    raw.split(/\r?\n/).forEach((line) => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#") || trimmed.startsWith("//")) return;
+      const [key, ...rest] = trimmed.split("=");
+      if (!key || rest.length === 0) return;
+      config[key.trim()] = rest.join("=").trim();
+    });
+    return config;
+  } catch (err) {
+    console.warn(`Failed to read TURN config: ${err.message}`);
+    return null;
+  }
+}
+
+function buildIceServersFromTurnConfig(configPath) {
+  const config = parseTurnConfig(configPath);
+  if (!config) return [];
+  const host =
+    process.env.TURN_PUBLIC_HOST ||
+    process.env.TURN_PUBLIC_IP ||
+    config.realm ||
+    "127.0.0.1";
+  const port = config["listening-port"] || "3478";
+  const urls = [
+    `stun:${host}:${port}`,
+    `turn:${host}:${port}?transport=udp`,
+    `turn:${host}:${port}?transport=tcp`,
+  ];
+  const userValue = config.user || "";
+  const [username, credential] = userValue.split(":");
+  const entry = { urls };
+  if (username && credential) {
+    entry.username = username;
+    entry.credential = credential;
+  }
+  return [entry];
+}
+
 function startTurnServer() {
   if (!process.env.START_TURN) return;
   const bin = process.env.TURN_SERVER_BIN || "turnserver";
   const configPath = process.env.TURN_CONFIG || path.join(__dirname, "turnserver.conf");
-  console.log(`Starting TURN server: ${bin} -c ${configPath}`);
-  turnProcess = spawn(bin, ["-c", configPath], {
+  let args = ["-c", configPath];
+  if (process.platform === "win32") {
+    const binName = path.basename(bin).toLowerCase();
+    if (binName === "wsl" || binName === "wsl.exe") {
+      let wslConfigPath = configPath;
+      const driveMatch = /^[A-Za-z]:\\/.exec(configPath);
+      if (driveMatch) {
+        const driveLetter = driveMatch[0][0].toLowerCase();
+        wslConfigPath = `/mnt/${driveLetter}/${configPath.slice(3).replace(/\\/g, "/")}`;
+      }
+      args = ["--", "turnserver", "-c", wslConfigPath];
+    }
+  }
+  console.log(`Starting TURN server: ${bin} ${args.join(" ")}`);
+  turnProcess = spawn(bin, args, {
     stdio: "inherit",
     shell: process.platform === "win32",
   });
+  if (iceServers.length === 0) {
+    iceServers = buildIceServersFromTurnConfig(configPath);
+  }
   turnProcess.on("exit", (code) => {
     console.warn(`TURN server exited with code ${code}`);
     turnProcess = null;
