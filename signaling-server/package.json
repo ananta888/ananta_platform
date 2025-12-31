@@ -5,7 +5,8 @@
   "description": "Simple WebSocket signaling server for Ananta",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "start:turn": "node start-with-turn.js"
   },
   "dependencies": {
     "ws": "^8.18.0"
