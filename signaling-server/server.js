@@ -22,14 +22,19 @@ function parseTurnConfig(configPath) {
   try {
     const raw = fs.readFileSync(configPath, "utf8");
     const config = {};
+    const flags = new Set();
     raw.split(/\r?\n/).forEach((line) => {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith("#") || trimmed.startsWith("//")) return;
       const [key, ...rest] = trimmed.split("=");
-      if (!key || rest.length === 0) return;
+      if (!key) return;
+      if (rest.length === 0) {
+        flags.add(key.trim());
+        return;
+      }
       config[key.trim()] = rest.join("=").trim();
     });
-    return config;
+    return { config, flags };
   } catch (err) {
     console.warn(`Failed to read TURN config: ${err.message}`);
     return null;
@@ -37,8 +42,9 @@ function parseTurnConfig(configPath) {
 }
 
 function buildIceServersFromTurnConfig(configPath) {
-  const config = parseTurnConfig(configPath);
-  if (!config) return [];
+  const parsed = parseTurnConfig(configPath);
+  if (!parsed) return [];
+  const { config } = parsed;
   const host =
     process.env.TURN_PUBLIC_HOST ||
     process.env.TURN_PUBLIC_IP ||
@@ -60,13 +66,23 @@ function buildIceServersFromTurnConfig(configPath) {
   return [entry];
 }
 
+function configWantsNoAuth(configPath) {
+  const parsed = parseTurnConfig(configPath);
+  if (!parsed) return false;
+  if (parsed.flags.has("no-auth")) return true;
+  if (parsed.flags.has("lt-cred-mech")) return false;
+  return !parsed.config.user;
+}
+
 function startTurnServer() {
   if (!process.env.START_TURN) return;
   const bin = process.env.TURN_SERVER_BIN || "turnserver";
   const configPath = process.env.TURN_CONFIG || path.join(__dirname, "turnserver.conf");
   let args = ["-c", configPath];
+  let useShell = process.platform === "win32";
+  const binName = path.basename(bin).toLowerCase();
+  const forceNoAuth = configWantsNoAuth(configPath);
   if (process.platform === "win32") {
-    const binName = path.basename(bin).toLowerCase();
     if (binName === "wsl" || binName === "wsl.exe") {
       let wslConfigPath = configPath;
       const driveMatch = /^[A-Za-z]:\\/.exec(configPath);
@@ -75,12 +91,16 @@ function startTurnServer() {
         wslConfigPath = `/mnt/${driveLetter}/${configPath.slice(3).replace(/\\/g, "/")}`;
       }
       args = ["--", "turnserver", "-c", wslConfigPath];
+      useShell = false;
     }
+  }
+  if (forceNoAuth) {
+    args.push("--no-auth");
   }
   console.log(`Starting TURN server: ${bin} ${args.join(" ")}`);
   turnProcess = spawn(bin, args, {
     stdio: "inherit",
-    shell: process.platform === "win32",
+    shell: useShell,
   });
   if (iceServers.length === 0) {
     iceServers = buildIceServersFromTurnConfig(configPath);
