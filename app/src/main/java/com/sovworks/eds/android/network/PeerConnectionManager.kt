@@ -117,6 +117,12 @@ class PeerConnectionManager(
     private fun getOrCreatePeerConnection(peerId: String): PeerConnection? {
         peerConnections[peerId]?.let { return it }
 
+        val iceConfigs = IceServersRegistry.getConfigs()
+        logDebug("iceServers -> $peerId count=${iceConfigs.size}")
+        iceConfigs.forEach { config ->
+            logDebug("iceServer -> $peerId urls=${config.urls.joinToString(",")} auth=${!config.username.isNullOrBlank()}")
+        }
+
         val pc = WebRTCManager.createPeerConnection(
             IceServersRegistry.getIceServers(),
             object : PeerConnection.Observer {
@@ -228,13 +234,19 @@ class PeerConnectionManager(
                             signalingClient.sendOffer(peerId, it)
                         }
                         override fun onCreateFailure(p0: String?) {}
-                        override fun onSetFailure(p0: String?) {}
+                        override fun onSetFailure(p0: String?) {
+                            logDebug("setLocalDescription (offer) failed -> $peerId reason=$p0")
+                        }
                     }, it)
                 }
             }
             override fun onSetSuccess() {}
-            override fun onCreateFailure(p0: String?) {}
-            override fun onSetFailure(p0: String?) {}
+            override fun onCreateFailure(p0: String?) {
+                logDebug("createOffer failed -> $peerId reason=$p0")
+            }
+            override fun onSetFailure(p0: String?) {
+                logDebug("setLocalDescription (offer) failed -> $peerId reason=$p0")
+            }
         }, constraints)
     }
 
@@ -289,20 +301,28 @@ class PeerConnectionManager(
                                 override fun onCreateSuccess(p0: SessionDescription?) {}
                                 override fun onSetSuccess() {
                                     logDebug("sendAnswer -> $peerId")
-                                    signalingClient.sendAnswer(peerId, it)      
+                                    signalingClient.sendAnswer(peerId, it)
                                 }
                                 override fun onCreateFailure(p0: String?) {}
-                                override fun onSetFailure(p0: String?) {}
+                                override fun onSetFailure(p0: String?) {
+                                    logDebug("setLocalDescription (answer) failed -> $peerId reason=$p0")
+                                }
                             }, it)
                         }
                     }
                     override fun onSetSuccess() {}
-                    override fun onCreateFailure(p0: String?) {}
-                    override fun onSetFailure(p0: String?) {}
+                    override fun onCreateFailure(p0: String?) {
+                        logDebug("createAnswer failed -> $peerId reason=$p0")
+                    }
+                    override fun onSetFailure(p0: String?) {
+                        logDebug("setRemoteDescription (offer) failed -> $peerId reason=$p0")
+                    }
                 }, constraints)
             }
             override fun onCreateFailure(p0: String?) {}
-            override fun onSetFailure(p0: String?) {}
+            override fun onSetFailure(p0: String?) {
+                logDebug("setRemoteDescription (offer) failed -> $peerId reason=$p0")
+            }
         }, sdp)
     }
 
@@ -316,7 +336,9 @@ class PeerConnectionManager(
                 drainIceCandidates(peerId, pc)
             }
             override fun onCreateFailure(p0: String?) {}
-            override fun onSetFailure(p0: String?) {}
+            override fun onSetFailure(p0: String?) {
+                logDebug("setRemoteDescription (answer) failed -> $peerId reason=$p0")
+            }
         }, sdp)
     }
 
