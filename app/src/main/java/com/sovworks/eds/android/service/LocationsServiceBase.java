@@ -106,10 +106,10 @@ public class LocationsServiceBase extends Service
                 context,
                 loc.getId().hashCode(),
                 i,
-                PendingIntent.FLAG_ONE_SHOT
+                PendingIntent.FLAG_ONE_SHOT | getImmutableFlag()
         );
-		LocationsService.setCheckTimer(context, pi, triggerTime);
-	}
+                LocationsService.setCheckTimer(context, pi, triggerTime);
+        }
 
 	protected static void setCheckTimer(Context context, PendingIntent pi, long triggerTime)
 	{
@@ -223,26 +223,33 @@ public class LocationsServiceBase extends Service
 	{
         Intent i = new Intent(this, FileManagerActivity.class);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CompatHelper.getServiceRunningNotificationsChannelId(this))
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CompatHelper.getServiceRunningNotificationsChannelId(this))
                 .setContentTitle(getString(R.string.eds_service_is_running))
                 .setSmallIcon(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? R.drawable.ic_notification_new : R.drawable.ic_notification)
                 .setContentText("")
-                .setContentIntent(PendingIntent.getActivity(this, 0, i, 0))
+                .setContentIntent(PendingIntent.getActivity(this, 0, i, getImmutableFlag()))
                 .setOngoing(true)
-				.addAction(
-						R.drawable.ic_action_cancel,
-						getString(R.string.close_all_containers),
-						PendingIntent.getActivity(
-								this,
-								0,
-								new Intent(this, CloseLocationsActivity.class),
-								PendingIntent.FLAG_UPDATE_CURRENT
-						)
-				);
+                                .addAction(
+                                                R.drawable.ic_action_cancel,
+                                                getString(R.string.close_all_containers),
+                                                PendingIntent.getActivity(
+                                                                this,
+                                                                0,
+                                                                new Intent(this, CloseLocationsActivity.class),
+                                                                PendingIntent.FLAG_UPDATE_CURRENT | getImmutableFlag()
+                                                )
+                                );
         Notification n = builder.build();
         n.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_FOREGROUND_SERVICE;
-		return n;
-	}
+                return n;
+        }
+
+        private static int getImmutableFlag()
+        {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                        return PendingIntent.FLAG_IMMUTABLE;
+                return 0;
+        }
 }
 
 
